@@ -1,5 +1,6 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { relations } from "drizzle-orm";
 import { z } from "zod";
 
 // Users and Authentication
@@ -25,6 +26,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   fullName: true,
   isDoctor: true,
+  isAdmin: true,
+  isMember: true,
   doctorTitle: true,
   doctorSpecialty: true,
   doctorBio: true,
@@ -125,6 +128,42 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
   imageUrl: true,
   featured: true,
 });
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  orders: many(orders),
+  cartItems: many(cartItems),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id],
+  }),
+  cartItems: many(cartItems),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products),
+}));
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
+}));
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+  user: one(users, {
+    fields: [cartItems.userId],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [cartItems.productId],
+    references: [products.id],
+  }),
+}));
 
 // Export types
 export type User = typeof users.$inferSelect;
