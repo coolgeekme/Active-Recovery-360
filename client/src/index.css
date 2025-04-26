@@ -13,12 +13,12 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 207 90% 22%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 220 14% 39%;
-  --secondary-foreground: 24 9.8% 10%;
-  --accent: 220 13% 75%;
-  --accent-foreground: 24 9.8% 10%;
+  --primary: 207 90% 22%; /* Deep blue */
+  --primary-foreground: 0 0% 100%; /* White text on primary blue */
+  --secondary: 220 14% 39%; /* Slate gray */
+  --secondary-foreground: 0 0% 100%; /* White text on secondary */
+  --accent: 220 13% 75%; /* Silver */
+  --accent-foreground: 24 9.8% 10%; /* Dark text on silver */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
   --ring: 20 14.3% 4.1%;
@@ -43,12 +43,12 @@
   --card-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --primary: 207 90% 22%;
-  --primary-foreground: 211 100% 99%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  --primary: 207 90% 30%; /* Slightly brighter blue in dark mode */
+  --primary-foreground: 0 0% 100%; /* Pure white text on primary */
+  --secondary: 220 14% 45%; /* Brighter slate gray in dark mode */
+  --secondary-foreground: 0 0% 100%; /* White text on secondary */
+  --accent: 220 13% 80%; /* Brighter silver in dark mode */
+  --accent-foreground: 240 10% 3.9%; /* Dark text on accent */
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
   --ring: 240 4.9% 83.9%;
@@ -59,15 +59,85 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 
   body {
-    @apply font-opensans antialiased bg-background text-foreground;
+    font-family: 'Open Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-montserrat;
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  /* Ensure text on blue backgrounds is always white for better contrast */
+  .bg-primary, .bg-primary-foreground, 
+  [class*="bg-primary-"], [class*="bg-blue"],
+  button[class*="bg-primary"], [class*="bg-blue"],
+  .btn-primary, .blue-bg {
+    color: white;
+  }
+  
+  /* Navigation links - ensure good contrast */
+  nav a, .nav-link, header a {
+    font-weight: 500;
+  }
+  
+  nav a:hover, .nav-link:hover, header a:hover {
+    color: white;
+    background-color: hsl(var(--primary));
+  }
+  
+  /* Button enhancements for better contrast */
+  button, .btn {
+    font-weight: 500;
+  }
+  
+  button.bg-primary, .btn-primary {
+    color: white;
+  }
+  
+  button.bg-primary:hover, .btn-primary:hover {
+    opacity: 0.9;
+  }
+  
+  button.bg-secondary, .btn-secondary {
+    color: white;
+  }
+  
+  button.bg-secondary:hover, .btn-secondary:hover {
+    opacity: 0.9;
+  }
+  
+  /* Text on color backgrounds */
+  .text-on-primary, .text-on-blue {
+    color: white;
+    font-weight: 500;
+  }
+  
+  .text-on-secondary {
+    color: white;
+    font-weight: 500;
+  }
+  
+  /* Hero sections and callouts */
+  .hero, .callout {
+    color: white;
+  }
+  
+  /* Cards with colored backgrounds */
+  .card.bg-primary, .card.bg-secondary {
+    color: white;
+  }
+  
+  /* Enhanced badge contrast */
+  .badge.bg-primary, .badge-primary {
+    background-color: hsl(var(--primary));
+    color: white;
   }
 }
 
