@@ -1,0 +1,28 @@
+import { Link } from "wouter";
+import { Category } from "@shared/schema";
+
+interface CategoryCardProps {
+  category: Category;
+}
+
+export default function CategoryCard({ category }: CategoryCardProps) {
+  return (
+    <Link href={`/category/${category.id}`}>
+      <a className="bg-white rounded-lg shadow overflow-hidden group block">
+        <div className="h-32 overflow-hidden">
+          <img 
+            src={category.imageUrl || "https://via.placeholder.com/500x300?text=Category"} 
+            alt={category.name} 
+            className="w-full h-full object-cover transition group-hover:scale-105"
+          />
+        </div>
+        <div className="p-4 text-center">
+          <h3 className="font-montserrat font-bold text-primary group-hover:text-secondary transition">
+            {category.name}
+          </h3>
+          <p className="text-secondary text-sm">{category.productCount} products</p>
+        </div>
+      </a>
+    </Link>
+  );
+}
