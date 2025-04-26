@@ -51,14 +51,14 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-primary bg-opacity-5 py-12 md:py-20">
+      <section className="bg-primary py-12 md:py-20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0 md:pr-12">
-              <h1 className="text-4xl md:text-5xl font-montserrat font-bold text-primary mb-4">
+              <h1 className="text-4xl md:text-5xl font-montserrat font-bold text-white mb-4">
                 Specialized Recovery Products For Your Healing Journey
               </h1>
-              <p className="text-lg text-secondary mb-8">
+              <p className="text-lg text-white mb-8">
                 Join the Exercise Recovery Alliance for exclusive access to professional-grade recovery tools and resources trusted by healthcare professionals.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
@@ -91,16 +91,16 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="bg-primary bg-opacity-5 rounded-lg p-6 md:p-8 mb-12">
+          <div className="bg-primary rounded-lg p-6 md:p-8 mb-12">
             <div className="flex flex-col md:flex-row items-center">
               <div className="md:w-2/3 mb-6 md:mb-0 md:pr-8">
-                <div className="inline-block bg-primary text-white px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3">
+                <div className="inline-block bg-white text-primary px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3">
                   LIMITED TIME OFFER
                 </div>
-                <h3 className="text-2xl font-montserrat font-bold text-primary mb-3">
+                <h3 className="text-2xl font-montserrat font-bold text-white mb-3">
                   Receive a FREE Recovery Kit ($35 value)
                 </h3>
-                <p className="text-secondary mb-6">
+                <p className="text-white mb-6">
                   Sign up today and receive our exclusive starter recovery kit as a welcome gift. Includes compression bands, recovery guide, and more.
                 </p>
                 <Button asChild className="font-montserrat font-semibold">
