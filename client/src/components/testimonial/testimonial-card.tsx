@@ -20,7 +20,7 @@ export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
       <div className="flex items-center">
         <div className="w-12 h-12 rounded-full overflow-hidden mr-3">
           <img 
-            src={testimonial.imageUrl || "https://via.placeholder.com/150x150?text=Author"} 
+            src={testimonial.imageUrl || "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&h=150&q=80"} 
             alt={testimonial.author} 
             className="w-full h-full object-cover"
           />

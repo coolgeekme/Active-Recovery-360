@@ -20,7 +20,7 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
         <div className="flex items-center mb-4">
           <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
             <img 
-              src={doctor.profileImage || "https://via.placeholder.com/200x200?text=Doctor"} 
+              src={doctor.profileImage || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&h=200&q=80"} 
               alt={doctor.fullName} 
               className="w-full h-full object-cover"
             />

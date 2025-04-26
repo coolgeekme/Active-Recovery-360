@@ -97,7 +97,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="relative">
         <Link href={`/product/${product.id}`}>
           <img 
-            src={product.imageUrl || "https://via.placeholder.com/500x300?text=No+Image"} 
+            src={product.imageUrl || "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=300&q=80"} 
             alt={product.name} 
             className="w-full h-48 object-cover cursor-pointer"
           />

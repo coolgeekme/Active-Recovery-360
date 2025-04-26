@@ -72,8 +72,8 @@ export default function HomePage() {
             </div>
             <div className="md:w-1/2">
               <img 
-                src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
-                alt="Medical professional with recovery equipment" 
+                src="https://images.unsplash.com/photo-1597764690523-15bea4c581c9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                alt="Physical therapy equipment and facilities" 
                 className="rounded-lg shadow-lg w-full h-auto object-cover" 
               />
             </div>
@@ -109,8 +109,8 @@ export default function HomePage() {
               </div>
               <div className="md:w-1/3">
                 <img 
-                  src="https://images.unsplash.com/photo-1596516109370-29001ec8ec36?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                  alt="Recovery starter kit" 
+                  src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                  alt="Professional rehabilitation equipment" 
                   className="rounded-lg shadow w-full h-auto object-cover"
                 />
               </div>

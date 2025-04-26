@@ -11,7 +11,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
       <a className="bg-white rounded-lg shadow overflow-hidden group block">
         <div className="h-32 overflow-hidden">
           <img 
-            src={category.imageUrl || "https://via.placeholder.com/500x300?text=Category"} 
+            src={category.imageUrl || "https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&h=300&q=80"} 
             alt={category.name} 
             className="w-full h-full object-cover transition group-hover:scale-105"
           />
