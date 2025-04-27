@@ -39,7 +39,7 @@ export default function ProductGrid({
     if (category) params.append("categoryId", category.toString());
     if (featured) params.append("featured", "true");
     if (doctorId) params.append("doctorId", doctorId.toString());
-    if (visibility) params.append("visibility", visibility);
+    if (visibility && visibility !== "all") params.append("visibility", visibility);
     
     return params.toString();
   };

@@ -88,20 +88,31 @@ export class DatabaseStorage implements IStorage {
     featured?: boolean;
     doctorId?: number;
   }): Promise<Product[]> {
+    // Log the filters being applied
+    console.log("Product filters:", filters);
+    
+    // First try to get all products to see if we're getting data
+    const allProducts = await db.select().from(products);
+    console.log(`Total products in database: ${allProducts.length}`);
+    
+    // Now build the query with filters
     let query = db.select().from(products);
     
     const conditions = [];
     
     if (filters) {
       if (filters.visibility) {
+        console.log(`Filtering by visibility: ${filters.visibility}`);
         conditions.push(eq(products.visibility, filters.visibility));
       }
       
       if (filters.categoryId !== undefined) {
+        console.log(`Filtering by categoryId: ${filters.categoryId}`);
         conditions.push(eq(products.categoryId, filters.categoryId));
       }
       
       if (filters.featured !== undefined) {
+        console.log(`Filtering by featured: ${filters.featured}`);
         conditions.push(eq(products.featured, filters.featured));
       }
     }
@@ -111,14 +122,18 @@ export class DatabaseStorage implements IStorage {
     }
     
     const results = await query;
+    console.log(`Results after SQL filtering: ${results.length}`);
     
     // Filter by doctorId if needed
     // Since doctorIds is a JSON field, we need to filter in memory
     if (filters?.doctorId !== undefined) {
-      return results.filter(product => {
+      console.log(`Filtering by doctorId: ${filters.doctorId}`);
+      const filteredResults = results.filter(product => {
         if (!product.doctorIds) return false;
         return product.doctorIds.includes(filters.doctorId!.toString());
       });
+      console.log(`Results after doctorId filtering: ${filteredResults.length}`);
+      return filteredResults;
     }
     
     return results;

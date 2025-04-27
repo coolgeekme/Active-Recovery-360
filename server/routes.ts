@@ -46,11 +46,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter options
       const filters: any = {};
       
-      // Show public products by default if no visibility specified
+      // Only filter by visibility if it's explicitly specified
       if (visibility) {
         filters.visibility = visibility as string;
-      } else {
-        filters.visibility = "public";
       }
       
       if (categoryId) filters.categoryId = parseInt(categoryId as string);
