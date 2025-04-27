@@ -400,68 +400,107 @@ export class DatabaseStorage implements IStorage {
 
     // Sample products
     const productsData = [
+      // Joint & Muscle Category
       {
-        name: "Professional Recovery Bands",
-        description: "Set of 3 professional-grade resistance bands for targeted recovery exercises.",
-        price: 3995, // $39.95
+        name: "Professional Recovery Bands Set",
+        description: "Set of 5 professional-grade resistance bands with varying tensions for targeted muscle recovery and joint mobility exercises.",
+        price: 3995,
         visibility: "public",
         categoryId: createdCategories[0].id,
         stockQuantity: 50,
         featured: true,
-        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
         doctorIds: [doctor.id.toString()]
       },
       {
-        name: "Knee Support Brace",
-        description: "Medical-grade knee support brace for injury recovery and prevention.",
-        price: 5995, // $59.95
-        visibility: "public",
-        categoryId: createdCategories[2].id,
-        stockQuantity: 30,
-        featured: false,
-        imageUrl: "https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Premium Cold/Hot Therapy Pack",
-        description: "Reusable gel pack that can be heated or frozen for versatile therapy options.",
-        price: 2495, // $24.95
-        visibility: "public",
-        categoryId: createdCategories[3].id,
-        stockQuantity: 100,
-        featured: true,
-        imageUrl: "https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        name: "Advanced Recovery Roller",
-        description: "High-density foam roller with textured surface for deep tissue massage.",
-        price: 4295, // $42.95
+        name: "Joint Mobility Kit",
+        description: "Complete kit for joint mobility including resistance tools and guided exercise program.",
+        price: 7995,
         visibility: "member",
+        categoryId: createdCategories[0].id,
+        stockQuantity: 30,
+        featured: true,
+        imageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a"
+      },
+      
+      // Spine & Back Category
+      {
+        name: "Premium Posture Corrector",
+        description: "Medical-grade posture correction system with smart sensor technology.",
+        price: 12995,
+        visibility: "public",
         categoryId: createdCategories[1].id,
         stockQuantity: 40,
         featured: true,
-        imageUrl: "https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b"
       },
       {
-        name: "Professional Ultrasound Device",
-        description: "Portable ultrasound therapy device for professional-grade recovery at home.",
-        price: 19995, // $199.95
+        name: "Therapeutic Back Support System",
+        description: "Professional-grade back support system with heat therapy integration.",
+        price: 18995,
         visibility: "doctor",
-        categoryId: createdCategories[0].id,
+        categoryId: createdCategories[1].id,
         stockQuantity: 15,
         featured: false,
-        imageUrl: "https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b",
         doctorIds: [doctor.id.toString()]
       },
+      
+      // Compression Therapy Category
       {
-        name: "Recovery Nutrition Bundle",
-        description: "Complete set of recovery-focused supplements and nutrition guides.",
-        price: 8995, // $89.95
-        visibility: "member",
-        categoryId: createdCategories[0].id,
-        stockQuantity: 25,
-        featured: false,
-        imageUrl: "https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        name: "Advanced Compression Sleeves",
+        description: "Set of compression sleeves for arms and legs with graduated pressure technology.",
+        price: 4995,
+        visibility: "public",
+        categoryId: createdCategories[2].id,
+        stockQuantity: 60,
+        featured: true,
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"
       },
+      {
+        name: "Professional Compression System",
+        description: "Full-body compression therapy system for enhanced recovery and circulation.",
+        price: 29995,
+        visibility: "doctor",
+        categoryId: createdCategories[2].id,
+        stockQuantity: 10,
+        featured: false,
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
+        doctorIds: [doctor.id.toString()]
+      },
+      
+      // Heat & Cold Therapy Category
+      {
+        name: "Digital Heat Therapy Wrap",
+        description: "Smart heat therapy wrap with digital temperature control and timer.",
+        price: 8995,
+        visibility: "public",
+        categoryId: createdCategories[3].id,
+        stockQuantity: 45,
+        featured: true,
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b"
+      },
+      {
+        name: "Professional Cold Therapy Unit",
+        description: "Medical-grade cold therapy system with continuous flow technology.",
+        price: 24995,
+        visibility: "member",
+        categoryId: createdCategories[3].id,
+        stockQuantity: 20,
+        featured: true,
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b"
+      },
+      {
+        name: "Contrast Therapy System",
+        description: "Advanced system combining both heat and cold therapy with digital controls.",
+        price: 34995,
+        visibility: "doctor",
+        categoryId: createdCategories[3].id,
+        stockQuantity: 15,
+        featured: false,
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b",
+        doctorIds: [doctor.id.toString()]
+      }
     ];
 
     for (const productData of productsData) {
