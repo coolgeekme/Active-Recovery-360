@@ -119,12 +119,19 @@
     font-weight: 500;
   }
 
-  button.bg-primary, .btn-primary {
-    color: white;
+  button.bg-primary, .btn-primary, 
+  .bg-primary[class*="button"], 
+  [class*="bg-primary"] {
+    background-color: white !important;
+    color: hsl(var(--primary)) !important;
+    border: 1px solid hsl(var(--primary));
   }
 
-  button.bg-primary:hover, .btn-primary:hover {
-    opacity: 0.9;
+  button.bg-primary:hover, .btn-primary:hover,
+  .bg-primary[class*="button"]:hover,
+  [class*="bg-primary"]:hover {
+    background-color: hsl(var(--primary)) !important;
+    color: white !important;
   }
 
   button.bg-secondary, .btn-secondary {
