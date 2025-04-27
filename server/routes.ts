@@ -46,7 +46,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter options
       const filters: any = {};
       
-      if (visibility) filters.visibility = visibility as string;
+      // Show public products by default if no visibility specified
+      if (visibility) {
+        filters.visibility = visibility as string;
+      } else {
+        filters.visibility = "public";
+      }
+      
       if (categoryId) filters.categoryId = parseInt(categoryId as string);
       if (featured) filters.featured = featured === 'true';
       if (doctorId) filters.doctorId = parseInt(doctorId as string);
