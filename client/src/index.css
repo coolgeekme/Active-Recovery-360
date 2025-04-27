@@ -78,8 +78,12 @@
   .bg-primary, .bg-primary-foreground, 
   [class*="bg-primary-"], [class*="bg-blue"],
   button[class*="bg-primary"], [class*="bg-blue"],
-  .btn-primary, .blue-bg {
-    color: white;
+  .btn-primary, .blue-bg,
+  [style*="background-color: blue"],
+  [style*="background: blue"],
+  [style*="background-color: #"],
+  [class*="bg-blue"] * {
+    color: white !important;
   }
   
   /* Navigation links - ensure good contrast */
