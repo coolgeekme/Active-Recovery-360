@@ -73,7 +73,7 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Montserrat', sans-serif;
   }
-  
+
   /* Ensure text on blue backgrounds is always white for better contrast */
   .bg-primary, .bg-primary-foreground, 
   [class*="bg-primary-"], [class*="bg-blue"],
@@ -82,62 +82,80 @@
   [style*="background-color: blue"],
   [style*="background: blue"],
   [style*="background-color: #"],
-  [class*="bg-blue"] * {
+  [class*="bg-blue"] *,
+  [class*="bg-primary"] *,
+  .bg-primary p,
+  .bg-primary h1,
+  .bg-primary h2,
+  .bg-primary h3,
+  .bg-primary h4,
+  .bg-primary h5,
+  .bg-primary h6,
+  .bg-primary span,
+  .bg-primary div {
     color: white !important;
   }
-  
+
+  /* Override specific text colors on primary backgrounds */
+  .bg-primary .text-secondary,
+  .bg-primary .text-muted-foreground,
+  .bg-primary [class*="text-"] {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+
   /* Navigation links - ensure good contrast */
   nav a, .nav-link, header a {
     font-weight: 500;
   }
-  
+
   nav a:hover, .nav-link:hover, header a:hover {
     color: white;
     background-color: hsl(var(--primary));
   }
-  
+
   /* Button enhancements for better contrast */
   button, .btn {
     font-weight: 500;
   }
-  
+
   button.bg-primary, .btn-primary {
     color: white;
   }
-  
+
   button.bg-primary:hover, .btn-primary:hover {
     opacity: 0.9;
   }
-  
+
   button.bg-secondary, .btn-secondary {
     color: white;
   }
-  
+
   button.bg-secondary:hover, .btn-secondary:hover {
     opacity: 0.9;
   }
-  
+
   /* Text on color backgrounds */
   .text-on-primary, .text-on-blue {
     color: white;
     font-weight: 500;
   }
-  
+
   .text-on-secondary {
     color: white;
     font-weight: 500;
   }
-  
+
   /* Hero sections and callouts */
   .hero, .callout {
     color: white;
   }
-  
+
   /* Cards with colored backgrounds */
   .card.bg-primary, .card.bg-secondary {
     color: white;
   }
-  
+
   /* Enhanced badge contrast */
   .badge.bg-primary, .badge-primary {
     background-color: hsl(var(--primary));
