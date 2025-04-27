@@ -19,17 +19,18 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { toast } = useToast();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // Determine if the user can view the product based on visibility
-  const canView = () => {
-    if (product.visibility === "public") return true;
-    if (product.visibility === "member" && user?.isMember) return true;
-    if (product.visibility === "doctor" && user?.isDoctor) return true;
-    return false;
-  };
+  // All products are viewable by all users now
+  const canView = () => true;
 
   // Determine if the user can purchase the product
+  // Only members can purchase products, with additional restrictions for doctor products
   const canPurchase = () => {
-    return user?.isMember && canView();
+    if (!user?.isMember) return false;
+    
+    // Doctor products can only be purchased by doctors
+    if (product.visibility === "doctor" && !user.isDoctor) return false;
+    
+    return true;
   };
 
   const formatPrice = (price: number) => {

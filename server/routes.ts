@@ -55,15 +55,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (featured) filters.featured = featured === 'true';
       if (doctorId) filters.doctorId = parseInt(doctorId as string);
       
-      // Check membership for visibility
+      // Note: We're allowing public users to view all products
+      // They just can't purchase member or doctor products
+      // This is intentionally commented out now
+      /* 
       if (filters.visibility === "member" && (!req.isAuthenticated() || !req.user.isMember)) {
         return res.status(403).json({ message: "Membership required to view these products" });
       }
       
-      // Check doctor visibility
       if (filters.visibility === "doctor" && (!req.isAuthenticated() || !req.user.isDoctor)) {
         return res.status(403).json({ message: "Doctor access required to view these products" });
       }
+      */
       
       const products = await storage.getProducts(filters);
       res.json(products);
@@ -81,15 +84,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Product not found" });
       }
       
-      // Check membership for visibility
+      // Note: We're allowing public users to view all product details
+      // They just can't purchase member or doctor products
+      // This is intentionally commented out now
+      /*
       if (product.visibility === "member" && (!req.isAuthenticated() || !req.user.isMember)) {
         return res.status(403).json({ message: "Membership required to view this product" });
       }
       
-      // Check doctor visibility
       if (product.visibility === "doctor" && (!req.isAuthenticated() || !req.user.isDoctor)) {
         return res.status(403).json({ message: "Doctor access required to view this product" });
       }
+      */
       
       res.json(product);
     } catch (error) {

@@ -35,18 +35,18 @@ export default function ProductPage() {
     queryKey: [`/api/products/${productId}`],
   });
 
-  // Determine if the user can view the product based on visibility
-  const canView = () => {
-    if (!product) return false;
-    if (product.visibility === "public") return true;
-    if (product.visibility === "member" && user?.isMember) return true;
-    if (product.visibility === "doctor" && user?.isDoctor) return true;
-    return false;
-  };
+  // All products are viewable by all users now
+  const canView = () => !!product;
 
   // Determine if the user can purchase the product
+  // Only members can purchase products, with additional restrictions for doctor products
   const canPurchase = () => {
-    return user?.isMember && canView();
+    if (!product || !user?.isMember) return false;
+    
+    // Doctor products can only be purchased by doctors
+    if (product.visibility === "doctor" && !user.isDoctor) return false;
+    
+    return true;
   };
 
   const formatPrice = (price: number) => {
@@ -124,43 +124,14 @@ export default function ProductPage() {
     );
   }
 
+  // Since we've updated the logic to allow all users to view all products,
+  // this block should never be reached, but keeping it for safety
   if (!canView()) {
     return (
       <div className="container mx-auto py-20 px-4 text-center">
-        <div className="bg-primary bg-opacity-5 rounded-lg p-8 max-w-2xl mx-auto">
-          <Lock className="h-12 w-12 text-primary mx-auto mb-4" />
-          <h2 className="text-2xl font-montserrat font-bold text-primary mb-4">
-            {product.visibility === "member" 
-              ? "Member Access Required" 
-              : "Healthcare Professional Access Required"}
-          </h2>
-          <p className="text-secondary mb-6">
-            {product.visibility === "member"
-              ? "This product is exclusively available to Exercise Recovery Alliance members."
-              : "This product is exclusively available to healthcare professionals."}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {product.visibility === "member" ? (
-              <>
-                <Button asChild>
-                  <a href="/membership">Become a Member</a>
-                </Button>
-                <Button asChild variant="outline">
-                  <a href="/auth">Sign In</a>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button asChild>
-                  <a href="/auth?tab=register">Register as a Healthcare Professional</a>
-                </Button>
-                <Button asChild variant="outline">
-                  <a href="/auth">Sign In</a>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <h2 className="text-2xl font-montserrat font-bold text-primary mb-4">Product Not Found</h2>
+        <p className="text-secondary mb-6">The product you're looking for doesn't exist or may have been removed.</p>
+        <a href="/shop" className="text-primary hover:underline">Return to Shop</a>
       </div>
     );
   }
