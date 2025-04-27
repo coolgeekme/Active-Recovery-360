@@ -404,7 +404,7 @@ export class DatabaseStorage implements IStorage {
       {
         name: "Professional Recovery Bands Set",
         description: "Set of 5 professional-grade resistance bands with varying tensions for targeted muscle recovery and joint mobility exercises.",
-        price: 3995,
+        price: 3995, // $39.95
         visibility: "public",
         categoryId: createdCategories[0].id,
         stockQuantity: 50,
