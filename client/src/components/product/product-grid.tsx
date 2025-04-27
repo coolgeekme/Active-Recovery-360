@@ -30,7 +30,7 @@ export default function ProductGrid({
   showFilters = false
 }: ProductGridProps) {
   const { user } = useAuth();
-  const [visibility, setVisibility] = useState<string | undefined>(undefined);
+  const [visibility, setVisibility] = useState<string | undefined>("all");
 
   // Build query parameters
   const buildQueryParams = () => {
@@ -51,7 +51,7 @@ export default function ProductGrid({
 
   // Filter visibility options based on user role
   const getVisibilityOptions = () => {
-    const options = [{ value: "", label: "All Products" }];
+    const options = [{ value: "all", label: "All Products" }];
     
     options.push({ value: "public", label: "Public Products" });
     
@@ -98,8 +98,11 @@ export default function ProductGrid({
           {showFilters && (
             <div className="flex items-center space-x-4">
               <Select
-                value={visibility || ""}
-                onValueChange={(value) => setVisibility(value || undefined)}
+                value={visibility || "all"}
+                onValueChange={(value) => {
+                  // Set visibility to undefined when "all" is selected to not filter in API
+                  setVisibility(value === "all" ? undefined : value);
+                }}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by visibility" />
