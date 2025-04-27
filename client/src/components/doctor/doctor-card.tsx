@@ -15,7 +15,7 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
   };
 
   return (
-    <Card className="bg-primary bg-opacity-5 rounded-lg overflow-hidden">
+    <Card className="bg-primary rounded-lg overflow-hidden text-white">
       <div className="p-6">
         <div className="flex items-center mb-4">
           <div className="w-16 h-16 rounded-full overflow-hidden mr-4">
@@ -26,20 +26,20 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
             />
           </div>
           <div>
-            <h3 className="font-montserrat font-bold text-primary text-xl">
+            <h3 className="font-montserrat font-bold text-white text-xl">
               {doctor.doctorTitle ? doctor.doctorTitle : ''} {doctor.fullName}
             </h3>
-            <p className="text-secondary text-sm">{doctor.doctorSpecialty}</p>
+            <p className="text-white/80 text-sm">{doctor.doctorSpecialty}</p>
           </div>
         </div>
         
-        <p className="text-secondary mb-4">
+        <p className="text-white/80 mb-4">
           {doctor.doctorBio || "Specializing in recovery and rehabilitation techniques."}
         </p>
         
         <div className="flex flex-wrap gap-2 mb-4">
           {getSpecialtyTags().map((tag, index) => (
-            <span key={index} className="bg-primary bg-opacity-10 text-primary text-xs px-2 py-1 rounded">
+            <span key={index} className="bg-white/20 text-white text-xs px-2 py-1 rounded">
               {tag}
             </span>
           ))}
