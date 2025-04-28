@@ -86,7 +86,16 @@ export default function PopupDialog() {
     <>
       {/* Full-screen popup */}
       {!isInitialLoad && (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog 
+          open={isOpen} 
+          onOpenChange={(open) => {
+            setIsOpen(open);
+            // If dialog is being closed, also handle the minimization and cookie setting
+            if (!open) {
+              handleClose();
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-[500px] p-6 animate-in fade-in-0 zoom-in-95 data-[state=open]:animate-in data-[state=closed]:animate-out">
             <button 
               onClick={handleClose}
