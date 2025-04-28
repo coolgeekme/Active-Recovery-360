@@ -60,20 +60,7 @@ export default function MembershipPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start mb-20">
         <div>
           <div className="bg-primary bg-opacity-5 rounded-lg p-6 mb-8">
-            <span 
-              className="blue-offer-text" 
-              style={{
-                display: 'inline-block',
-                backgroundColor: 'white',
-                color: '#2563eb',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '0.25rem',
-                fontSize: '0.875rem',
-                fontFamily: 'Montserrat, sans-serif',
-                fontWeight: '600',
-                marginBottom: '0.75rem'
-              }}
-            >
+            <span className="blue-offer-text inline-block bg-white px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3">
               LIMITED TIME OFFER
             </span>
             <h2 className="text-2xl font-montserrat font-bold text-primary mb-3">
