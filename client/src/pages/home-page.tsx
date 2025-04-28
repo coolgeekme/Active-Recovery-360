@@ -219,10 +219,10 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild variant="secondary" className="bg-white text-primary font-montserrat font-semibold">
+              <Button asChild variant="secondary" className="font-montserrat font-semibold">
                 <Link href="/membership">Join Now</Link>
               </Button>
-              <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-primary font-montserrat font-semibold">
+              <Button asChild variant="outline" className="border-white hover:text-primary font-montserrat font-semibold">
                 <Link href="/about">Learn More</Link>
               </Button>
             </div>

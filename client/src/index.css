@@ -146,19 +146,34 @@ body::before {
     font-weight: 500;
   }
 
+  button, .btn, button.bg-white, .btn-white {
+    background-color: #4B5563 !important; /* gray-600 */
+    color: white !important;
+  }
+
+  button:hover, .btn:hover {
+    background-color: hsl(var(--primary)) !important;
+    color: white !important;
+    opacity: 0.9;
+  }
+
   button.bg-primary, .btn-primary {
-    color: white;
+    background-color: #4B5563 !important; /* gray-600 */
+    color: white !important;
   }
 
   button.bg-primary:hover, .btn-primary:hover {
+    background-color: hsl(var(--primary)) !important;
     opacity: 0.9;
   }
 
   button.bg-secondary, .btn-secondary {
-    color: white;
+    background-color: #4B5563 !important; /* gray-600 */
+    color: white !important;
   }
 
   button.bg-secondary:hover, .btn-secondary:hover {
+    background-color: hsl(var(--primary)) !important;
     opacity: 0.9;
   }
 
