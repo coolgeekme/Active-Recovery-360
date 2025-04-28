@@ -162,6 +162,11 @@ body::before {
     color: white;
     font-weight: 500;
   }
+  
+  /* Specific override for LIMITED TIME OFFER text */
+  .limited-time-offer {
+    color: hsl(var(--primary)) !important;
+  }
 
   .text-on-secondary {
     color: white;

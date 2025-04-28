@@ -60,7 +60,7 @@ export default function MembershipPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start mb-20">
         <div>
           <div className="bg-primary bg-opacity-5 rounded-lg p-6 mb-8">
-            <div className="inline-block bg-white text-primary px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3">
+            <div className="inline-block bg-white text-primary limited-time-offer px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3">
               LIMITED TIME OFFER
             </div>
             <h2 className="text-2xl font-montserrat font-bold text-primary mb-3">
