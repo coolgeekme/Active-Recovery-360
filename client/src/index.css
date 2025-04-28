@@ -24,8 +24,12 @@ body::before {
   user-select: none;
 }
 
-input {
-  color: hsl(var(--primary));
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="password"],
+input:not([type]) {
+  color: hsl(var(--primary)) !important;
 }
 
 :root {
