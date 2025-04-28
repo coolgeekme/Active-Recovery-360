@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Cookie utility functions
@@ -27,6 +27,7 @@ export default function PopupDialog() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const calendlyUrl = 'https://calendly.com/reggiealcos';
+  const fastTrackUrl = 'https://fasttrackbuilds.coolgeek.me';
 
   useEffect(() => {
     // Check if we should show popup based on cookie
@@ -76,6 +77,11 @@ export default function PopupDialog() {
     setIsOpen(true);
   };
 
+  const handleFastTrackVisit = () => {
+    // Open FastTrack builds site in a new tab
+    window.open(fastTrackUrl, '_blank');
+  };
+
   return (
     <>
       {/* Full-screen popup */}
@@ -97,7 +103,18 @@ export default function PopupDialog() {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+            <div className="mt-4">
+              <a 
+                href={fastTrackUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary flex items-center hover:underline mb-5"
+              >
+                Visit FastTrack Builds <ExternalLink className="h-4 w-4 ml-1" />
+              </a>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <Button 
                 className="w-full" 
                 onClick={handleScheduleCall}
@@ -128,6 +145,16 @@ export default function PopupDialog() {
         >
           <div className="flex flex-col">
             <h3 className="font-bold text-lg mb-2">Want to claim this site?</h3>
+            
+            <a 
+              href={fastTrackUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary flex items-center hover:underline mb-3 text-sm"
+            >
+              Visit FastTrack Builds <ExternalLink className="h-3 w-3 ml-1" />
+            </a>
+            
             <div className="flex flex-col gap-2 mt-1">
               <Button 
                 size="sm" 
