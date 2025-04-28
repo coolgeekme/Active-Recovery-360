@@ -72,7 +72,7 @@ export default function HomePage() {
             </div>
             <div className="md:w-1/2">
               <img 
-                src="https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                src="https://images.unsplash.com/photo-1584516150909-4ed9df642a09?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
                 alt="Professional recovery equipment" 
                 className="rounded-lg shadow-lg w-full h-auto object-cover" 
               />
