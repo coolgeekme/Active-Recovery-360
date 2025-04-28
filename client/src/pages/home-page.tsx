@@ -94,9 +94,22 @@ export default function HomePage() {
           <div className="bg-primary rounded-lg p-6 md:p-8 mb-12">
             <div className="flex flex-col md:flex-row items-center">
               <div className="md:w-2/3 mb-6 md:mb-0 md:pr-8">
-                <div className="inline-block bg-white text-primary limited-time-offer px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3">
+                <span 
+                  className="blue-offer-text" 
+                  style={{
+                    display: 'inline-block',
+                    backgroundColor: 'white',
+                    color: '#2563eb',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '0.25rem',
+                    fontSize: '0.875rem',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontWeight: '600',
+                    marginBottom: '0.75rem'
+                  }}
+                >
                   LIMITED TIME OFFER
-                </div>
+                </span>
                 <h3 className="text-2xl font-montserrat font-bold text-white mb-3">
                   Receive a FREE Recovery Kit ($35 value)
                 </h3>

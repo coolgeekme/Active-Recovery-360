@@ -163,10 +163,7 @@ body::before {
     font-weight: 500;
   }
   
-  /* Specific override for LIMITED TIME OFFER text */
-  .limited-time-offer {
-    color: hsl(var(--primary)) !important;
-  }
+  /* This style is now handled directly in the components with inline styles */
 
   .text-on-secondary {
     color: white;
