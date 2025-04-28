@@ -1,0 +1,38 @@
+Please add a two-stage popup system to my application with the following specifications:
+
+1. On initial page load, display a full-screen overlay popup with the following features:
+   - Dark semi-transparent background covering the entire page
+   - Centered modal dialog with rounded corners and drop shadow
+   - Title text: "Like what you see?"
+   - Description text: "This new site could be yours! Let's talk about it. Schedule a 30 minute call today before the site expires."
+   - Two buttons: "Schedule a Call" (primary action button) and "No Thanks" (secondary button)
+   - A close (×) button in the top-right corner
+   - The popup should block scrolling of the underlying page content
+   - Animated entrance with fade and zoom effects
+
+2. When a user clicks "No Thanks" or the close button, the popup should:
+   - Not completely disappear
+   - Minimize to a small persistent banner in the bottom-right corner of the screen
+   - Save this preference in a cookie that expires in one year
+
+3. The minimized banner should have:
+   - A small footprint in the bottom-right corner
+   - A title: "Want to claim this site?"
+   - Two buttons: "Schedule Call" and "Learn More"
+   - Clean, non-intrusive design with a subtle left border accent
+   - Animation when it appears
+
+4. Functionality:
+   - "Schedule a Call" button should link to a Calendly page (URL: https://calendly.com/[your-username])
+   - "Learn More" button in the minimized state should reopen the full-screen popup
+   - The popup state should persist between page refreshes using cookies
+   - If the cookie "cookieDialogShown" exists, the popup should start in the minimized state
+
+5. Technical requirements:
+   - Use React useState and useEffect hooks for state management
+   - Implement proper CSS animations for transitions
+   - Ensure the component is responsive and works on all screen sizes
+   - Prevent scroll on the body when the full-screen popup is visible
+   - Include proper z-indexing to ensure the popup appears above all other content
+
+Please provide the complete implementation code for both the React component and the CSS styling.
