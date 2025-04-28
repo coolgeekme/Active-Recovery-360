@@ -5,6 +5,7 @@ import { Testimonial, Category, Product } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
+import massageTherapyImg from "@/assets/massage-therapy.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -72,8 +73,8 @@ export default function HomePage() {
             </div>
             <div className="md:w-1/2">
               <img 
-                src="https://images.unsplash.com/photo-1636873395667-e19e656dbe3d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
-                alt="Professional massage therapy equipment" 
+                src={massageTherapyImg} 
+                alt="Professional massage therapy treatment with percussion device" 
                 className="rounded-lg shadow-lg w-full h-auto object-cover" 
               />
             </div>
