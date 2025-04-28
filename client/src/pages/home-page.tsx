@@ -72,8 +72,8 @@ export default function HomePage() {
             </div>
             <div className="md:w-1/2">
               <img 
-                src="https://images.unsplash.com/photo-1662983685134-8ba8f265e171?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
-                alt="Professional massage therapy gun for muscle recovery" 
+                src="https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" 
+                alt="Professional recovery equipment" 
                 className="rounded-lg shadow-lg w-full h-auto object-cover" 
               />
             </div>
