@@ -95,7 +95,7 @@ export default function ProductManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(location === "/admin/products/new");
   const [filterVisibility, setFilterVisibility] = useState<string | undefined>(undefined);
   const [filterCategory, setFilterCategory] = useState<number | undefined>(undefined);
   const [filterFeatured, setFilterFeatured] = useState<boolean | undefined>(undefined);
@@ -173,6 +173,11 @@ export default function ProductManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       setIsAddDialogOpen(false);
       addProductForm.reset();
+      
+      // If we're on the /admin/products/new route, navigate back to products page
+      if (location === "/admin/products/new") {
+        navigate("/admin/products");
+      }
     },
     onError: (error) => {
       toast({
@@ -357,14 +362,14 @@ export default function ProductManagement() {
               <div className="space-y-2 flex-1">
                 <label className="text-sm font-medium">Visibility</label>
                 <Select
-                  value={filterVisibility || ""}
-                  onValueChange={(value) => setFilterVisibility(value || undefined)}
+                  value={filterVisibility || "all"}
+                  onValueChange={(value) => setFilterVisibility(value === "all" ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All visibilities" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All visibilities</SelectItem>
+                    <SelectItem value="all">All visibilities</SelectItem>
                     <SelectItem value="public">Public</SelectItem>
                     <SelectItem value="member">Members</SelectItem>
                     <SelectItem value="doctor">Doctors</SelectItem>
@@ -375,14 +380,14 @@ export default function ProductManagement() {
               <div className="space-y-2 flex-1">
                 <label className="text-sm font-medium">Category</label>
                 <Select
-                  value={filterCategory?.toString() || ""}
-                  onValueChange={(value) => setFilterCategory(value ? parseInt(value) : undefined)}
+                  value={filterCategory?.toString() || "all"}
+                  onValueChange={(value) => setFilterCategory(value === "all" ? undefined : parseInt(value))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All categories</SelectItem>
+                    <SelectItem value="all">All categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
@@ -405,7 +410,7 @@ export default function ProductManagement() {
                     <SelectValue placeholder="All products" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All products</SelectItem>
+                    <SelectItem value="all">All products</SelectItem>
                     <SelectItem value="true">Featured only</SelectItem>
                     <SelectItem value="false">Non-featured only</SelectItem>
                   </SelectContent>

@@ -56,6 +56,7 @@ function Router() {
           <ProtectedRoute path="/account/orders" component={OrdersPage} />
           <ProtectedRoute path="/admin" component={AdminPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/products" component={ProductManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/products/new" component={ProductManagement} requireAdmin={true} />
           
           {/* Fallback to 404 */}
           <Route component={NotFound} />
