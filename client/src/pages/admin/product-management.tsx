@@ -400,9 +400,9 @@ export default function ProductManagement() {
               <div className="space-y-2 flex-1">
                 <label className="text-sm font-medium">Featured</label>
                 <Select
-                  value={filterFeatured === undefined ? "" : filterFeatured.toString()}
+                  value={filterFeatured === undefined ? "all" : filterFeatured.toString()}
                   onValueChange={(value) => {
-                    if (value === "") setFilterFeatured(undefined);
+                    if (value === "all") setFilterFeatured(undefined);
                     else setFilterFeatured(value === "true");
                   }}
                 >
