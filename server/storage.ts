@@ -31,6 +31,7 @@ const MemoryStore = createMemoryStore(session);
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -55,6 +56,7 @@ export interface IStorage {
   getCategory(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, categoryData: Partial<Category>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
 
   // Order operations
   getOrders(userId?: number): Promise<Order[]>;

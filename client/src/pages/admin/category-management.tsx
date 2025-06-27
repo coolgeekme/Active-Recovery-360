@@ -88,6 +88,9 @@ export default function CategoryManagement() {
     mutationFn: async (data: CategoryFormData) => {
       return apiRequest("/api/categories", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
     },
@@ -113,6 +116,9 @@ export default function CategoryManagement() {
     mutationFn: async (data: CategoryFormData & { id: number }) => {
       return apiRequest(`/api/categories/${data.id}`, {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
     },

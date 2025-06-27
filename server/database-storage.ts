@@ -48,6 +48,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
@@ -236,6 +240,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(categories.id, id))
       .returning();
     return updatedCategory;
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    try {
+      await db.delete(categories).where(eq(categories.id, id));
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   // Order operations
