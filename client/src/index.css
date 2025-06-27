@@ -157,12 +157,26 @@ input:not([type]) {
   button, .btn, button.bg-white, .btn-white {
     background-color: #4B5563 !important; /* gray-600 */
     color: white !important;
+    border: 1px solid transparent !important;
   }
 
   button:hover, .btn:hover {
     background-color: hsl(var(--primary)) !important;
     color: white !important;
     opacity: 0.9;
+  }
+
+  /* Special handling for buttons with blue backgrounds to ensure white text */
+  button.bg-primary, .btn-primary, button[class*="bg-blue"], .btn[class*="bg-blue"] {
+    background-color: hsl(var(--primary)) !important;
+    color: white !important;
+    border: 1px solid hsl(var(--primary)) !important;
+  }
+
+  button.bg-primary:hover, .btn-primary:hover, button[class*="bg-blue"]:hover, .btn[class*="bg-blue"]:hover {
+    background-color: hsl(var(--primary)) !important;
+    color: white !important;
+    opacity: 0.8;
   }
 
   button.bg-primary, .btn-primary {
