@@ -125,7 +125,7 @@ input:not([type]) {
   .bg-primary div:not(.blue-offer-text) {
     color: white !important;
   }
-
+  
   /* Special blue text for offer labels */
   .blue-offer-text {
     color: #2563eb !important;
@@ -204,7 +204,7 @@ input:not([type]) {
     color: white;
     font-weight: 500;
   }
-
+  
   /* This style is now handled directly in the components with inline styles */
 
   .text-on-secondary {
