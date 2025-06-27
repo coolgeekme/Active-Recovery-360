@@ -26,6 +26,10 @@ import AboutPage from "@/pages/about-page";
 import CategoryPage from "@/pages/category-page";
 import AdminPage from "@/pages/admin/admin-page";
 import ProductManagement from "@/pages/admin/product-management";
+import OrderManagement from "@/pages/admin/order-management";
+import CategoryManagement from "@/pages/admin/category-management";
+import UserManagement from "@/pages/admin/user-management";
+import AdminSettings from "@/pages/admin/admin-settings";
 
 // Components
 import Header from "@/components/layout/header";
@@ -59,6 +63,10 @@ function Router() {
           <ProtectedRoute path="/admin" component={AdminPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/products" component={ProductManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/products/new" component={ProductManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/orders" component={OrderManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/categories" component={CategoryManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/users" component={UserManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/settings" component={AdminSettings} requireAdmin={true} />
           
           {/* Fallback to 404 */}
           <Route component={NotFound} />
