@@ -3,12 +3,18 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
+import Stripe from "stripe";
 import { 
   insertProductSchema, 
   insertCategorySchema, 
   insertCartItemSchema,
   insertOrderSchema
 } from "@shared/schema";
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-10-16",
+});
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: any, res: any, next: any) => {
@@ -37,6 +43,53 @@ const isMember = (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+
+  // Stripe payment routes for membership
+  app.post("/api/create-payment-intent", async (req, res) => {
+    try {
+      const { amount } = req.body;
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          type: "membership",
+        },
+      });
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Confirm membership payment and update user
+  app.post("/api/confirm-membership-payment", isAuthenticated, async (req, res) => {
+    try {
+      const { paymentIntentId } = req.body;
+      
+      // Retrieve the payment intent from Stripe
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      if (paymentIntent.status === "succeeded" && paymentIntent.metadata.type === "membership") {
+        // Update user to be a member
+        const updatedUser = await storage.updateUser(req.user!.id, { isMember: true });
+        
+        if (updatedUser) {
+          const { password, ...userWithoutPassword } = updatedUser;
+          res.json(userWithoutPassword);
+        } else {
+          res.status(404).json({ message: "User not found" });
+        }
+      } else {
+        res.status(400).json({ message: "Payment not completed" });
+      }
+    } catch (error: any) {
+      console.error("Error confirming membership payment:", error);
+      res.status(500).json({ message: "Error confirming payment: " + error.message });
+    }
+  });
 
   // Product routes
   app.get("/api/products", async (req, res) => {

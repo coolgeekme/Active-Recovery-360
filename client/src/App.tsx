@@ -15,6 +15,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import ShopPage from "@/pages/shop-page";
 import MembershipPage from "@/pages/membership-page";
+import MembershipCheckoutPage from "@/pages/membership-checkout-page";
 import ProductPage from "@/pages/product-page";
 import DoctorStorefrontPage from "@/pages/doctor-storefront-page";
 import DoctorsPage from "@/pages/doctors-page";
@@ -43,6 +44,7 @@ function Router() {
           <Route path="/auth" component={AuthPage} />
           <Route path="/shop" component={ShopPage} />
           <Route path="/membership" component={MembershipPage} />
+          <Route path="/membership/checkout" component={MembershipCheckoutPage} />
           <Route path="/product/:id" component={ProductPage} />
           <Route path="/doctors" component={DoctorsPage} />
           <Route path="/doctors/:id" component={DoctorStorefrontPage} />
