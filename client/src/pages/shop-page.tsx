@@ -15,6 +15,7 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -89,12 +90,11 @@ export default function ShopPage() {
                 </li>
               </ul>
               <Separator className="my-4" />
-              <a 
-                href="/membership-checkout" 
-                className="w-full inline-block text-center bg-primary text-white py-2 rounded font-medium hover:bg-primary/90 transition"
-              >
-                Become a Member
-              </a>
+              <Button asChild className="w-full">
+                <a href="/membership-checkout">
+                  Become a Member
+                </a>
+              </Button>
             </CardContent>
           </Card>
 

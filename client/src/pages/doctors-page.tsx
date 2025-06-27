@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import DoctorCard from "@/components/doctor/doctor-card";
 
 export default function DoctorsPage() {
@@ -51,12 +52,11 @@ export default function DoctorsPage() {
         <p className="text-lg text-secondary mb-6 max-w-2xl mx-auto">
           Join the Exercise Recovery Alliance as a healthcare provider and create your own specialized storefront with curated product recommendations.
         </p>
-        <a 
-          href="/auth?tab=register" 
-          className="inline-block bg-primary text-white px-6 py-3 rounded font-montserrat font-semibold hover:bg-opacity-90 transition"
-        >
-          Register as a Healthcare Professional
-        </a>
+        <Button asChild size="lg" className="font-montserrat font-semibold">
+          <a href="/auth?tab=register">
+            Register as a Healthcare Professional
+          </a>
+        </Button>
       </div>
     </div>
   );
