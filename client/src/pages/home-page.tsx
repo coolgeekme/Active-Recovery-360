@@ -60,7 +60,7 @@ export default function HomePage() {
                 Specialized Recovery Products For Your Healing Journey
               </h1>
               <p className="text-lg text-white mb-8">
-                Join the Exercise Recovery Alliance for exclusive access to professional-grade recovery tools and resources trusted by healthcare professionals.
+                Join our alliance for exclusive access to professional-grade recovery tools and resources trusted by healthcare professionals.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Button asChild size="lg" className="font-montserrat font-semibold">
@@ -88,7 +88,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-montserrat font-bold text-primary mb-2">Exclusive Membership Benefits</h2>
             <p className="text-secondary max-w-xl mx-auto">
-              Join the Exercise Recovery Alliance for a one-time fee of $49 and unlock premium recovery products and resources.
+              Join our alliance for a one-time fee of $49 and unlock premium recovery products and resources.
             </p>
           </div>
 

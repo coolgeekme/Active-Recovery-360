@@ -61,7 +61,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">
-              About the Exercise Recovery Alliance
+              About Us
             </h1>
             <p className="text-xl text-secondary mb-8">
               We're dedicated to providing healthcare professionals and patients with professional-grade recovery products to support healing journeys.
@@ -80,7 +80,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-3xl font-montserrat font-bold text-primary mb-4">Our Mission</h2>
               <p className="text-secondary mb-6">
-                The Exercise Recovery Alliance was founded by healthcare professionals who recognized the need for a specialized platform that offers medical-grade recovery products directly to patients and practitioners.
+                We were founded by healthcare professionals who recognized the need for a specialized platform that offers medical-grade recovery products directly to patients and practitioners.
               </p>
               <p className="text-secondary mb-6">
                 Our mission is to bridge the gap between clinical rehabilitation and home recovery by providing access to the same high-quality tools used by professionals.
@@ -106,7 +106,7 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-montserrat font-bold text-primary mb-4">Our Values</h2>
             <p className="text-xl text-secondary max-w-3xl mx-auto">
-              The Exercise Recovery Alliance is built on a foundation of core values that guide everything we do.
+              We are built on a foundation of core values that guide everything we do.
             </p>
           </div>
 
@@ -178,7 +178,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl font-montserrat font-bold text-white mb-4">
-              Join the Exercise Recovery Alliance
+              Join Our Alliance
             </h2>
             <p className="text-xl text-white text-opacity-90 mb-8">
               Become a member today for just $49 and gain lifetime access to exclusive recovery products and resources.

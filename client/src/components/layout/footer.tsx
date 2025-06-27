@@ -13,10 +13,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center mb-4">
               <ERALogo className="h-10 w-auto mr-3" />
-              <div>
-                <div className="text-white font-montserrat font-bold text-base leading-none">EXERCISE RECOVERY</div>
-                <div className="text-gray-300 font-montserrat text-sm leading-none">ALLIANCE</div>
-              </div>
+              
             </Link>
             <p className="text-gray-300 text-sm mb-4">
               Professional-grade recovery products for healthcare providers and patients.
@@ -72,7 +69,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-600 mt-8 pt-8 text-center">
           <p className="text-gray-300 text-sm">
-            © 2024 Exercise Recovery Alliance. All rights reserved.
+            © 2024 ERA. All rights reserved.
           </p>
         </div>
       </div>

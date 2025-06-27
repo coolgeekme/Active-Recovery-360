@@ -51,9 +51,9 @@ export default function MembershipPage() {
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Exercise Recovery Alliance Membership</h1>
+        <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Alliance Membership</h1>
         <p className="text-xl text-secondary max-w-3xl mx-auto">
-          Join the Exercise Recovery Alliance for a one-time fee of $49 and unlock exclusive access to premium recovery products and resources.
+          Join our alliance for a one-time fee of $49 and unlock exclusive access to premium recovery products and resources.
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function MembershipPage() {
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8 text-center">
                 <h2 className="text-xl font-montserrat font-bold text-primary mb-4">Sign In to Purchase Membership</h2>
                 <p className="text-secondary mb-6">
-                  Please create an account or sign in to purchase your Exercise Recovery Alliance membership.
+                  Please create an account or sign in to purchase your alliance membership.
                 </p>
                 <div className="space-x-4">
                   <Button asChild>

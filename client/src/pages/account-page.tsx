@@ -217,7 +217,7 @@ export default function AccountPage() {
             <CardHeader>
               <CardTitle>Membership Status</CardTitle>
               <CardDescription>
-                Manage your Exercise Recovery Alliance membership
+                Manage your alliance membership
               </CardDescription>
             </CardHeader>
             <CardContent>
