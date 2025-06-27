@@ -152,19 +152,19 @@ function CheckoutForm({
           <div className="mb-6 p-4 bg-primary/5 rounded-lg">
             <div className="flex justify-between items-center">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">AR360 Membership</h3>
-                <p className="text-sm text-muted-foreground mt-1">Lifetime access to exclusive products</p>
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">AR360 Membership</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Lifetime access to exclusive products</p>
               </div>
               <div className="text-right">
                 {appliedDiscount && (
-                  <div className="text-sm text-muted-foreground line-through">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 line-through">
                     ${originalAmount.toFixed(2)}
                   </div>
                 )}
                 <div className="text-2xl font-bold text-primary">
                   ${finalAmount.toFixed(2)}
                 </div>
-                <div className="text-sm text-muted-foreground">one-time</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">one-time</div>
               </div>
             </div>
           </div>
