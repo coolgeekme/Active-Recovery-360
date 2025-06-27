@@ -37,14 +37,29 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [location, navigate] = useLocation();
   
-  // Get tab from URL query parameter
+  // Get tab from URL query parameter and handle OAuth success
   useEffect(() => {
     const params = new URLSearchParams(location.split("?")[1]);
     const tab = params.get("tab");
+    const oauth = params.get("oauth");
+    
     if (tab === "register") {
       setActiveTab("register");
     }
-  }, [location]);
+    
+    // Handle OAuth success - ask if user wants membership
+    if (oauth === "success" && user && !user.isMember) {
+      // Show a toast asking if they want to purchase membership
+      setTimeout(() => {
+        const wantsMembership = window.confirm(
+          "Welcome to Active Recovery 360! Would you like to upgrade to a membership for $49 to access exclusive recovery products?"
+        );
+        if (wantsMembership) {
+          navigate("/membership/checkout");
+        }
+      }, 1000);
+    }
+  }, [location, user, navigate]);
 
   // If user is already logged in, redirect to home page
   useEffect(() => {
@@ -85,8 +100,19 @@ export default function AuthPage() {
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
     // Remove confirmPassword as it's not in the schema
-    const { confirmPassword, ...userData } = data;
-    registerMutation.mutate(userData);
+    const { confirmPassword, isMember, ...userData } = data;
+    
+    // If user wants membership, register without membership first, then redirect to checkout
+    if (isMember) {
+      registerMutation.mutate(userData, {
+        onSuccess: () => {
+          // After successful registration, redirect to membership checkout
+          navigate("/membership/checkout");
+        }
+      });
+    } else {
+      registerMutation.mutate(userData);
+    }
   };
 
   const isDoctor = registerForm.watch("isDoctor");

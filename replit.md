@@ -126,6 +126,9 @@ The system uses a comprehensive schema supporting:
 
 - June 27, 2025. Initial setup
 - June 27, 2025. Updated branding from "Exercise Recovery Alliance" to "Active Recovery 360" throughout the application
+- June 27, 2025. Integrated Google OAuth authentication with Passport.js strategy for seamless user registration and login
+- June 27, 2025. Added Stripe payment integration for membership purchases during registration and post-OAuth signup
+- June 27, 2025. Created membership checkout flow allowing users to upgrade to member status with $49 one-time payment
 
 ## User Preferences
 
