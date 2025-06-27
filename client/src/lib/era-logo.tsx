@@ -1,5 +1,5 @@
 
-import logoImage from "@/assets/era-logo.jpg";
+import logoImage from "@/assets/Logo_6_v2_Final.png";
 
 interface AR360LogoProps {
   className?: string;
