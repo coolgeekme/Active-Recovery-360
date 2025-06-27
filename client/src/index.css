@@ -154,6 +154,11 @@ input:not([type]) {
     font-weight: 500;
   }
 
+  /* Ensure Button component styles are not overridden */
+  .btn, button {
+    text-decoration: none !important;
+  }
+
   button, .btn, button.bg-white, .btn-white {
     background-color: #4B5563 !important; /* gray-600 */
     color: white !important;
