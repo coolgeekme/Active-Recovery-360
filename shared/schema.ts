@@ -129,6 +129,30 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
   featured: true,
 });
 
+// Discount Codes
+export const discountCodes = pgTable("discount_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  description: text("description").notNull(),
+  discountType: text("discount_type").notNull(), // "percentage" or "fixed"
+  discountValue: integer("discount_value").notNull(), // percentage (1-100) or cents for fixed
+  isActive: boolean("is_active").default(true).notNull(),
+  usageLimit: integer("usage_limit"), // null for unlimited
+  usedCount: integer("used_count").default(0).notNull(),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDiscountCodeSchema = createInsertSchema(discountCodes).pick({
+  code: true,
+  description: true,
+  discountType: true,
+  discountValue: true,
+  isActive: true,
+  usageLimit: true,
+  expiresAt: true,
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
@@ -183,3 +207,6 @@ export type InsertCartItem = z.infer<typeof insertCartItemSchema>;
 
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+
+export type DiscountCode = typeof discountCodes.$inferSelect;
+export type InsertDiscountCode = z.infer<typeof insertDiscountCodeSchema>;

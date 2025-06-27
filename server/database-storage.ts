@@ -16,7 +16,10 @@ import {
   InsertCartItem,
   testimonials,
   Testimonial,
-  InsertTestimonial
+  InsertTestimonial,
+  discountCodes,
+  DiscountCode,
+  InsertDiscountCode
 } from "@shared/schema";
 import session from "express-session";
 import { eq, and, inArray, or, like, asc, desc } from 'drizzle-orm';
@@ -328,6 +331,53 @@ export class DatabaseStorage implements IStorage {
   async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
     const [testimonial] = await db.insert(testimonials).values(insertTestimonial).returning();
     return testimonial;
+  }
+
+  // Discount code operations
+  async getDiscountCodes(): Promise<DiscountCode[]> {
+    return db.select().from(discountCodes).orderBy(asc(discountCodes.createdAt));
+  }
+
+  async getDiscountCode(id: number): Promise<DiscountCode | undefined> {
+    const [discountCode] = await db.select().from(discountCodes).where(eq(discountCodes.id, id));
+    return discountCode;
+  }
+
+  async getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined> {
+    const [discountCode] = await db.select().from(discountCodes).where(eq(discountCodes.code, code.toUpperCase()));
+    return discountCode;
+  }
+
+  async createDiscountCode(insertDiscountCode: InsertDiscountCode): Promise<DiscountCode> {
+    const codeToInsert = {
+      ...insertDiscountCode,
+      code: insertDiscountCode.code.toUpperCase() // Ensure codes are uppercase
+    };
+    const [discountCode] = await db.insert(discountCodes).values(codeToInsert).returning();
+    return discountCode;
+  }
+
+  async updateDiscountCode(id: number, data: Partial<DiscountCode>): Promise<DiscountCode | undefined> {
+    const [updatedDiscountCode] = await db
+      .update(discountCodes)
+      .set(data)
+      .where(eq(discountCodes.id, id))
+      .returning();
+    return updatedDiscountCode;
+  }
+
+  async deleteDiscountCode(id: number): Promise<boolean> {
+    await db.delete(discountCodes).where(eq(discountCodes.id, id));
+    return true;
+  }
+
+  async incrementDiscountCodeUsage(id: number): Promise<DiscountCode | undefined> {
+    const [updatedDiscountCode] = await db
+      .update(discountCodes)
+      .set({ usedCount: db.sql`${discountCodes.usedCount} + 1` })
+      .where(eq(discountCodes.id, id))
+      .returning();
+    return updatedDiscountCode;
   }
 
   private async initializeData() {

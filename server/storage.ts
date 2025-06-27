@@ -16,7 +16,10 @@ import {
   InsertCartItem,
   testimonials,
   Testimonial,
-  InsertTestimonial
+  InsertTestimonial,
+  discountCodes,
+  DiscountCode,
+  InsertDiscountCode
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -70,6 +73,15 @@ export interface IStorage {
   // Testimonial operations
   getTestimonials(featured?: boolean): Promise<Testimonial[]>;
   createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
+
+  // Discount code operations
+  getDiscountCodes(): Promise<DiscountCode[]>;
+  getDiscountCode(id: number): Promise<DiscountCode | undefined>;
+  getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined>;
+  createDiscountCode(discountCode: InsertDiscountCode): Promise<DiscountCode>;
+  updateDiscountCode(id: number, data: Partial<DiscountCode>): Promise<DiscountCode | undefined>;
+  deleteDiscountCode(id: number): Promise<boolean>;
+  incrementDiscountCodeUsage(id: number): Promise<DiscountCode | undefined>;
 
   // Session store
   sessionStore: any; // Using any for now to avoid sessionStore type issues
