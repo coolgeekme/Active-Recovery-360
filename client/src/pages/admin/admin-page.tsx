@@ -213,6 +213,12 @@ export default function AdminPage() {
                     Manage Users
                   </Link>
                 </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/admin/discounts">
+                    <Tag className="h-4 w-4 mr-2" />
+                    Discount Codes
+                  </Link>
+                </Button>
                 <Separator className="my-2" />
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/settings">
