@@ -166,7 +166,8 @@ function CheckoutForm({
                 </div>
                 <div className="text-sm text-muted-foreground">one-time</div>
               </div>
-            </div></div>
+            </div>
+          </div>
             
             {/* Applied Discount Display */}
             {appliedDiscount && (
@@ -198,7 +199,6 @@ function CheckoutForm({
                 </div>
               </div>
             )}
-          </div>
 
           {/* Discount Code Section */}
           {!appliedDiscount && (
