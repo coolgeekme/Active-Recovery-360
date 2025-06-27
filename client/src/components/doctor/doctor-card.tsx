@@ -48,7 +48,7 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
         <Button 
           asChild
           variant="outline" 
-          className="block text-center border border-primary text-primary w-full px-4 py-2 rounded font-montserrat font-semibold hover:bg-primary hover:text-white transition"
+          className="block text-center border-2 border-white text-white w-full px-4 py-2 rounded font-montserrat font-semibold hover:bg-white hover:text-primary transition bg-transparent"
         >
           <Link href={`/doctors/${doctor.id}`}>
             Visit Storefront

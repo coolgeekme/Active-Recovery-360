@@ -104,7 +104,7 @@ export default function HomePage() {
                 <p className="text-white mb-6">
                   Sign up today and receive our exclusive starter recovery kit as a welcome gift. Includes compression bands, recovery guide, and more.
                 </p>
-                <Button asChild className="font-montserrat font-semibold">
+                <Button asChild className="font-montserrat font-semibold btn-secondary-enhanced">
                   <Link href="/membership">Join Now for $49</Link>
                 </Button>
               </div>

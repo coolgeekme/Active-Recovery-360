@@ -160,7 +160,7 @@ export default function MembershipPage() {
         <p className="text-lg text-secondary mb-6 max-w-3xl mx-auto">
           Our members love the exclusive products and benefits they receive with their Exercise Recovery Alliance membership.
         </p>
-        <Button asChild size="lg">
+        <Button asChild size="lg" className="btn-primary-enhanced">
           <Link href={user ? (user.isMember ? "/shop" : "#membership-form") : "/auth"}>
             {user ? (user.isMember ? "Browse Member Products" : "Join Now for $49") : "Sign In to Join"}
           </Link>
