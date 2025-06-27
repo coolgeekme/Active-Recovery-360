@@ -90,7 +90,7 @@ export default function ShopPage() {
               </ul>
               <Separator className="my-4" />
               <a 
-                href="/membership" 
+                href="/membership-checkout" 
                 className="w-full inline-block text-center bg-primary text-white py-2 rounded font-medium hover:bg-primary/90 transition"
               >
                 Become a Member

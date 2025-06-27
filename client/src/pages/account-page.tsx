@@ -98,7 +98,7 @@ export default function AccountPage() {
                       <p className="text-sm text-muted-foreground">Manage your account status and role</p>
                     </div>
                     <Button variant="outline" asChild>
-                      <a href="/membership">Manage Membership</a>
+                      <a href="/membership-checkout">Manage Membership</a>
                     </Button>
                   </div>
 
@@ -151,7 +151,7 @@ export default function AccountPage() {
                     
                     {!user.isMember && (
                       <Button variant="outline" className="w-full justify-start" asChild>
-                        <a href="/membership">
+                        <a href="/membership-checkout">
                           <Heart className="h-4 w-4 mr-2" />
                           Become a Member
                         </a>
@@ -266,7 +266,7 @@ export default function AccountPage() {
                     Join the Exercise Recovery Alliance for just $49 to unlock exclusive products and benefits
                   </p>
                   <Button asChild>
-                    <a href="/membership">Become a Member</a>
+                    <a href="/membership-checkout">Become a Member</a>
                   </Button>
                 </div>
               )}
