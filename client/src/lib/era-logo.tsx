@@ -1,17 +1,17 @@
 
 import logoImage from "@/assets/era-logo.jpg";
 
-interface ERALogoProps {
+interface AR360LogoProps {
   className?: string;
   width?: number;
   height?: number;
 }
 
-export function ERALogo({ className = "", width, height, ...props }: ERALogoProps) {
+export function AR360Logo({ className = "", width, height, ...props }: AR360LogoProps) {
   return (
     <img
       src={logoImage}
-      alt="Exercise Recovery Alliance Logo"
+      alt="Active Recovery 360 Logo"
       className={className}
       width={width}
       height={height}
@@ -19,3 +19,6 @@ export function ERALogo({ className = "", width, height, ...props }: ERALogoProp
     />
   );
 }
+
+// Keep the old name for backwards compatibility during transition
+export const ERALogo = AR360Logo;

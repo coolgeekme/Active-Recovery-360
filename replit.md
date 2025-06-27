@@ -1,8 +1,8 @@
-# Exercise Recovery Alliance (ERA) - System Architecture
+# Active Recovery 360 (AR360) - System Architecture
 
 ## Overview
 
-Exercise Recovery Alliance (ERA) is a full-stack e-commerce web application built for professional-grade recovery products. The system features a React frontend with Express.js backend, utilizing PostgreSQL with Drizzle ORM for data management. The application implements a multi-tier access system where products can be public, member-only, or doctor-exclusive, with specialized doctor storefronts.
+Active Recovery 360 (AR360) is a full-stack e-commerce web application built for professional-grade recovery products. The system features a React frontend with Express.js backend, utilizing PostgreSQL with Drizzle ORM for data management. The application implements a multi-tier access system where products can be public, member-only, or doctor-exclusive, with specialized doctor storefronts.
 
 ## System Architecture
 

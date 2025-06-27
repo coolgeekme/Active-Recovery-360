@@ -527,7 +527,7 @@ export class DatabaseStorage implements IStorage {
       {
         author: "Dr. Karen Miller",
         role: "Physical Therapist",
-        content: "The Exercise Recovery Alliance offers products that match what we use in our clinic. I recommend these to all my patients for continued care at home.",
+        content: "Active Recovery 360 offers products that match what we use in our clinic. I recommend these to all my patients for continued care at home.",
         rating: 5,
         featured: true
       },
@@ -541,7 +541,7 @@ export class DatabaseStorage implements IStorage {
       {
         author: "Sarah Thomson",
         role: "Yoga Instructor",
-        content: "I recommend ERA to all my yoga students. The quality of their products and the educational resources are exceptional.",
+        content: "I recommend Active Recovery 360 to all my yoga students. The quality of their products and the educational resources are exceptional.",
         rating: 4,
         featured: true
       },

@@ -214,7 +214,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-6 md:mb-0">
-              <h2 className="text-3xl font-montserrat font-bold text-white mb-2">Ready to Join the Alliance?</h2>
+              <h2 className="text-3xl font-montserrat font-bold text-white mb-2">Ready to Join Active Recovery 360?</h2>
               <p className="text-white text-opacity-90 max-w-xl">
                 Become a member today for just $49 and gain lifetime access to exclusive recovery products and resources.
               </p>

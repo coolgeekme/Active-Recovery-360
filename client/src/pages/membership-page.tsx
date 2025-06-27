@@ -51,7 +51,7 @@ export default function MembershipPage() {
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Alliance Membership</h1>
+        <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Active Recovery 360 Membership</h1>
         <p className="text-xl text-secondary max-w-3xl mx-auto">
           Join our alliance for a one-time fee of $49 and unlock exclusive access to premium recovery products and resources.
         </p>
