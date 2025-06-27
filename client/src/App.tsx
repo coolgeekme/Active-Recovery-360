@@ -45,6 +45,7 @@ function Router() {
           <Route path="/shop" component={ShopPage} />
           <Route path="/membership" component={MembershipPage} />
           <Route path="/membership/checkout" component={MembershipCheckoutPage} />
+          <Route path="/membership-checkout" component={MembershipCheckoutPage} />
           <Route path="/product/:id" component={ProductPage} />
           <Route path="/doctors" component={DoctorsPage} />
           <Route path="/doctors/:id" component={DoctorStorefrontPage} />
