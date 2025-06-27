@@ -1,5 +1,5 @@
 
-import logoImage from "@/assets/era-logo.jpeg";
+import logoImage from "@/assets/era-logo.jpg";
 
 interface ERALogoProps {
   className?: string;
