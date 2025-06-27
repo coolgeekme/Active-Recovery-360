@@ -151,14 +151,14 @@ function CheckoutForm({
           {/* Pricing Display */}
           <div className="mb-6 p-4 bg-primary/5 rounded-lg">
             <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-semibold">AR360 Membership</h3>
-                <p className="text-sm text-muted-foreground">Lifetime access to exclusive products</p>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">AR360 Membership</h3>
+                <p className="text-sm text-muted-foreground mt-1">Lifetime access to exclusive products</p>
               </div>
               <div className="text-right">
                 {appliedDiscount && (
                   <div className="text-sm text-muted-foreground line-through">
-                    ${originalAmount}
+                    ${originalAmount.toFixed(2)}
                   </div>
                 )}
                 <div className="text-2xl font-bold text-primary">
@@ -166,7 +166,7 @@ function CheckoutForm({
                 </div>
                 <div className="text-sm text-muted-foreground">one-time</div>
               </div>
-            </div>
+            </div></div>
             
             {/* Applied Discount Display */}
             {appliedDiscount && (
