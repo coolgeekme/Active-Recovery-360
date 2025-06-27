@@ -29,7 +29,6 @@ import ProductManagement from "@/pages/admin/product-management";
 // Components
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import PopupDialog from "@/components/marketing/popup-dialog";
 
 // Protected Routes
 import { ProtectedRoute } from "@/lib/protected-route";
@@ -63,7 +62,6 @@ function Router() {
         </Switch>
       </main>
       <Footer />
-      <PopupDialog />
     </div>
   );
 }
