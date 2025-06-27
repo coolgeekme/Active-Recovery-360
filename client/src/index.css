@@ -60,6 +60,10 @@ input:not([type]) {
   --chart-5: 0 0% 80%;
   --success: 142 76% 36%;
   --success-foreground: 0 0% 100%;
+  --button-primary: 207 90% 35%; /* Brighter blue for buttons */
+  --button-primary-foreground: 0 0% 100%;
+  --button-secondary: 220 14% 25%; /* Darker slate for contrast */
+  --button-secondary-foreground: 0 0% 100%;
 }
 
 .dark {
@@ -85,6 +89,10 @@ input:not([type]) {
   --radius: 0.5rem;
   --success: 142 76% 36%;
   --success-foreground: 0 0% 100%;
+  --button-primary: 207 90% 40%; /* Brighter blue for buttons in dark mode */
+  --button-primary-foreground: 0 0% 100%;
+  --button-secondary: 220 14% 20%; /* Darker slate for contrast in dark mode */
+  --button-secondary-foreground: 0 0% 100%;
 }
 
 @layer base {
@@ -182,6 +190,24 @@ input:not([type]) {
   .badge.bg-primary, .badge-primary {
     background-color: hsl(var(--primary));
     color: white;
+  }
+}
+
+@layer components {
+  .btn-primary-enhanced {
+    @apply bg-[hsl(var(--button-primary))] text-[hsl(var(--button-primary-foreground))];
+    @apply hover:bg-[hsl(var(--button-primary))]/90;
+    @apply shadow-md hover:shadow-lg transition-all duration-200;
+    @apply border border-[hsl(var(--button-primary))] hover:border-[hsl(var(--button-primary))]/90;
+    @apply font-semibold;
+  }
+  
+  .btn-secondary-enhanced {
+    @apply bg-[hsl(var(--button-secondary))] text-[hsl(var(--button-secondary-foreground))];
+    @apply hover:bg-[hsl(var(--button-secondary))]/90;
+    @apply shadow-md hover:shadow-lg transition-all duration-200;
+    @apply border border-[hsl(var(--button-secondary))] hover:border-[hsl(var(--button-secondary))]/90;
+    @apply font-semibold;
   }
 }
 

@@ -90,7 +90,7 @@ export default function ShopPage() {
                 </li>
               </ul>
               <Separator className="my-4" />
-              <Button asChild className="w-full">
+              <Button asChild className="w-full btn-primary-enhanced">
                 <a href="/membership-checkout">
                   Become a Member
                 </a>

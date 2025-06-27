@@ -52,7 +52,7 @@ export default function DoctorsPage() {
         <p className="text-lg text-secondary mb-6 max-w-2xl mx-auto">
           Join the Exercise Recovery Alliance as a healthcare provider and create your own specialized storefront with curated product recommendations.
         </p>
-        <Button asChild size="lg" className="font-montserrat font-semibold">
+        <Button asChild size="lg" className="font-montserrat font-semibold btn-primary-enhanced">
           <a href="/auth?tab=register">
             Register as a Healthcare Professional
           </a>
