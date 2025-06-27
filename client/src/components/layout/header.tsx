@@ -125,7 +125,7 @@ export default function Header() {
               </div>
             )}
 
-            {/* <CartDrawer /> */}
+            <CartDrawer />
 
             <button 
               className="md:hidden p-2" 
