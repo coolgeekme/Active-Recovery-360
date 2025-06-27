@@ -1,5 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
@@ -66,6 +67,49 @@ export function setupAuth(app: Express) {
     }),
   );
 
+  // Google OAuth Strategy
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.AR360_GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.AR360_GOOGLE_CLIENT_SECRET!,
+        callbackURL: "/auth/google/callback",
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          console.log(`Google OAuth login attempt for: ${profile.emails?.[0]?.value}`);
+          
+          // Check if user already exists by email
+          const existingUser = await storage.getUserByEmail(profile.emails?.[0]?.value || "");
+          
+          if (existingUser) {
+            console.log("Existing user found, logging in");
+            return done(null, existingUser);
+          }
+          
+          // Create new user from Google profile
+          const newUser: InsertUser = {
+            username: profile.emails?.[0]?.value?.split('@')[0] || `google_${profile.id}`,
+            email: profile.emails?.[0]?.value || "",
+            fullName: profile.displayName || "Google User",
+            password: "", // No password needed for OAuth users
+            isMember: false, // Will be updated if they purchase membership
+            isAdmin: false,
+            isDoctor: false,
+            profileImage: profile.photos?.[0]?.value || null,
+          };
+          
+          const user = await storage.createUser(newUser);
+          console.log("New Google user created");
+          return done(null, user);
+        } catch (error) {
+          console.error("Google OAuth error:", error);
+          return done(error);
+        }
+      }
+    )
+  );
+
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     try {
@@ -128,6 +172,17 @@ export function setupAuth(app: Express) {
       res.sendStatus(200);
     });
   });
+
+  // Google OAuth routes
+  app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+  
+  app.get("/auth/google/callback", 
+    passport.authenticate("google", { failureRedirect: "/auth" }),
+    (req, res) => {
+      // Successful authentication, redirect to home or membership page
+      res.redirect("/?oauth=success");
+    }
+  );
 
   // Get current user
   app.get("/api/user", (req, res) => {
