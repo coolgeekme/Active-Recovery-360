@@ -13,15 +13,17 @@ import { Loader2, CheckCircle, Tag, X } from "lucide-react";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
 
+interface CheckoutFormProps {
+  appliedDiscount: any;
+  setAppliedDiscount: (discount: any) => void;
+  createPaymentIntent: (discountCode?: string) => Promise<void>;
+}
+
 function CheckoutForm({ 
   appliedDiscount, 
   setAppliedDiscount, 
   createPaymentIntent 
-}: { 
-  appliedDiscount: any;
-  setAppliedDiscount: (discount: any) => void;
-  createPaymentIntent: (discountCode?: string) => Promise<void>;
-}) {
+}: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -330,7 +332,11 @@ export default function MembershipCheckoutPage() {
 
   return (
     <Elements stripe={stripePromise} options={options}>
-      <CheckoutForm />
+      <CheckoutForm 
+        appliedDiscount={appliedDiscount}
+        setAppliedDiscount={setAppliedDiscount}
+        createPaymentIntent={createPaymentIntent}
+      />
     </Elements>
   );
 }

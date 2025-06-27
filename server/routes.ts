@@ -48,17 +48,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stripe payment routes for membership
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
-      const { amount } = req.body;
+      const { amount, discountCode } = req.body;
+      let finalAmount = amount;
+      let appliedDiscount = null;
+      
+      // If discount code is provided, validate and apply it
+      if (discountCode) {
+        try {
+          const discount = await storage.getDiscountCodeByCode(discountCode.toUpperCase());
+          
+          if (!discount) {
+            return res.status(400).json({ message: "Invalid discount code" });
+          }
+          
+          // Check if discount code is still valid
+          if (discount.expiresAt && new Date(discount.expiresAt) < new Date()) {
+            return res.status(400).json({ message: "Discount code has expired" });
+          }
+          
+          if (discount.usageLimit && discount.usedCount >= discount.usageLimit) {
+            return res.status(400).json({ message: "Discount code usage limit reached" });
+          }
+          
+          // Apply discount
+          if (discount.discountType === "percentage") {
+            finalAmount = amount - (amount * discount.discountValue / 100);
+          } else {
+            // Fixed discount (convert from cents to dollars)
+            finalAmount = Math.max(0, amount - (discount.discountValue / 100));
+          }
+          
+          appliedDiscount = discount;
+        } catch (error) {
+          console.error("Error validating discount code:", error);
+          return res.status(400).json({ message: "Error validating discount code" });
+        }
+      }
       
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: Math.round(finalAmount * 100), // Convert to cents
         currency: "usd",
         metadata: {
           type: "membership",
+          ...(discountCode && { discountCode })
         },
       });
       
-      res.json({ clientSecret: paymentIntent.client_secret });
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        appliedDiscount: appliedDiscount,
+        finalAmount: finalAmount
+      });
     } catch (error: any) {
       console.error("Error creating payment intent:", error);
       res.status(500).json({ message: "Error creating payment intent: " + error.message });
@@ -74,6 +114,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
       if (paymentIntent.status === "succeeded" && paymentIntent.metadata.type === "membership") {
+        // If payment used a discount code, increment its usage
+        const discountCode = paymentIntent.metadata?.discountCode;
+        if (discountCode) {
+          try {
+            const discount = await storage.getDiscountCodeByCode(discountCode);
+            if (discount) {
+              await storage.incrementDiscountCodeUsage(discount.id);
+            }
+          } catch (error) {
+            console.error("Error updating discount code usage:", error);
+            // Don't fail the payment confirmation if discount update fails
+          }
+        }
+        
         // Update user to be a member
         const updatedUser = await storage.updateUser(req.user!.id, { isMember: true });
         
