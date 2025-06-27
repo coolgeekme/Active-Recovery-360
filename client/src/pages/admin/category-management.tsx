@@ -86,13 +86,7 @@ export default function CategoryManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CategoryFormData) => {
-      return apiRequest("/api/categories", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/categories", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
@@ -114,13 +108,8 @@ export default function CategoryManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: CategoryFormData & { id: number }) => {
-      return apiRequest(`/api/categories/${data.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const { id, ...updateData } = data;
+      return apiRequest("PUT", `/api/categories/${id}`, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
@@ -143,9 +132,7 @@ export default function CategoryManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/categories/${id}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/categories/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
