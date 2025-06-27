@@ -372,9 +372,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementDiscountCodeUsage(id: number): Promise<DiscountCode | undefined> {
+    // First, get the current discount code
+    const currentDiscountCode = await this.getDiscountCode(id);
+    if (!currentDiscountCode) return undefined;
+    
     const [updatedDiscountCode] = await db
       .update(discountCodes)
-      .set({ usedCount: db.sql`${discountCodes.usedCount} + 1` })
+      .set({ usedCount: currentDiscountCode.usedCount + 1 })
       .where(eq(discountCodes.id, id))
       .returning();
     return updatedDiscountCode;

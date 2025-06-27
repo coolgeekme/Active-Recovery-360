@@ -8,7 +8,8 @@ import {
   insertProductSchema, 
   insertCategorySchema, 
   insertCartItemSchema,
-  insertOrderSchema
+  insertOrderSchema,
+  insertDiscountCodeSchema
 } from "@shared/schema";
 
 // Initialize Stripe
@@ -504,6 +505,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedOrder);
     } catch (error) {
       res.status(500).json({ message: "Failed to update order status" });
+    }
+  });
+
+  // Discount code routes
+  
+  // Public route - validate discount code for users
+  app.post("/api/discount-codes/validate", async (req, res) => {
+    try {
+      const { code } = req.body;
+      
+      if (!code || typeof code !== 'string') {
+        return res.status(400).json({ message: "Discount code is required" });
+      }
+      
+      const discountCode = await storage.getDiscountCodeByCode(code);
+      
+      if (!discountCode) {
+        return res.status(404).json({ message: "Invalid discount code" });
+      }
+      
+      // Check if code is active
+      if (!discountCode.isActive) {
+        return res.status(400).json({ message: "This discount code is no longer active" });
+      }
+      
+      // Check if code is expired
+      if (discountCode.expiresAt && new Date() > discountCode.expiresAt) {
+        return res.status(400).json({ message: "This discount code has expired" });
+      }
+      
+      // Check usage limit
+      if (discountCode.usageLimit && discountCode.usedCount >= discountCode.usageLimit) {
+        return res.status(400).json({ message: "This discount code has reached its usage limit" });
+      }
+      
+      // Return discount info (without sensitive data)
+      const validDiscountCode = {
+        id: discountCode.id,
+        code: discountCode.code,
+        description: discountCode.description,
+        discountType: discountCode.discountType,
+        discountValue: discountCode.discountValue
+      };
+      
+      res.json({ valid: true, discountCode: validDiscountCode });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to validate discount code" });
+    }
+  });
+  
+  // Admin routes for discount code management
+  app.get("/api/discount-codes", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const discountCodes = await storage.getDiscountCodes();
+      res.json(discountCodes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch discount codes" });
+    }
+  });
+  
+  app.post("/api/discount-codes", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const discountCodeData = insertDiscountCodeSchema.parse(req.body);
+      const discountCode = await storage.createDiscountCode(discountCodeData);
+      res.status(201).json(discountCode);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid discount code data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create discount code" });
+    }
+  });
+  
+  app.put("/api/discount-codes/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const discountCodeId = parseInt(req.params.id);
+      const discountCodeData = req.body;
+      
+      const updatedDiscountCode = await storage.updateDiscountCode(discountCodeId, discountCodeData);
+      
+      if (!updatedDiscountCode) {
+        return res.status(404).json({ message: "Discount code not found" });
+      }
+      
+      res.json(updatedDiscountCode);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update discount code" });
+    }
+  });
+  
+  app.delete("/api/discount-codes/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const discountCodeId = parseInt(req.params.id);
+      const success = await storage.deleteDiscountCode(discountCodeId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Discount code not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete discount code" });
     }
   });
 
