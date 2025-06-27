@@ -178,7 +178,7 @@ function CheckoutForm({
                       <div className="text-sm font-medium text-green-800">
                         {appliedDiscount.code}
                       </div>
-                      <div className="text-xs text-green-600">
+                      <div className="text-xs text-green-700">
                         {appliedDiscount.description}
                       </div>
                     </div>
@@ -188,10 +188,13 @@ function CheckoutForm({
                     variant="ghost"
                     size="sm"
                     onClick={removeDiscount}
-                    className="text-green-600 hover:text-green-800"
+                    className="text-green-600 hover:text-green-800 hover:bg-green-100"
                   >
                     <X className="h-4 w-4" />
                   </Button>
+                </div>
+                <div className="mt-2 text-xs text-green-800">
+                  Discount: ${(originalAmount - finalAmount).toFixed(2)} off
                 </div>
               </div>
             )}
@@ -260,6 +263,7 @@ function CheckoutForm({
 export default function MembershipCheckoutPage() {
   const [clientSecret, setClientSecret] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [elementsKey, setElementsKey] = useState(0); // Key to force Elements remount
   const { user, isLoading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -275,9 +279,12 @@ export default function MembershipCheckoutPage() {
       });
       const data = await response.json();
       setClientSecret(data.clientSecret);
+      setElementsKey(prev => prev + 1); // Force Elements to remount with new clientSecret
       
       if (data.appliedDiscount) {
         setAppliedDiscount(data.appliedDiscount);
+      } else {
+        setAppliedDiscount(null);
       }
     } catch (error) {
       console.error("Error creating payment intent:", error);
@@ -331,7 +338,7 @@ export default function MembershipCheckoutPage() {
   };
 
   return (
-    <Elements stripe={stripePromise} options={options}>
+    <Elements key={elementsKey} stripe={stripePromise} options={options}>
       <CheckoutForm 
         appliedDiscount={appliedDiscount}
         setAppliedDiscount={setAppliedDiscount}
