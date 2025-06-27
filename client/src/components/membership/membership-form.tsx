@@ -74,7 +74,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
       
       toast({
         title: "Membership purchased!",
-        description: "Welcome to the Exercise Recovery Alliance!",
+        description: "Welcome to Active Recovery 360!",
       });
       
       if (onSuccess) {
@@ -100,7 +100,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
         <CardHeader>
           <CardTitle className="text-center">You're Already a Member!</CardTitle>
           <CardDescription className="text-center">
-            Thank you for being part of the Exercise Recovery Alliance.
+            Thank you for being part of Active Recovery 360.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-6">

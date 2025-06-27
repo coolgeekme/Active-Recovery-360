@@ -69,7 +69,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-600 mt-8 pt-8 text-center">
           <p className="text-gray-300 text-sm">
-            © 2024 ERA. All rights reserved.
+            © 2024 Active Recovery 360. All rights reserved.
           </p>
         </div>
       </div>

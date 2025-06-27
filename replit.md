@@ -125,6 +125,7 @@ The system uses a comprehensive schema supporting:
 ## Changelog
 
 - June 27, 2025. Initial setup
+- June 27, 2025. Updated branding from "Exercise Recovery Alliance" to "Active Recovery 360" throughout the application
 
 ## User Preferences
 

@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
-        description: `Welcome to Exercise Recovery Alliance, ${user.fullName}!`,
+        description: `Welcome to Active Recovery 360, ${user.fullName}!`,
       });
     },
     onError: (error: Error) => {

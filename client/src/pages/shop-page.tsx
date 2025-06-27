@@ -118,7 +118,7 @@ export default function ShopPage() {
                     <div className="w-3 h-3 bg-[#FFC107] rounded-full mr-2"></div>
                     <span className="font-medium">MEMBERS</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">Exclusive to ERA members</p>
+                  <p className="text-sm text-muted-foreground">Exclusive to AR360 members</p>
                 </div>
                 
                 <div>

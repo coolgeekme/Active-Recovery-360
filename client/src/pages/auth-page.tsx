@@ -381,7 +381,7 @@ export default function AuthPage() {
             </div>
           </div>
           <h2 className="text-3xl font-montserrat font-bold text-primary text-center mb-4">
-            Join Our Alliance
+            Join Active Recovery 360
           </h2>
           <p className="text-center text-secondary mb-6">
             Unlock access to professional-grade recovery products and resources trusted by healthcare professionals worldwide.
