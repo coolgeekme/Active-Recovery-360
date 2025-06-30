@@ -184,10 +184,10 @@ export default function AboutPage() {
               Become a member today for just $49 and gain lifetime access to exclusive recovery products and resources.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button asChild variant="secondary" size="lg">
+              <Button asChild variant="secondary" size="lg" className="btn-hero-primary">
                 <Link href="/membership">Become a Member</Link>
               </Button>
-              <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-primary" size="lg">
+              <Button asChild variant="outline" size="lg" className="btn-hero-outline">
                 <Link href="/shop">Browse Products</Link>
               </Button>
             </div>

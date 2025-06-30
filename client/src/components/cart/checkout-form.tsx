@@ -284,7 +284,7 @@ export default function CheckoutForm({ subtotal }: CheckoutFormProps) {
 
         <Button 
           type="submit" 
-          className="w-full bg-primary text-white py-3 rounded font-montserrat font-semibold hover:bg-opacity-90 transition"
+          className="w-full btn-primary-enhanced py-3 rounded font-montserrat"
           disabled={isSubmitting}
         >
           {isSubmitting ? (

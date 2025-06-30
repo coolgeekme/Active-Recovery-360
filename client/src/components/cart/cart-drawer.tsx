@@ -115,7 +115,7 @@ export default function CartDrawer() {
             
             <Button 
               onClick={handleCheckout}
-              className="w-full bg-primary text-white"
+              className="w-full btn-primary-enhanced"
               disabled={cartItems.length === 0}
             >
               Proceed to Checkout
