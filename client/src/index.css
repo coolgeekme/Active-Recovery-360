@@ -209,6 +209,20 @@ input:not([type]) {
     @apply border border-[hsl(var(--button-secondary))] hover:border-[hsl(var(--button-secondary))]/90;
     @apply font-semibold;
   }
+  
+  .btn-hero-primary {
+    @apply bg-white text-primary border-2 border-white;
+    @apply hover:bg-gray-100 hover:text-primary;
+    @apply shadow-lg hover:shadow-xl transition-all duration-200;
+    @apply font-semibold;
+  }
+  
+  .btn-hero-outline {
+    @apply bg-transparent text-white border-2 border-white;
+    @apply hover:bg-white hover:text-primary;
+    @apply shadow-lg hover:shadow-xl transition-all duration-200;
+    @apply font-semibold;
+  }
 }
 
 @font-face {

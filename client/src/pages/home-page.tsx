@@ -63,10 +63,10 @@ export default function HomePage() {
                 Join our alliance for exclusive access to professional-grade recovery tools and resources trusted by healthcare professionals.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Button asChild size="lg" className="font-montserrat font-semibold">
+                <Button asChild size="lg" className="font-montserrat btn-hero-primary">
                   <Link href="/membership">Become a Member</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="border-primary text-primary hover:bg-primary hover:text-white font-montserrat font-semibold">
+                <Button asChild variant="outline" size="lg" className="font-montserrat btn-hero-outline">
                   <Link href="/shop">Browse Products</Link>
                 </Button>
               </div>
@@ -220,10 +220,10 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild variant="secondary" className="font-montserrat font-semibold">
+              <Button asChild variant="secondary" className="font-montserrat btn-hero-primary">
                 <Link href="/membership">Join Now</Link>
               </Button>
-              <Button asChild variant="outline" className="border-white hover:text-primary font-montserrat font-semibold">
+              <Button asChild variant="outline" className="font-montserrat btn-hero-outline">
                 <Link href="/about">Learn More</Link>
               </Button>
             </div>
