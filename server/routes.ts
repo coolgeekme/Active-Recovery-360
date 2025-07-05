@@ -680,6 +680,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User profile update route
+  app.patch("/api/user/profile", isAuthenticated, async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      const userId = req.user.id;
+      const updates = req.body;
+      
+      // Validate that we're only updating allowed profile fields
+      const allowedFields = ['username', 'email', 'fullName', 'password'];
+      const validUpdates: any = {};
+      
+      for (const field of allowedFields) {
+        if (field in updates && updates[field] !== undefined && updates[field] !== '') {
+          validUpdates[field] = updates[field];
+        }
+      }
+      
+      if (Object.keys(validUpdates).length === 0) {
+        return res.status(400).json({ message: "No valid profile updates provided" });
+      }
+      
+      // Check if username is being updated and if it's already taken
+      if (validUpdates.username) {
+        const existingUser = await storage.getUserByUsername(validUpdates.username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Username already taken" });
+        }
+      }
+      
+      // Check if email is being updated and if it's already taken
+      if (validUpdates.email) {
+        const existingUser = await storage.getUserByEmail(validUpdates.email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Email already taken" });
+        }
+      }
+      
+      const updatedUser = await storage.updateUser(userId, validUpdates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   app.patch("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);

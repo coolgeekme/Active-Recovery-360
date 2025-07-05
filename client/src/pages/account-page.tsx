@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,81 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, User, CreditCard, Package, Heart } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, User, CreditCard, Package, Heart, Edit2, Save, X } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+const profileFormSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters").max(50, "Username must be less than 50 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  fullName: z.string().min(2, "Full name must be at least 2 characters").max(100, "Full name must be less than 100 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal(""))
+});
+
+type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function AccountPage() {
   const { user, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      username: user?.username || "",
+      email: user?.email || "",
+      fullName: user?.fullName || "",
+      password: ""
+    }
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: ProfileFormData) => {
+      const updateData: any = {
+        username: data.username,
+        email: data.email,
+        fullName: data.fullName
+      };
+      
+      // Only include password if it's provided
+      if (data.password && data.password.trim() !== "") {
+        updateData.password = data.password;
+      }
+      
+      const response = await apiRequest("PATCH", "/api/user/profile", updateData);
+      return await response.json();
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been successfully updated.",
+      });
+      setIsEditingProfile(false);
+      form.reset({
+        username: updatedUser.username,
+        email: updatedUser.email,
+        fullName: updatedUser.fullName,
+        password: ""
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Redirect if not logged in
   useEffect(() => {
@@ -24,8 +94,38 @@ export default function AccountPage() {
     }
   }, [user, navigate, logoutMutation.isPending]);
 
+  // Update form when user changes
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        password: ""
+      });
+    }
+  }, [user, form]);
+
   const handleLogout = () => {
     logoutMutation.mutate();
+  };
+
+  const handleEditProfile = () => {
+    setIsEditingProfile(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+    form.reset({
+      username: user?.username || "",
+      email: user?.email || "",
+      fullName: user?.fullName || "",
+      password: ""
+    });
+  };
+
+  const onSubmit = (data: ProfileFormData) => {
+    updateProfileMutation.mutate(data);
   };
 
   if (!user) {
@@ -67,64 +167,170 @@ export default function AccountPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="md:col-span-2">
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>
-                  Your personal and account information
-                </CardDescription>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Profile Information</CardTitle>
+                    <CardDescription>
+                      Your personal and account information
+                    </CardDescription>
+                  </div>
+                  {!isEditingProfile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEditProfile}
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                      <div className="text-lg">{user.fullName}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Username</label>
-                      <div className="text-lg">{user.username}</div>
-                    </div>
-                  </div>
+                {isEditingProfile ? (
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Enter your full name" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Enter your username" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Email</label>
-                    <div className="text-lg">{user.email}</div>
-                  </div>
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="email" placeholder="Enter your email" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <Separator className="my-4" />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password (optional)</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="password" placeholder="Enter new password (leave empty to keep current)" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold">Account Status</h3>
-                      <p className="text-sm text-muted-foreground">Manage your account status and role</p>
-                    </div>
-                    <Button variant="outline" asChild>
-                      <a href="/membership-checkout">Manage Membership</a>
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div className="bg-primary bg-opacity-5 p-4 rounded-lg text-center">
-                      <div className="font-semibold mb-1">Member Status</div>
-                      <div className={`${user.isMember ? "text-green-600" : "text-gray-500"}`}>
-                        {user.isMember ? "Active Member" : "Not a Member"}
+                      <div className="flex gap-2 pt-4">
+                        <Button
+                          type="submit"
+                          disabled={updateProfileMutation.isPending}
+                        >
+                          {updateProfileMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Save Changes
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                          disabled={updateProfileMutation.isPending}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                        <div className="text-lg">{user.fullName}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Username</label>
+                        <div className="text-lg">{user.username}</div>
                       </div>
                     </div>
 
-                    {user.isDoctor && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Email</label>
+                      <div className="text-lg">{user.email}</div>
+                    </div>
+
+                    <Separator className="my-4" />
+
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-semibold">Account Status</h3>
+                        <p className="text-sm text-muted-foreground">Manage your account status and role</p>
+                      </div>
+                      <Button variant="outline" asChild>
+                        <a href="/membership-checkout">Manage Membership</a>
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                       <div className="bg-primary bg-opacity-5 p-4 rounded-lg text-center">
-                        <div className="font-semibold mb-1">Doctor Status</div>
-                        <div className="text-green-600">Verified Healthcare Professional</div>
+                        <div className="font-semibold mb-1">Member Status</div>
+                        <div className={`${user.isMember ? "text-green-600" : "text-gray-500"}`}>
+                          {user.isMember ? "Active Member" : "Not a Member"}
+                        </div>
                       </div>
-                    )}
 
-                    {user.isAdmin && (
-                      <div className="bg-primary bg-opacity-5 p-4 rounded-lg text-center">
-                        <div className="font-semibold mb-1">Admin Status</div>
-                        <div className="text-green-600">Administrator</div>
-                      </div>
-                    )}
+                      {user.isDoctor && (
+                        <div className="bg-primary bg-opacity-5 p-4 rounded-lg text-center">
+                          <div className="font-semibold mb-1">Doctor Status</div>
+                          <div className="text-green-600">Verified Healthcare Professional</div>
+                        </div>
+                      )}
+
+                      {user.isAdmin && (
+                        <div className="bg-primary bg-opacity-5 p-4 rounded-lg text-center">
+                          <div className="font-semibold mb-1">Admin Status</div>
+                          <div className="text-green-600">Administrator</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
