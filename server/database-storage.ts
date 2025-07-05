@@ -406,8 +406,29 @@ export class DatabaseStorage implements IStorage {
   private async initializeData() {
     // Check if we already have data
     const existingUsers = await db.select().from(users);
+    
+    // Always check if Kevin MacPherson user exists and create if missing
+    const kevinUser = await this.getUserByEmail("kevinmacpherson08@gmail.com");
+    if (!kevinUser) {
+      console.log("Creating Kevin MacPherson admin user");
+      const kevinHashedPassword = await this.hashPassword("Recovery25!");
+      const kevinAdminUser: InsertUser = {
+        username: "kevinmacpherson08",
+        password: kevinHashedPassword,
+        email: "kevinmacpherson08@gmail.com",
+        fullName: "Kevin MacPherson",
+        isAdmin: true,
+        isMember: true,
+        isDoctor: false,
+      };
+      await this.createUser(kevinAdminUser);
+      console.log("Kevin MacPherson admin user created successfully");
+    } else {
+      console.log("Kevin MacPherson user already exists");
+    }
+    
     if (existingUsers.length > 0) {
-      console.log("Database already has data, skipping initialization");
+      console.log("Database already has data, skipping full initialization");
       return;
     }
 
@@ -425,18 +446,7 @@ export class DatabaseStorage implements IStorage {
     };
     const admin = await this.createUser(adminUser);
 
-    // Create Kevin MacPherson admin user with properly hashed password
-    const kevinHashedPassword = await this.hashPassword("Recovery25!");
-    const kevinAdminUser: InsertUser = {
-      username: "kevinmacpherson08",
-      password: kevinHashedPassword,
-      email: "kevinmacpherson08@gmail.com",
-      fullName: "Kevin MacPherson",
-      isAdmin: true,
-      isMember: true,
-      isDoctor: false,
-    };
-    await this.createUser(kevinAdminUser);
+    
 
     // Create doctor user
     const doctorUser: InsertUser = {
