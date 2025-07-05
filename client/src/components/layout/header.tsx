@@ -62,7 +62,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <ERALogo className="h-16 w-auto mr-3" />
+            <ERALogo className="h-12 w-auto mr-3" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -144,7 +144,7 @@ export default function Header() {
           <div className="flex flex-col h-full py-6">
             <div className="flex items-center justify-between mb-8">
               <Link href="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
-                <ERALogo className="h-12 w-auto mr-3" />
+                <ERALogo className="h-10 w-auto mr-3" />
               </Link>
               <Button 
                 variant="ghost" 
