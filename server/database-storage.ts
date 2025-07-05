@@ -25,12 +25,18 @@ import session from "express-session";
 import { eq, and, inArray, or, like, asc, desc } from 'drizzle-orm';
 import { db, pool } from './db';
 import connectPg from "connect-pg-simple";
+import bcrypt from "bcrypt";
 import { IStorage } from "./storage";
 
 const PostgresSessionStore = connectPg(session);
 
 export class DatabaseStorage implements IStorage {
   sessionStore: any; // Using any to avoid type issues
+
+  private async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
+  }
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -419,10 +425,11 @@ export class DatabaseStorage implements IStorage {
     };
     const admin = await this.createUser(adminUser);
 
-    // Create Kevin MacPherson admin user
+    // Create Kevin MacPherson admin user with properly hashed password
+    const kevinHashedPassword = await this.hashPassword("Recovery25!");
     const kevinAdminUser: InsertUser = {
       username: "kevinmacpherson08",
-      password: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // "Recovery25!"
+      password: kevinHashedPassword,
       email: "kevinmacpherson08@gmail.com",
       fullName: "Kevin MacPherson",
       isAdmin: true,
