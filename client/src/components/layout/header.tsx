@@ -58,11 +58,11 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between min-h-[60px]">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <ERALogo className="h-12 w-auto mr-3" />
+          <Link href="/" className="flex items-center py-2">
+            <ERALogo className="h-10 w-auto object-contain max-w-[200px] md:max-w-[250px]" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -143,8 +143,8 @@ export default function Header() {
         <SheetContent side="left" className="w-[300px] sm:w-[400px]">
           <div className="flex flex-col h-full py-6">
             <div className="flex items-center justify-between mb-8">
-              <Link href="/" className="flex items-center" onClick={() => setIsMenuOpen(false)}>
-                <ERALogo className="h-10 w-auto mr-3" />
+              <Link href="/" className="flex items-center py-2" onClick={() => setIsMenuOpen(false)}>
+                <ERALogo className="h-8 w-auto object-contain max-w-[180px]" />
               </Link>
               <Button 
                 variant="ghost" 
