@@ -419,6 +419,18 @@ export class DatabaseStorage implements IStorage {
     };
     const admin = await this.createUser(adminUser);
 
+    // Create Kevin MacPherson admin user
+    const kevinAdminUser: InsertUser = {
+      username: "kevinmacpherson08",
+      password: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // "Recovery25!"
+      email: "kevinmacpherson08@gmail.com",
+      fullName: "Kevin MacPherson",
+      isAdmin: true,
+      isMember: true,
+      isDoctor: false,
+    };
+    await this.createUser(kevinAdminUser);
+
     // Create doctor user
     const doctorUser: InsertUser = {
       username: "doctor",
