@@ -140,6 +140,14 @@ input:not([type]) {
     background-color: white !important;
   }
 
+  /* Force blue text for Limited Time Offer banners - more specific selector */
+  .bg-primary span.bg-white,
+  .bg-primary .bg-white,
+  span.bg-white {
+    color: #2563eb !important;
+    background-color: white !important;
+  }
+
   /* Override specific text colors on primary backgrounds */
   .bg-primary .text-secondary,
   .bg-primary .text-muted-foreground,

@@ -62,7 +62,7 @@ export default function MembershipPage() {
           <div className="bg-primary bg-opacity-5 rounded-lg p-6 mb-8">
             <span
               className="inline-block bg-white px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3"
-              style={{ color: '#2563eb', fontWeight: 'bold' }}
+              style={{ color: '#2563eb !important', fontWeight: 'bold', backgroundColor: 'white !important' }}
             >
               LIMITED TIME OFFER
             </span>
