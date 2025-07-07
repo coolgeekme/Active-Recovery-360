@@ -220,10 +220,10 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild variant="secondary" className="font-montserrat btn-hero-primary">
+              <Button asChild className="font-montserrat bg-white text-primary border-2 border-white hover:bg-gray-100 hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
                 <Link href="/membership">Join Now</Link>
               </Button>
-              <Button asChild variant="outline" className="font-montserrat btn-hero-outline">
+              <Button asChild className="font-montserrat bg-transparent text-white border-2 border-white hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
                 <Link href="/about">Learn More</Link>
               </Button>
             </div>
