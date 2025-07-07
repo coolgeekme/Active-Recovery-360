@@ -195,19 +195,25 @@ input:not([type]) {
 
 @layer components {
   .btn-primary-enhanced {
-    @apply bg-[hsl(var(--button-primary))] text-[hsl(var(--button-primary-foreground))];
-    @apply hover:bg-[hsl(var(--button-primary))]/90;
+    @apply bg-[hsl(var(--button-primary))] text-white;
+    @apply hover:bg-[hsl(var(--button-primary))]/90 hover:text-white;
     @apply shadow-md hover:shadow-lg transition-all duration-200;
     @apply border border-[hsl(var(--button-primary))] hover:border-[hsl(var(--button-primary))]/90;
     @apply font-semibold;
+    /* Enhanced contrast */
+    color: white !important;
+    font-weight: 600 !important;
   }
   
   .btn-secondary-enhanced {
-    @apply bg-[hsl(var(--button-secondary))] text-[hsl(var(--button-secondary-foreground))];
-    @apply hover:bg-[hsl(var(--button-secondary))]/90;
+    @apply bg-[hsl(var(--button-secondary))] text-white;
+    @apply hover:bg-[hsl(var(--button-secondary))]/90 hover:text-white;
     @apply shadow-md hover:shadow-lg transition-all duration-200;
     @apply border border-[hsl(var(--button-secondary))] hover:border-[hsl(var(--button-secondary))]/90;
     @apply font-semibold;
+    /* Enhanced contrast */
+    color: white !important;
+    font-weight: 600 !important;
   }
   
   .btn-hero-primary {
@@ -215,6 +221,9 @@ input:not([type]) {
     @apply hover:bg-gray-100 hover:text-primary;
     @apply shadow-lg hover:shadow-xl transition-all duration-200;
     @apply font-semibold;
+    /* Enhanced contrast */
+    color: hsl(207, 90%, 22%) !important;
+    font-weight: 600 !important;
   }
   
   .btn-hero-outline {
@@ -222,6 +231,15 @@ input:not([type]) {
     @apply hover:bg-white hover:text-primary;
     @apply shadow-lg hover:shadow-xl transition-all duration-200;
     @apply font-semibold;
+    /* Enhanced contrast */
+    color: white !important;
+    border-color: white !important;
+    font-weight: 600 !important;
+  }
+  
+  .btn-hero-outline:hover {
+    background-color: white !important;
+    color: hsl(207, 90%, 22%) !important;
   }
 }
 

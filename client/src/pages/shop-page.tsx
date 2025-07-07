@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import { CheckIcon } from "lucide-react";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -115,7 +116,7 @@ export default function ShopPage() {
                 
                 <div>
                   <div className="flex items-center mb-1">
-                    <div className="w-3 h-3 bg-[#FFC107] rounded-full mr-2"></div>
+                    <div className="w-3 h-3 bg-[#E65100] rounded-full mr-2"></div>
                     <span className="font-medium">MEMBERS</span>
                   </div>
                   <p className="text-sm text-muted-foreground">Exclusive to AR360 members</p>
@@ -136,5 +137,3 @@ export default function ShopPage() {
     </div>
   );
 }
-
-import { CheckIcon } from "lucide-react";
