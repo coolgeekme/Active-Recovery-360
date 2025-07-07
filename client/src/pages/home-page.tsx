@@ -63,7 +63,7 @@ export default function HomePage() {
                 Join our alliance for exclusive access to professional-grade recovery tools and resources trusted by healthcare professionals.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Button asChild size="lg" className="font-montserrat btn-hero-primary">
+                <Button asChild size="lg" className="font-montserrat bg-white text-primary border-2 border-white hover:bg-gray-100 hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
                   <Link href="/membership">Become a Member</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="font-montserrat btn-hero-outline">
