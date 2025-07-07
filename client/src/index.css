@@ -137,6 +137,7 @@ input:not([type]) {
   /* Special blue text for offer labels */
   .blue-offer-text {
     color: #2563eb !important;
+    background-color: white !important;
   }
 
   /* Override specific text colors on primary backgrounds */
