@@ -22,7 +22,7 @@ import {
   InsertDiscountCode
 } from "@shared/schema";
 import session from "express-session";
-import { eq, and, inArray, or, like, asc, desc } from 'drizzle-orm';
+import { eq, and, inArray, or, like, asc, desc, sql } from 'drizzle-orm';
 import { db, pool } from './db';
 import connectPg from "connect-pg-simple";
 import bcrypt from "bcrypt";
@@ -43,7 +43,7 @@ export class DatabaseStorage implements IStorage {
       pool, 
       createTableIfMissing: true 
     });
-    
+
     // Seed data if needed
     this.initializeData();
   }
@@ -59,7 +59,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
     return user;
   }
 
@@ -103,40 +103,40 @@ export class DatabaseStorage implements IStorage {
   }): Promise<Product[]> {
     // Log the filters being applied
     console.log("Product filters:", filters);
-    
+
     // First try to get all products to see if we're getting data
     const allProducts = await db.select().from(products);
     console.log(`Total products in database: ${allProducts.length}`);
-    
+
     // Now build the query with filters
     let query = db.select().from(products);
-    
+
     const conditions = [];
-    
+
     if (filters) {
       if (filters.visibility) {
         console.log(`Filtering by visibility: ${filters.visibility}`);
         conditions.push(eq(products.visibility, filters.visibility));
       }
-      
+
       if (filters.categoryId !== undefined) {
         console.log(`Filtering by categoryId: ${filters.categoryId}`);
         conditions.push(eq(products.categoryId, filters.categoryId));
       }
-      
+
       if (filters.featured !== undefined) {
         console.log(`Filtering by featured: ${filters.featured}`);
         conditions.push(eq(products.featured, filters.featured));
       }
     }
-    
+
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
-    
+
     const results = await query;
     console.log(`Results after SQL filtering: ${results.length}`);
-    
+
     // Filter by doctorId if needed
     // Since doctorIds is a JSON field, we need to filter in memory
     if (filters?.doctorId !== undefined) {
@@ -148,7 +148,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Results after doctorId filtering: ${filteredResults.length}`);
       return filteredResults;
     }
-    
+
     return results;
   }
 
@@ -159,7 +159,7 @@ export class DatabaseStorage implements IStorage {
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
     const [product] = await db.insert(products).values(insertProduct).returning();
-    
+
     // Update category product count
     if (product.categoryId) {
       const category = await this.getCategory(product.categoryId);
@@ -169,7 +169,7 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
-    
+
     return product;
   }
 
@@ -178,13 +178,13 @@ export class DatabaseStorage implements IStorage {
     const oldProduct = await this.getProduct(id);
     const oldCategoryId = oldProduct?.categoryId;
     const newCategoryId = productData.categoryId;
-    
+
     const [updatedProduct] = await db
       .update(products)
       .set(productData)
       .where(eq(products.id, id))
       .returning();
-      
+
     if (updatedProduct && oldCategoryId !== newCategoryId && oldCategoryId && newCategoryId) {
       // Update old category count
       const oldCategory = await this.getCategory(oldCategoryId);
@@ -193,7 +193,7 @@ export class DatabaseStorage implements IStorage {
           productCount: Math.max(0, oldCategory.productCount - 1)
         });
       }
-      
+
       // Update new category count
       const newCategory = await this.getCategory(newCategoryId);
       if (newCategory) {
@@ -202,14 +202,14 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
-    
+
     return updatedProduct;
   }
 
   async deleteProduct(id: number): Promise<boolean> {
     const product = await this.getProduct(id);
     if (!product) return false;
-    
+
     // Update category product count
     if (product.categoryId) {
       const category = await this.getCategory(product.categoryId);
@@ -219,7 +219,7 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
-    
+
     await db.delete(products).where(eq(products.id, id));
     return true;
   }
@@ -300,7 +300,7 @@ export class DatabaseStorage implements IStorage {
     const existingItem = existingItems.find(
       item => item.productId === insertCartItem.productId
     );
-    
+
     if (existingItem) {
       // Update quantity instead of creating new item
       const quantity = existingItem.quantity + (insertCartItem.quantity || 1);
@@ -309,13 +309,13 @@ export class DatabaseStorage implements IStorage {
         quantity
       ) as Promise<CartItem>;
     }
-    
+
     // Ensure quantity has a default value if not provided
     const cartItemToInsert = {
       ...insertCartItem,
       quantity: insertCartItem.quantity || 1
     };
-    
+
     const [cartItem] = await db.insert(cartItems).values(cartItemToInsert).returning();
     return cartItem;
   }
@@ -394,7 +394,7 @@ export class DatabaseStorage implements IStorage {
     // First, get the current discount code
     const currentDiscountCode = await this.getDiscountCode(id);
     if (!currentDiscountCode) return undefined;
-    
+
     const [updatedDiscountCode] = await db
       .update(discountCodes)
       .set({ usedCount: currentDiscountCode.usedCount + 1 })
@@ -406,7 +406,7 @@ export class DatabaseStorage implements IStorage {
   private async initializeData() {
     // Check if we already have data
     const existingUsers = await db.select().from(users);
-    
+
     // Always check if Kevin MacPherson user exists and create if missing
     const kevinUser = await this.getUserByEmail("kevinmacpherson08@gmail.com");
     if (!kevinUser) {
@@ -426,7 +426,7 @@ export class DatabaseStorage implements IStorage {
     } else {
       console.log("Kevin MacPherson user already exists");
     }
-    
+
     if (existingUsers.length > 0) {
       console.log("Database already has data, skipping full initialization");
       return;
@@ -446,7 +446,7 @@ export class DatabaseStorage implements IStorage {
     };
     const admin = await this.createUser(adminUser);
 
-    
+
 
     // Create doctor user
     const doctorUser: InsertUser = {
@@ -533,7 +533,7 @@ export class DatabaseStorage implements IStorage {
         featured: true,
         imageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a"
       },
-      
+
       // Spine & Back Category
       {
         name: "Premium Posture Corrector",
@@ -556,7 +556,7 @@ export class DatabaseStorage implements IStorage {
         imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b",
         doctorIds: [doctor.id.toString()]
       },
-      
+
       // Compression Therapy Category
       {
         name: "Advanced Compression Sleeves",
@@ -579,7 +579,7 @@ export class DatabaseStorage implements IStorage {
         imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
         doctorIds: [doctor.id.toString()]
       },
-      
+
       // Heat & Cold Therapy Category
       {
         name: "Digital Heat Therapy Wrap",
