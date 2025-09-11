@@ -52,8 +52,15 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative bg-primary py-20 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-primary opacity-90"></div>
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        {/* Background Image with Blue Gradient Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${massageTherapyImg})`
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
             DENVER SPORTS RECOVERY
