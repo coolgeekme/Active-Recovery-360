@@ -39,11 +39,13 @@ export default function Header() {
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const navigationLinks = [
-    { name: "Home", href: "/", icon: <Home className="h-5 w-5 mr-2" /> },
-    { name: "Shop", href: "/shop", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
-    { name: "Membership", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
-    { name: "Doctors", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
-    { name: "About", href: "/about", icon: <Info className="h-5 w-5 mr-2" /> },
+    { name: "HOME", href: "/", icon: <Home className="h-5 w-5 mr-2" /> },
+    { name: "ABOUT", href: "/about", icon: <Info className="h-5 w-5 mr-2" /> },
+    { name: "ONLINE STORE", href: "/shop", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
+    { name: "RECOVERY CENTER", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
+    { name: "SERVICES", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
+    { name: "MEMBERSHIPS", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
+    { name: "CONTACT", href: "/about", icon: <Info className="h-5 w-5 mr-2" /> },
   ];
 
   const isActive = (href: string) => {
@@ -66,24 +68,28 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
+          <nav className="hidden lg:flex space-x-6">
             {navigationLinks.map((link) => (
               <Link 
                 key={link.name} 
                 href={link.href}
                 className={`${
                   isActive(link.href) 
-                    ? "text-primary font-montserrat font-medium" 
-                    : "text-secondary font-montserrat font-medium hover:text-primary transition"
+                    ? "text-primary font-montserrat font-bold text-sm tracking-wide" 
+                    : "text-secondary font-montserrat font-bold text-sm tracking-wide hover:text-primary transition"
                 }`}
+                data-testid={`link-${link.name.toLowerCase().replace(/ /g, '-')}`}
               >
                 {link.name}
               </Link>
             ))}
           </nav>
 
-          {/* User Actions */}
+          {/* Contact Phone and User Actions */}
           <div className="flex items-center space-x-4">
+            <Button asChild className="hidden md:flex btn-dsr-phone" data-testid="button-call">
+              <a href="tel:303-718-3435">CALL US: (303) 718-3435</a>
+            </Button>
             {user ? (
               <div className="hidden md:block">
                 <DropdownMenu>
@@ -128,9 +134,10 @@ export default function Header() {
             <CartDrawer />
 
             <button 
-              className="md:hidden p-2" 
+              className="lg:hidden p-2" 
               onClick={() => setIsMenuOpen(true)}
               aria-label="Open menu"
+              data-testid="button-menu"
             >
               <Menu className="h-6 w-6 text-secondary" />
             </button>

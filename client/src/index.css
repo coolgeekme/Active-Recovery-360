@@ -250,6 +250,40 @@ input:not([type]) {
     background-color: white !important;
     color: hsl(207, 90%, 22%) !important;
   }
+
+  /* Denver Sports Recovery inspired button styles */
+  .btn-dsr-cta {
+    @apply bg-accent text-primary border-2 border-accent;
+    @apply hover:bg-white hover:text-primary hover:border-primary;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300;
+    @apply font-bold uppercase tracking-wide text-sm px-6 py-3;
+    /* Enhanced styling */
+    color: hsl(207, 90%, 22%) !important;
+    font-weight: 700 !important;
+    border-radius: 4px;
+  }
+
+  .btn-dsr-featured {
+    @apply bg-accent text-primary border-2 border-accent;
+    @apply hover:bg-primary hover:text-white hover:border-primary;
+    @apply shadow-lg hover:shadow-xl transition-all duration-300;
+    @apply font-bold uppercase tracking-wide text-sm px-4 py-2;
+    /* Enhanced styling */
+    color: hsl(207, 90%, 22%) !important;
+    font-weight: 700 !important;
+    border-radius: 4px;
+  }
+
+  .btn-dsr-phone {
+    @apply bg-accent text-primary border-2 border-accent;
+    @apply hover:bg-accent/80 hover:text-primary;
+    @apply shadow-md hover:shadow-lg transition-all duration-200;
+    @apply font-bold uppercase tracking-wide text-xs px-4 py-2;
+    /* Enhanced styling */
+    color: hsl(207, 90%, 22%) !important;
+    font-weight: 700 !important;
+    border-radius: 4px;
+  }
 }
 
 @font-face {

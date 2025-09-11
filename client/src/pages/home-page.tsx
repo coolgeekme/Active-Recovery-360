@@ -52,31 +52,41 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-primary py-12 md:py-20">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 mb-8 md:mb-0 md:pr-12">
-              <h1 className="text-4xl md:text-5xl font-montserrat font-bold text-white mb-4">
-                Specialized Recovery Products For Your Healing Journey
-              </h1>
-              <p className="text-lg text-white mb-8">
-                Join our alliance for exclusive access to professional-grade recovery tools and resources trusted by healthcare professionals.
-              </p>
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Button asChild size="lg" className="font-montserrat bg-primary text-white border-2 border-white hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
-                  <Link href="/membership">Become a Member</Link>
-                </Button>
-                <Button asChild size="lg" className="font-montserrat bg-primary text-white border-2 border-white hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
-                  <Link href="/shop">Browse Products</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="md:w-1/2">
-              <img 
-                src={massageTherapyImg} 
-                alt="Professional massage therapy treatment with percussion device" 
-                className="rounded-lg shadow-lg w-full h-auto object-cover" 
-              />
+      <section className="relative bg-primary py-20 md:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-primary opacity-90"></div>
+        <div className="relative container mx-auto px-4 text-center">
+          <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
+            DENVER SPORTS RECOVERY
+          </h1>
+          <h2 className="text-2xl md:text-4xl font-montserrat font-light text-white mb-12 tracking-widest">
+            PERFORM. RECOVER. REBUILD.
+          </h2>
+          
+          {/* Main CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+            <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-shop">
+              <Link href="/shop">SHOP</Link>
+            </Button>
+            <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-member">
+              <Link href="/membership">MEMBER</Link>
+            </Button>
+            <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-healthcare-provider">
+              <Link href="/doctors">HEALTHCARE PROVIDER</Link>
+            </Button>
+          </div>
+
+          {/* Featured Section */}
+          <div className="mb-12">
+            <h3 className="text-xl md:text-2xl font-montserrat font-bold text-white mb-8 tracking-wider">
+              FEATURED
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button asChild size="lg" className="btn-dsr-featured" data-testid="button-nad-patches">
+                <Link href="/shop?category=wellness">NAD+ PATCHES</Link>
+              </Button>
+              <Button asChild size="lg" className="btn-dsr-featured" data-testid="button-wellness">
+                <Link href="/shop?category=wellness">DSR WELLNESS</Link>
+              </Button>
             </div>
           </div>
         </div>
