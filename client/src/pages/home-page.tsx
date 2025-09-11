@@ -5,7 +5,7 @@ import { Testimonial, Category, Product } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
-import massageTherapyImg from "@/assets/massage-therapy.png";
+import heroAthleteImg from "@assets/generated_images/Female_athlete_hero_image_b9862508.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -57,7 +57,7 @@ export default function HomePage() {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${massageTherapyImg})`
+            backgroundImage: `url(${heroAthleteImg})`
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
