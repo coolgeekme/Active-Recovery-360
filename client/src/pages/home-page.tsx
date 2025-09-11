@@ -63,10 +63,10 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
-            DENVER SPORTS RECOVERY
+            ACTIVE RECOVERY 360
           </h1>
           <h2 className="text-2xl md:text-4xl font-montserrat font-light text-white mb-12 tracking-widest">
-            PERFORM. RECOVER. REBUILD.
+            RECOVER LIKE THE PROS DO
           </h2>
           
           {/* Main CTA Buttons */}
