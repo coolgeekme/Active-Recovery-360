@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@assets/generated_images/Female_athlete_with_AR360_branding_b1de1d6f.png";
+import logoImg from "@assets/Logo_6_v2_Final_1757605203924.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -61,6 +62,16 @@ export default function HomePage() {
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
+        
+        {/* Logo Overlay in Background */}
+        <div className="absolute top-8 right-8 opacity-60">
+          <img 
+            src={logoImg} 
+            alt="Active Recovery 360 Logo" 
+            className="h-20 md:h-32 w-auto"
+          />
+        </div>
+        
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
             ACTIVE RECOVERY 360
