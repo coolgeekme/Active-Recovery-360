@@ -40,11 +40,10 @@ export default function Header() {
 
   const navigationLinks = [
     { name: "HOME", href: "/", icon: <Home className="h-5 w-5 mr-2" /> },
-    { name: "ABOUT", href: "/about", icon: <Info className="h-5 w-5 mr-2" /> },
-    { name: "ONLINE STORE", href: "/shop", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
-    { name: "RECOVERY CENTER", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
-    { name: "SERVICES", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
-    { name: "MEMBERSHIPS", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
+    { name: "SHOP", href: "/shop", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
+    { name: "MEMBERSHIP", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
+    { name: "HCP", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
+    { name: "AFFILIATES", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
     { name: "CONTACT", href: "/about", icon: <Info className="h-5 w-5 mr-2" /> },
   ];
 
