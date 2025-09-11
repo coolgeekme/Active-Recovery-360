@@ -5,7 +5,7 @@ import { Testimonial, Category, Product } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
-import heroAthleteImg from "@assets/generated_images/Female_athlete_deflated_compression_sleeves_c0a18c5c.png";
+import heroAthleteImg from "@/assets/hero-image.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
