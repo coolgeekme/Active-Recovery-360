@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
+import activeRecovery360Logo from "@assets/Logo_6_v2_Final_1758640634040.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -63,7 +64,11 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
-            ACTIVE RECOVERY 360
+            <img 
+              src={activeRecovery360Logo} 
+              alt="Active Recovery 360" 
+              className="h-24 md:h-32 mx-auto" 
+            />
           </h1>
           <h2 className="text-2xl md:text-4xl font-montserrat font-light text-white mb-12 tracking-widest">
             RECOVER LIKE THE PROS DO
