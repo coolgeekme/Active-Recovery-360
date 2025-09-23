@@ -81,7 +81,7 @@ export default function HomePage() {
               aria-label="Active Recovery 360"
             />
           </h1>
-          <h2 className="text-2xl md:text-4xl font-montserrat font-light text-white mb-12 tracking-widest">
+          <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">
             RECOVER LIKE THE PROS DO
           </h2>
           
