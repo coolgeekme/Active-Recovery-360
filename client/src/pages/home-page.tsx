@@ -65,7 +65,7 @@ export default function HomePage() {
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
             <div 
-              className="h-48 md:h-64 w-auto mx-auto bg-white"
+              className="h-36 md:h-48 w-auto mx-auto bg-white"
               style={{ 
                 maskImage: `url(${activeRecovery360Logo})`, 
                 WebkitMaskImage: `url(${activeRecovery360Logo})`, 
