@@ -91,7 +91,7 @@ export default function HomePage() {
               <Link href="/shop">SHOP</Link>
             </Button>
             <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-member">
-              <Link href="/membership">MEMBER</Link>
+              <Link href="/membership">MEMBERS</Link>
             </Button>
             <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-healthcare-provider">
               <Link href="/doctors">HEALTHCARE PROVIDER</Link>
