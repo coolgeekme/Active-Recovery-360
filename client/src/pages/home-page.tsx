@@ -75,7 +75,8 @@ export default function HomePage() {
                 WebkitMaskSize: 'contain', 
                 maskPosition: 'center', 
                 WebkitMaskPosition: 'center',
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3)) contrast(1.1) brightness(1.05)',
+                imageRendering: 'crisp-edges'
               }}
               role="img"
               aria-label="Active Recovery 360"
