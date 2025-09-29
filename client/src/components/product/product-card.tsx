@@ -120,7 +120,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Button
               onClick={handleAddToCart}
               disabled={isAddingToCart}
-              className="bg-primary text-white px-3 py-1 rounded text-sm font-montserrat hover:bg-opacity-90 transition"
+              className="bg-primary text-white px-3 py-1 text-sm font-montserrat hover:bg-opacity-90 transition"
             >
               {isAddingToCart ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -131,7 +131,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           ) : (
             <Button 
               asChild
-              className="bg-primary text-white px-3 py-1 rounded text-sm font-montserrat hover:bg-opacity-90 transition"
+              className="bg-primary text-white px-3 py-1 text-sm font-montserrat hover:bg-opacity-90 transition"
             >
               <Link href={`/product/${product.id}`}>View Details</Link>
             </Button>
