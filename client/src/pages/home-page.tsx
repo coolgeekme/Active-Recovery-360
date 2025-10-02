@@ -69,7 +69,7 @@ export default function HomePage() {
               alt="Active Recovery 360"
               className="h-36 md:h-48 w-auto mx-auto"
               style={{ 
-                filter: 'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3)) contrast(1.15) brightness(1.05) saturate(1.1)',
                 imageRendering: '-webkit-optimize-contrast'
               }}
             />
