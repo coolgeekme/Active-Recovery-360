@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
-import activeRecovery360Logo from "@assets/Logo_6_v3_Final_1759440520971.png";
+import activeRecovery360Logo from "@assets/Logo_6_v3_Final_1759440672889.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -64,14 +64,25 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
-            <img 
-              src={activeRecovery360Logo}
-              alt="Active Recovery 360"
-              className="h-36 md:h-48 w-auto mx-auto"
+            <div 
+              className="h-36 md:h-48 mx-auto"
               style={{ 
-                filter: 'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-                imageRendering: '-webkit-optimize-contrast'
-              }}
+                width: 'fit-content',
+                background: 'white',
+                maskImage: `url(${activeRecovery360Logo})`, 
+                WebkitMaskImage: `url(${activeRecovery360Logo})`, 
+                maskSize: 'contain', 
+                WebkitMaskSize: 'contain', 
+                maskRepeat: 'no-repeat',
+                WebkitMaskRepeat: 'no-repeat',
+                maskPosition: 'center', 
+                WebkitMaskPosition: 'center',
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+                imageRendering: '-webkit-optimize-contrast',
+                aspectRatio: '3.5'
+              } as React.CSSProperties}
+              role="img"
+              aria-label="Active Recovery 360"
             />
           </h1>
           <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">
