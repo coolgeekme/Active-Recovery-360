@@ -67,8 +67,9 @@ export default function HomePage() {
             <div
               aria-label="Active Recovery 360"
               role="img"
-              className="h-36 md:h-48 w-auto mx-auto bg-white"
+              className="h-36 md:h-48 w-auto mx-auto"
               style={{
+                backgroundColor: '#ffffff',
                 WebkitMaskImage: `url(${activeRecovery360Logo})`,
                 maskImage: `url(${activeRecovery360Logo})`,
                 WebkitMaskSize: 'contain',
@@ -78,8 +79,7 @@ export default function HomePage() {
                 WebkitMaskPosition: 'center',
                 maskPosition: 'center',
                 maskMode: 'luminance',
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3)) contrast(1.5) brightness(1.2)',
-                opacity: 0.95
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
               }}
             />
           </h1>
