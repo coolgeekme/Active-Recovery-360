@@ -64,14 +64,21 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
-            <img 
-              src={activeRecovery360Logo}
-              alt="Active Recovery 360"
-              className="h-36 md:h-48 w-auto mx-auto"
-              style={{ 
-                filter: 'brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-                imageRendering: '-webkit-optimize-contrast',
-                mixBlendMode: 'screen'
+            <div
+              aria-label="Active Recovery 360"
+              role="img"
+              className="h-36 md:h-48 w-auto mx-auto bg-white"
+              style={{
+                WebkitMaskImage: `url(${activeRecovery360Logo})`,
+                maskImage: `url(${activeRecovery360Logo})`,
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                maskMode: 'luminance',
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
               }}
             />
           </h1>
