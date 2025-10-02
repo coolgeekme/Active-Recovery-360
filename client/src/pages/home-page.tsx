@@ -86,9 +86,6 @@ export default function HomePage() {
             <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-member">
               <Link href="/membership">MEMBERS</Link>
             </Button>
-            <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-healthcare-provider">
-              <Link href="/doctors">HEALTHCARE PROVIDERS</Link>
-            </Button>
           </div>
 
           {/* Featured Section */}
@@ -96,12 +93,17 @@ export default function HomePage() {
             <h3 className="text-xl md:text-2xl font-montserrat font-bold text-white mb-8 tracking-wider">
               FEATURED
             </h3>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4">
               <Button asChild size="lg" className="btn-dsr-featured" data-testid="button-nad-patches">
                 <Link href="/shop?category=wellness">NAD+ PATCHES</Link>
               </Button>
               <Button asChild size="lg" className="btn-dsr-featured" data-testid="button-wellness">
                 <Link href="/shop?category=wellness">DSR WELLNESS</Link>
+              </Button>
+            </div>
+            <div className="flex justify-center">
+              <Button asChild size="lg" className="btn-dsr-cta" data-testid="button-healthcare-provider">
+                <Link href="/doctors">HEALTHCARE PROVIDERS</Link>
               </Button>
             </div>
           </div>
