@@ -70,7 +70,8 @@ export default function HomePage() {
               className="h-36 md:h-48 w-auto mx-auto"
               style={{ 
                 filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3)) contrast(1.15) brightness(1.05) saturate(1.1)',
-                imageRendering: '-webkit-optimize-contrast'
+                imageRendering: '-webkit-optimize-contrast',
+                mixBlendMode: 'screen'
               }}
             />
           </h1>
