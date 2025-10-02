@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
-import activeRecovery360Logo from "@assets/Logo_6_v3_Final_1759440672889.png";
+import activeRecovery360Logo from "@assets/Logo_6_v3_Final_1759440520971.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -65,22 +65,19 @@ export default function HomePage() {
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
             <div 
-              className="h-36 md:h-48 mx-auto"
+              className="h-36 md:h-48 w-auto mx-auto bg-white"
               style={{ 
-                width: 'fit-content',
-                background: 'white',
                 maskImage: `url(${activeRecovery360Logo})`, 
                 WebkitMaskImage: `url(${activeRecovery360Logo})`, 
+                maskRepeat: 'no-repeat', 
+                WebkitMaskRepeat: 'no-repeat', 
                 maskSize: 'contain', 
                 WebkitMaskSize: 'contain', 
-                maskRepeat: 'no-repeat',
-                WebkitMaskRepeat: 'no-repeat',
                 maskPosition: 'center', 
                 WebkitMaskPosition: 'center',
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-                imageRendering: '-webkit-optimize-contrast',
-                aspectRatio: '3.5'
-              } as React.CSSProperties}
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3)) contrast(1.15) brightness(1.05) saturate(1.1)',
+                imageRendering: '-webkit-optimize-contrast'
+              }}
               role="img"
               aria-label="Active Recovery 360"
             />
