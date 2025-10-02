@@ -78,7 +78,8 @@ export default function HomePage() {
                 WebkitMaskPosition: 'center',
                 maskPosition: 'center',
                 maskMode: 'luminance',
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3)) contrast(1.5) brightness(1.2)',
+                opacity: 0.95
               }}
             />
           </h1>
