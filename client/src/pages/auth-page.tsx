@@ -196,7 +196,7 @@ export default function AuthPage() {
                     
                     <Button 
                       variant="outline" 
-                      className="w-full mt-4 !text-foreground hover:!text-white"
+                      className="w-full mt-4"
                       onClick={() => window.location.href = "/auth/google"}
                       data-testid="button-google-login"
                     >
@@ -466,7 +466,7 @@ export default function AuthPage() {
                     
                     <Button 
                       variant="outline" 
-                      className="w-full mt-4 !text-foreground hover:!text-white"
+                      className="w-full mt-4"
                       onClick={() => window.location.href = "/auth/google"}
                       data-testid="button-google-signup"
                     >

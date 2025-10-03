@@ -113,15 +113,11 @@ input:not([type]) {
   }
 
   /* Ensure text on blue backgrounds is always white for better contrast */
-  .bg-primary, .bg-primary-foreground, 
-  [class*="bg-primary-"], [class*="bg-blue"],
-  button[class*="bg-primary"], [class*="bg-blue"],
+  .bg-primary, .bg-primary-foreground,
   .btn-primary, .blue-bg,
   [style*="background-color: blue"],
   [style*="background: blue"],
-  [style*="background-color: #"],
-  [class*="bg-blue"] *:not(.blue-offer-text),
-  [class*="bg-primary"] *:not(.blue-offer-text),
+  .bg-primary *:not(.blue-offer-text),
   .bg-primary p:not(.blue-offer-text),
   .bg-primary h1:not(.blue-offer-text),
   .bg-primary h2:not(.blue-offer-text),
