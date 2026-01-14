@@ -74,9 +74,7 @@ export default function HomePage() {
               }}
             />
           </h1>
-          <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">
-            RECOVER LIKE THE PROS DO
-          </h2>
+          <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">Exercise, Injury & Performance Recovery</h2>
           
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-6">
@@ -109,7 +107,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       {/* Membership Section */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4">
@@ -161,7 +158,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       {/* Featured Products Section */}
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -176,7 +172,6 @@ export default function HomePage() {
           <ProductGrid featured={true} limit={4} />
         </div>
       </section>
-
       {/* Doctor Shops Section */}
       {doctors.length > 0 && (
         <section className="py-12 bg-white">
@@ -196,7 +191,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
       {/* Category Browse Section */}
       {categories.length > 0 && (
         <section className="py-12 bg-gray-50">
@@ -216,7 +210,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
       {/* Testimonials Section */}
       {testimonials.length > 0 && (
         <section className="py-12 bg-white">
@@ -236,7 +229,6 @@ export default function HomePage() {
           </div>
         </section>
       )}
-
       {/* CTA Banner */}
       <section className="py-12 bg-primary">
         <div className="container mx-auto px-4">
