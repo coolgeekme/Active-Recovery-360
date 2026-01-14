@@ -74,7 +74,7 @@ export default function HomePage() {
               }}
             />
           </h1>
-          <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">Exercise, Injury & Performance Recovery</h2>
+          <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">Exercise, Performance & Injury Recovery</h2>
           
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-6">
