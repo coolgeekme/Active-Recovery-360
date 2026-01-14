@@ -104,6 +104,9 @@ export default function HomePage() {
                 <Link href="/shop?category=wellness">DSR WELLNESS</Link>
               </Button>
             </div>
+            <p className="text-xl md:text-2xl font-montserrat font-bold text-white mt-8 tracking-wider">
+              RECOVER LIKE THE PROS DO
+            </p>
           </div>
         </div>
       </section>
