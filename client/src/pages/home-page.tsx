@@ -92,7 +92,7 @@ export default function HomePage() {
           </div>
 
           {/* Featured Section */}
-          <div className="mb-12">
+          <div className="mb-4">
             <h3 className="text-xl md:text-2xl font-montserrat font-bold text-white mb-8 tracking-wider">
               FEATURED
             </h3>
