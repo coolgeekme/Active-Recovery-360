@@ -52,7 +52,7 @@ export default function AuthPage() {
       // Show a toast asking if they want to purchase membership
       setTimeout(() => {
         const wantsMembership = window.confirm(
-          "Welcome to Active Recovery 360! Would you like to upgrade to a membership for $49 to access exclusive recovery products?"
+          "Welcome to Active Recovery 360! Would you like to upgrade to a membership for $29 to access exclusive recovery products?"
         );
         if (wantsMembership) {
           navigate("/membership/checkout");
@@ -404,7 +404,7 @@ export default function AuthPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-primary">$49</div>
+                            <div className="text-2xl font-bold text-primary">$29</div>
                             <div className="text-sm text-muted-foreground">one-time</div>
                           </div>
                         </div>
@@ -424,7 +424,7 @@ export default function AuthPage() {
                               </FormControl>
                               <div className="space-y-1 leading-none">
                                 <FormLabel className="text-sm font-normal">
-                                  Add membership to my account (+$49)
+                                  Add membership to my account (+$29)
                                 </FormLabel>
                                 <p className="text-xs text-muted-foreground">
                                   Access member-only products and exclusive content
@@ -527,7 +527,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-primary">One-time Fee</h3>
-                <p className="text-secondary text-sm">Pay just $49 once for lifetime membership benefits</p>
+                <p className="text-secondary text-sm">Pay just $29 once for lifetime membership benefits</p>
               </div>
             </div>
             

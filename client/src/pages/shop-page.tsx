@@ -87,7 +87,7 @@ export default function ShopPage() {
                 </li>
                 <li className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-primary mr-2" />
-                  <span className="text-sm">One-time $49 Fee</span>
+                  <span className="text-sm">One-time $29 Fee</span>
                 </li>
               </ul>
               <Separator className="my-4" />

@@ -28,7 +28,7 @@ export default function MembershipPage() {
   const faqItems = [
     {
       question: "What is included in the membership?",
-      answer: "Your $49 membership includes lifetime access to all member-only products, a free recovery starter kit ($35 value), and access to doctor-curated storefronts. There are no recurring fees - just a one-time payment."
+      answer: "Your $29 membership includes lifetime access to all member-only products, a free recovery starter kit ($35 value), and access to doctor-curated storefronts. There are no recurring fees - just a one-time payment."
     },
     {
       question: "How do I receive my free recovery kit?",
@@ -53,7 +53,7 @@ export default function MembershipPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Active Recovery 360 Membership</h1>
         <p className="text-xl text-secondary max-w-3xl mx-auto">
-          Join our alliance for a one-time fee of $49 and unlock exclusive access to premium recovery products and resources.
+          Join our alliance for a one-time fee of $29 and unlock exclusive access to premium recovery products and resources.
         </p>
       </div>
 
@@ -162,7 +162,7 @@ export default function MembershipPage() {
         </p>
         <Button asChild size="lg" className="btn-primary-enhanced">
           <Link href={user ? (user.isMember ? "/shop" : "#membership-form") : "/auth"}>
-            {user ? (user.isMember ? "Browse Member Products" : "Join Now for $49") : "Sign In to Join"}
+            {user ? (user.isMember ? "Browse Member Products" : "Join Now for $29") : "Sign In to Join"}
           </Link>
         </Button>
       </div>

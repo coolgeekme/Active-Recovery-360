@@ -38,7 +38,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [discountLoading, setDiscountLoading] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
-  const [originalAmount] = useState(49);
+  const [originalAmount] = useState(29);
   const { toast } = useToast();
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -193,7 +193,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
       <CardHeader>
         <CardTitle className="text-center">Become a Member</CardTitle>
         <CardDescription className="text-center">
-          Join our alliance for a one-time fee of $49
+          Join our alliance for a one-time fee of $29
         </CardDescription>
       </CardHeader>
       <CardContent>

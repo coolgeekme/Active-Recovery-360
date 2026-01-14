@@ -181,7 +181,7 @@ export default function AboutPage() {
               Join Our Alliance
             </h2>
             <p className="text-xl text-white text-opacity-90 mb-8">
-              Become a member today for just $49 and gain lifetime access to exclusive recovery products and resources.
+              Become a member today for just $29 and gain lifetime access to exclusive recovery products and resources.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button asChild variant="secondary" size="lg" className="btn-hero-primary">

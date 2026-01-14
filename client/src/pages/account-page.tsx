@@ -469,7 +469,7 @@ export default function AccountPage() {
                   <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">Become a Member Today</h3>
                   <p className="text-muted-foreground mb-4">
-                    Join the Exercise Recovery Alliance for just $49 to unlock exclusive products and benefits
+                    Join the Exercise Recovery Alliance for just $29 to unlock exclusive products and benefits
                   </p>
                   <Button asChild>
                     <a href="/membership-checkout">Become a Member</a>

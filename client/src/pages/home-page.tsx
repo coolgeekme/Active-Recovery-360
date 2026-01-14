@@ -116,7 +116,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-montserrat font-bold text-primary mb-2">Exclusive Membership Benefits</h2>
             <p className="text-secondary max-w-xl mx-auto">
-              Join our alliance for a one-time fee of $49 and unlock premium recovery products and resources.
+              Join our alliance for a one-time fee of $29 and unlock premium recovery products and resources.
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export default function HomePage() {
                   Sign up today and receive our exclusive starter recovery kit as a welcome gift. Includes compression bands, recovery guide, and more.
                 </p>
                 <Button asChild className="font-montserrat font-semibold btn-secondary-enhanced">
-                  <Link href="/membership">Join Now for $49</Link>
+                  <Link href="/membership">Join Now for $29</Link>
                 </Button>
               </div>
               <div className="md:w-1/3">
@@ -239,7 +239,7 @@ export default function HomePage() {
             <div className="mb-6 md:mb-0">
               <h2 className="text-3xl font-montserrat font-bold text-white mb-2">Ready to Join Active Recovery 360?</h2>
               <p className="text-white text-opacity-90 max-w-xl">
-                Become a member today for just $49 and gain lifetime access to exclusive recovery products and resources.
+                Become a member today for just $29 and gain lifetime access to exclusive recovery products and resources.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
