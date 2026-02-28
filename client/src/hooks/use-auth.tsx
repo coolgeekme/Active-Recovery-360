@@ -15,6 +15,7 @@ type AuthContextType = {
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  refetch: () => Promise<any>;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -22,13 +23,20 @@ type LoginData = Pick<InsertUser, "username" | "password">;
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
+  // CRITICAL: If returning from OAuth callback, skip the /me check initially.
+  // AuthCallback will exchange the session_id and establish the session first.
+  const isOAuthCallback = typeof window !== 'undefined' && window.location.hash?.includes('session_id=');
+  
   const {
     data: user,
     error,
     isLoading,
+    refetch,
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !isOAuthCallback, // Skip initial fetch during OAuth callback
   });
 
   const loginMutation = useMutation({
