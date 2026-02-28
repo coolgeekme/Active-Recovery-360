@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
@@ -13,7 +13,6 @@ import { CartProvider } from "@/hooks/use-cart";
 // Pages
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
-import AuthCallback from "@/pages/auth-callback";
 import ShopPage from "@/pages/shop-page";
 import MembershipPage from "@/pages/membership-page";
 import MembershipCheckoutPage from "@/pages/membership-checkout-page";
@@ -41,12 +40,6 @@ import Footer from "@/components/layout/footer";
 import { ProtectedRoute } from "@/lib/protected-route";
 
 function AppRouter() {
-  // Check for OAuth callback with session_id in hash - handle BEFORE normal routing
-  // This synchronous check prevents race conditions
-  if (typeof window !== 'undefined' && window.location.hash?.includes('session_id=')) {
-    return <AuthCallback />;
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -54,7 +47,6 @@ function AppRouter() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/auth" component={AuthPage} />
-          <Route path="/auth/callback" component={AuthCallback} />
           <Route path="/shop" component={ShopPage} />
           <Route path="/membership" component={MembershipPage} />
           <Route path="/membership/checkout" component={MembershipCheckoutPage} />
