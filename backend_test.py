@@ -136,15 +136,29 @@ class AR360FirebaseAPITester:
         self.log_test("GET /api/testimonials?featured=true", success,
                      f"Retrieved {len(data) if isinstance(data, list) else 0} featured testimonials")
 
-    def test_auth_endpoints(self):
-        """Test authentication endpoints"""
-        print("\n🔍 Testing Authentication API...")
+    def test_firebase_auth_endpoint(self):
+        """Test Firebase authentication endpoint"""
+        print("\n🔍 Testing Firebase Authentication API...")
         
         # Test user status endpoint (should return 401 when not logged in)
         success, data, status_code = self.make_request('GET', '/api/user', expected_status=401)
         self.log_test("GET /api/user (unauthorized)", success, "Correctly returns 401 when not logged in")
         
-        # Test registration with a unique username
+        # Test Firebase auth endpoint without token (should fail)
+        success, data, status_code = self.make_request('POST', '/api/auth/firebase', {}, expected_status=400)
+        self.log_test("POST /api/auth/firebase (no token)", success, "Correctly requires Firebase ID token")
+        
+        # Test Firebase auth endpoint with invalid token (should fail)
+        invalid_firebase_data = {
+            "idToken": "invalid_token_123", 
+            "email": "test@example.com",
+            "fullName": "Test User"
+        }
+        success, data, status_code = self.make_request('POST', '/api/auth/firebase', invalid_firebase_data, expected_status=401)
+        self.log_test("POST /api/auth/firebase (invalid token)", success, 
+                     f"Correctly rejects invalid Firebase token: {data.get('message', 'No message')}")
+        
+        # Test traditional registration (still available alongside Firebase)
         timestamp = datetime.now().strftime('%H%M%S')
         test_user = {
             "username": f"testuser_{timestamp}",
@@ -158,7 +172,7 @@ class AR360FirebaseAPITester:
             self.log_test("POST /api/register", True, f"User created: {data.get('username')}")
             self.test_user_id = data.get('id')
             
-            # Test login with created user
+            # Test traditional login
             login_data = {
                 "username": test_user["username"],
                 "password": test_user["password"]
