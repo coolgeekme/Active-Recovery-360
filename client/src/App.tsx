@@ -95,7 +95,7 @@ function App() {
           <CartProvider>
             <TooltipProvider>
               <Toaster />
-              <Router />
+              <AppRouter />
             </TooltipProvider>
           </CartProvider>
         </AuthProvider>
