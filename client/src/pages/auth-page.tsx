@@ -11,19 +11,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckIcon } from "lucide-react";
 import { ERALogo } from "@/lib/era-logo";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 // Login schema
 const loginSchema = z.object({
-  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-// Registration schema (extends the insert schema from DB)
-const registerSchema = insertUserSchema.extend({
+// Registration schema
+const registerSchema = z.object({
+  fullName: z.string().min(2, { message: "Full name is required" }),
+  email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string(),
+  isDoctor: z.boolean().optional(),
+  doctorTitle: z.string().optional(),
+  doctorSpecialty: z.string().optional(),
+  doctorBio: z.string().optional(),
+  profileImage: z.string().optional(),
+  isMember: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -34,32 +45,20 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
-  const { user, loginMutation, registerMutation } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const { user, firebaseLoginMutation } = useAuth();
   const [location, navigate] = useLocation();
+  const { toast } = useToast();
   
-  // Get tab from URL query parameter and handle OAuth success
+  // Get tab from URL query parameter
   useEffect(() => {
     const params = new URLSearchParams(location.split("?")[1]);
     const tab = params.get("tab");
-    const oauth = params.get("oauth");
-    
     if (tab === "register") {
       setActiveTab("register");
     }
-    
-    // Handle OAuth success - ask if user wants membership
-    if (oauth === "success" && user && !user.isMember) {
-      // Show a toast asking if they want to purchase membership
-      setTimeout(() => {
-        const wantsMembership = window.confirm(
-          "Welcome to Active Recovery 360! Would you like to upgrade to a membership for $29 to access exclusive recovery products?"
-        );
-        if (wantsMembership) {
-          navigate("/membership/checkout");
-        }
-      }, 1000);
-    }
-  }, [location, user, navigate]);
+  }, [location]);
 
   // If user is already logged in, redirect to home page
   useEffect(() => {
@@ -72,7 +71,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -81,37 +80,129 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
+      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
-      fullName: "",
       isDoctor: false,
       doctorTitle: "",
       doctorSpecialty: "",
       doctorBio: "",
       profileImage: "",
+      isMember: false,
     },
   });
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+  // Handle Google Sign-in
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const idToken = await user.getIdToken();
+      
+      // Send to backend to create/update user and establish session
+      firebaseLoginMutation.mutate({
+        idToken,
+        email: user.email || "",
+        fullName: user.displayName || "",
+        profileImage: user.photoURL || "",
+      });
+      
+    } catch (error: any) {
+      console.error("Google sign-in error:", error);
+      toast({
+        title: "Sign-in failed",
+        description: error.message || "Failed to sign in with Google",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
-  const onRegisterSubmit = (data: RegisterFormValues) => {
-    // Remove confirmPassword as it's not in the schema
-    const { confirmPassword, isMember, ...userData } = data;
-    
-    // If user wants membership, register without membership first, then redirect to checkout
-    if (isMember) {
-      registerMutation.mutate(userData, {
+  // Handle Email/Password Login
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    setIsEmailLoading(true);
+    try {
+      const result = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const idToken = await result.user.getIdToken();
+      
+      // Send to backend to establish session
+      firebaseLoginMutation.mutate({
+        idToken,
+        email: result.user.email || "",
+        fullName: result.user.displayName || "",
+        profileImage: result.user.photoURL || "",
+      });
+      
+    } catch (error: any) {
+      console.error("Email login error:", error);
+      let errorMessage = "Invalid email or password";
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Invalid email or password";
+      }
+      toast({
+        title: "Login failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
+  // Handle Email/Password Registration
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
+    setIsEmailLoading(true);
+    try {
+      const result = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      
+      // Update Firebase profile with display name
+      await updateProfile(result.user, {
+        displayName: data.fullName,
+      });
+      
+      const idToken = await result.user.getIdToken();
+      
+      // Send to backend to create user with additional fields
+      firebaseLoginMutation.mutate({
+        idToken,
+        email: data.email,
+        fullName: data.fullName,
+        profileImage: data.profileImage || "",
+        isDoctor: data.isDoctor,
+        doctorTitle: data.doctorTitle,
+        doctorSpecialty: data.doctorSpecialty,
+        doctorBio: data.doctorBio,
+      }, {
         onSuccess: () => {
-          // After successful registration, redirect to membership checkout
-          navigate("/membership/checkout");
+          // If user wants membership, redirect to checkout
+          if (data.isMember) {
+            navigate("/membership/checkout");
+          }
         }
       });
-    } else {
-      registerMutation.mutate(userData);
+      
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      let errorMessage = "Failed to create account";
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "An account with this email already exists";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak";
+      }
+      toast({
+        title: "Registration failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailLoading(false);
     }
   };
 
@@ -141,12 +232,12 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter your username" {...field} />
+                              <Input type="email" placeholder="Enter your email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -168,9 +259,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full mt-4" 
-                        disabled={loginMutation.isPending}
+                        disabled={isEmailLoading || firebaseLoginMutation.isPending}
                       >
-                        {loginMutation.isPending ? (
+                        {isEmailLoading || firebaseLoginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Signing in...
@@ -197,19 +288,20 @@ export default function AuthPage() {
                     <Button 
                       variant="outline" 
                       className="w-full mt-4"
-                      onClick={() => {
-                        // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-                        const redirectUrl = window.location.origin + '/auth/callback';
-                        window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-                      }}
+                      onClick={handleGoogleSignIn}
+                      disabled={isGoogleLoading || firebaseLoginMutation.isPending}
                       data-testid="button-google-login"
                     >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
+                      {isGoogleLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                      )}
                       Continue with Google
                     </Button>
                   </div>
@@ -253,35 +345,19 @@ export default function AuthPage() {
                         )}
                       />
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Username</FormLabel>
-                              <FormControl>
-                                <Input placeholder="johndoe" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={registerForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="john@example.com" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="john@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
@@ -442,9 +518,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full mt-4" 
-                        disabled={registerMutation.isPending}
+                        disabled={isEmailLoading || firebaseLoginMutation.isPending}
                       >
-                        {registerMutation.isPending ? (
+                        {isEmailLoading || firebaseLoginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Creating account...
@@ -471,19 +547,20 @@ export default function AuthPage() {
                     <Button 
                       variant="outline" 
                       className="w-full mt-4"
-                      onClick={() => {
-                        // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-                        const redirectUrl = window.location.origin + '/auth/callback';
-                        window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
-                      }}
+                      onClick={handleGoogleSignIn}
+                      disabled={isGoogleLoading || firebaseLoginMutation.isPending}
                       data-testid="button-google-signup"
                     >
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
+                      {isGoogleLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                      )}
                       Sign up with Google
                     </Button>
                   </div>
@@ -579,5 +656,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
-import { CheckIcon } from "lucide-react";
