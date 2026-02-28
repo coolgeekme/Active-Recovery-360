@@ -1,6 +1,5 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
@@ -30,6 +29,9 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
     }
   };
 
@@ -65,49 +67,6 @@ export function setupAuth(app: Express) {
         return done(error);
       }
     }),
-  );
-
-  // Google OAuth Strategy
-  passport.use(
-    new GoogleStrategy(
-      {
-        clientID: process.env.AR360_GOOGLE_CLIENT_ID!,
-        clientSecret: process.env.AR360_GOOGLE_CLIENT_SECRET!,
-        callbackURL: "/auth/google/callback",
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          console.log(`Google OAuth login attempt for: ${profile.emails?.[0]?.value}`);
-          
-          // Check if user already exists by email
-          const existingUser = await storage.getUserByEmail(profile.emails?.[0]?.value || "");
-          
-          if (existingUser) {
-            console.log("Existing user found, logging in");
-            return done(null, existingUser);
-          }
-          
-          // Create new user from Google profile
-          const newUser: InsertUser = {
-            username: profile.emails?.[0]?.value?.split('@')[0] || `google_${profile.id}`,
-            email: profile.emails?.[0]?.value || "",
-            fullName: profile.displayName || "Google User",
-            password: "", // No password needed for OAuth users
-            isMember: false, // Will be updated if they purchase membership
-            isAdmin: false,
-            isDoctor: false,
-            profileImage: profile.photos?.[0]?.value || null,
-          };
-          
-          const user = await storage.createUser(newUser);
-          console.log("New Google user created");
-          return done(null, user);
-        } catch (error) {
-          console.error("Google OAuth error:", error);
-          return done(error);
-        }
-      }
-    )
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
@@ -173,16 +132,80 @@ export function setupAuth(app: Express) {
     });
   });
 
-  // Google OAuth routes
-  app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-  
-  app.get("/auth/google/callback", 
-    passport.authenticate("google", { failureRedirect: "/auth" }),
-    (req, res) => {
-      // Successful authentication, redirect to home or membership page
-      res.redirect("/?oauth=success");
+  // Emergent Google OAuth - Exchange session_id for user data
+  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+  app.post("/api/auth/emergent-session", async (req, res, next) => {
+    try {
+      const { session_id } = req.body;
+      
+      if (!session_id) {
+        return res.status(400).json({ message: "session_id is required" });
+      }
+      
+      console.log("Exchanging Emergent session_id for user data");
+      
+      // Call Emergent Auth API to get user data
+      const response = await fetch(
+        "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+        {
+          method: "GET",
+          headers: {
+            "X-Session-ID": session_id,
+          },
+        }
+      );
+      
+      if (!response.ok) {
+        console.error("Emergent Auth API error:", response.status);
+        return res.status(401).json({ message: "Invalid session" });
+      }
+      
+      const emergentUser = await response.json();
+      console.log("Emergent user data received:", emergentUser.email);
+      
+      // Check if user already exists by email
+      let user = await storage.getUserByEmail(emergentUser.email);
+      
+      if (user) {
+        console.log("Existing user found, logging in");
+        // Update profile image if changed
+        if (emergentUser.picture && emergentUser.picture !== user.profileImage) {
+          user = await storage.updateUser(user.id, { profileImage: emergentUser.picture }) || user;
+        }
+      } else {
+        // Create new user from Google profile
+        const newUser: InsertUser = {
+          username: emergentUser.email.split('@')[0] || `google_${Date.now()}`,
+          email: emergentUser.email,
+          fullName: emergentUser.name || "Google User",
+          password: "", // No password needed for OAuth users
+          isMember: false,
+          isAdmin: false,
+          isDoctor: false,
+          profileImage: emergentUser.picture || null,
+        };
+        
+        user = await storage.createUser(newUser);
+        console.log("New Google user created");
+      }
+      
+      // Log in the user with Passport session
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Session login error:", err);
+          return next(err);
+        }
+        
+        // Return user without password
+        const { password, ...userWithoutPassword } = user!;
+        res.status(200).json(userWithoutPassword);
+      });
+      
+    } catch (error) {
+      console.error("Emergent OAuth error:", error);
+      next(error);
     }
-  );
+  });
 
   // Get current user
   app.get("/api/user", (req, res) => {
