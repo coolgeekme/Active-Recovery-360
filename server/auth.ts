@@ -21,6 +21,32 @@ async function comparePasswords(supplied: string, stored: string) {
   return bcrypt.compare(supplied, stored);
 }
 
+// Verify Firebase ID token
+async function verifyFirebaseToken(idToken: string): Promise<any> {
+  // Call Firebase's token verification endpoint
+  const response = await fetch(
+    `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=AIzaSyDSXNmLxpA_-Y2d8LueMTr9XXqXnt1pp2A`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ idToken }),
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error("Invalid Firebase token");
+  }
+  
+  const data = await response.json();
+  if (!data.users || data.users.length === 0) {
+    throw new Error("No user found for token");
+  }
+  
+  return data.users[0];
+}
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "active-recovery-360-secret",
@@ -132,61 +158,64 @@ export function setupAuth(app: Express) {
     });
   });
 
-  // Emergent Google OAuth - Exchange session_id for user data
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
-  app.post("/api/auth/emergent-session", async (req, res, next) => {
+  // Firebase Authentication endpoint
+  app.post("/api/auth/firebase", async (req, res, next) => {
     try {
-      const { session_id } = req.body;
+      const { idToken, email, fullName, profileImage, isDoctor, doctorTitle, doctorSpecialty, doctorBio } = req.body;
       
-      if (!session_id) {
-        return res.status(400).json({ message: "session_id is required" });
+      if (!idToken) {
+        return res.status(400).json({ message: "Firebase ID token is required" });
       }
       
-      console.log("Exchanging Emergent session_id for user data");
+      console.log("Verifying Firebase token for:", email);
       
-      // Call Emergent Auth API to get user data
-      const response = await fetch(
-        "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-        {
-          method: "GET",
-          headers: {
-            "X-Session-ID": session_id,
-          },
-        }
-      );
-      
-      if (!response.ok) {
-        console.error("Emergent Auth API error:", response.status);
-        return res.status(401).json({ message: "Invalid session" });
+      // Verify the Firebase token
+      let firebaseUser;
+      try {
+        firebaseUser = await verifyFirebaseToken(idToken);
+      } catch (error) {
+        console.error("Firebase token verification failed:", error);
+        return res.status(401).json({ message: "Invalid Firebase token" });
       }
-      
-      const emergentUser = await response.json();
-      console.log("Emergent user data received:", emergentUser.email);
       
       // Check if user already exists by email
-      let user = await storage.getUserByEmail(emergentUser.email);
+      let user = await storage.getUserByEmail(email);
       
       if (user) {
-        console.log("Existing user found, logging in");
+        console.log("Existing user found, logging in:", email);
         // Update profile image if changed
-        if (emergentUser.picture && emergentUser.picture !== user.profileImage) {
-          user = await storage.updateUser(user.id, { profileImage: emergentUser.picture }) || user;
+        if (profileImage && profileImage !== user.profileImage) {
+          user = await storage.updateUser(user.id, { profileImage }) || user;
         }
       } else {
-        // Create new user from Google profile
+        // Create new user from Firebase profile
+        console.log("Creating new user from Firebase:", email);
+        const username = email.split('@')[0] || `user_${Date.now()}`;
+        
+        // Check if username exists and make unique if needed
+        let finalUsername = username;
+        let counter = 1;
+        while (await storage.getUserByUsername(finalUsername)) {
+          finalUsername = `${username}_${counter}`;
+          counter++;
+        }
+        
         const newUser: InsertUser = {
-          username: emergentUser.email.split('@')[0] || `google_${Date.now()}`,
-          email: emergentUser.email,
-          fullName: emergentUser.name || "Google User",
-          password: "", // No password needed for OAuth users
+          username: finalUsername,
+          email: email,
+          fullName: fullName || "User",
+          password: "", // No password needed for Firebase users
           isMember: false,
           isAdmin: false,
-          isDoctor: false,
-          profileImage: emergentUser.picture || null,
+          isDoctor: isDoctor || false,
+          doctorTitle: doctorTitle || null,
+          doctorSpecialty: doctorSpecialty || null,
+          doctorBio: doctorBio || null,
+          profileImage: profileImage || null,
         };
         
         user = await storage.createUser(newUser);
-        console.log("New Google user created");
+        console.log("New Firebase user created:", user.email);
       }
       
       // Log in the user with Passport session
@@ -202,7 +231,7 @@ export function setupAuth(app: Express) {
       });
       
     } catch (error) {
-      console.error("Emergent OAuth error:", error);
+      console.error("Firebase auth error:", error);
       next(error);
     }
   });
