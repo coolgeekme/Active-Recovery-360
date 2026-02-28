@@ -249,7 +249,7 @@ class AR360FirebaseAPITester:
 
 def main():
     """Main function"""
-    tester = AR360APITester()
+    tester = AR360FirebaseAPITester()
     success = tester.run_all_tests()
     return 0 if success else 1
 
