@@ -226,7 +226,7 @@ class AR360FirebaseAPITester:
         self.test_testimonials_api()
         
         # Test authentication
-        self.test_auth_endpoints()
+        self.test_firebase_auth_endpoint()
         
         # Test membership endpoints
         self.test_membership_endpoints()
