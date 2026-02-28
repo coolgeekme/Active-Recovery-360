@@ -36,7 +36,7 @@ AR360 is a full-stack e-commerce platform focused on professional-grade exercise
 ### Backend Features
 - Express.js API with all CRUD endpoints
 - User authentication (local username/password)
-- **Emergent Google OAuth integration** (via auth.emergentagent.com)
+- **Firebase Authentication** (Google Sign-in + Email/Password)
 - Product management with visibility controls
 - Category management
 - Order processing
@@ -49,8 +49,7 @@ AR360 is a full-stack e-commerce platform focused on professional-grade exercise
 - Shop page with product grid and filtering
 - Membership page with Stripe checkout
 - Doctor storefronts page
-- User authentication pages with Google OAuth button
-- **OAuth callback handler** (AuthCallback component)
+- User authentication pages with **Firebase Google Sign-in** and Email/Password
 - Admin dashboard with full management capabilities
 - Responsive design matching activerecovery360.com
 
