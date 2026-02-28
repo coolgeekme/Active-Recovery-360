@@ -6,8 +6,8 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-class AR360APITester:
-    """Test suite for AR360 E-commerce Platform APIs"""
+class AR360FirebaseAPITester:
+    """Test suite for AR360 E-commerce Platform APIs with Firebase Auth"""
     
     def __init__(self, base_url: str = "http://localhost:3000"):
         self.base_url = base_url
@@ -15,7 +15,7 @@ class AR360APITester:
         self.session.headers.update({'Content-Type': 'application/json'})
         self.tests_run = 0
         self.tests_passed = 0
-        self.user_token = None
+        self.firebase_token = None
         self.test_user_id = None
         
     def log_test(self, name: str, status: bool, message: str = ""):
