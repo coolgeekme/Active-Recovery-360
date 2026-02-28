@@ -4,9 +4,11 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
 
 type AuthContextType = {
   user: SelectUser | null;
@@ -15,18 +17,27 @@ type AuthContextType = {
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  firebaseLoginMutation: UseMutationResult<SelectUser, Error, FirebaseLoginData>;
   refetch: () => Promise<any>;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
 
+type FirebaseLoginData = {
+  idToken: string;
+  email: string;
+  fullName: string;
+  profileImage?: string;
+  isDoctor?: boolean;
+  doctorTitle?: string;
+  doctorSpecialty?: string;
+  doctorBio?: string;
+};
+
 export const AuthContext = createContext<AuthContextType | null>(null);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  
-  // CRITICAL: If returning from OAuth callback, skip the /me check initially.
-  // AuthCallback will exchange the session_id and establish the session first.
-  const isOAuthCallback = typeof window !== 'undefined' && window.location.hash?.includes('session_id=');
   
   const {
     data: user,
@@ -36,9 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    enabled: !isOAuthCallback, // Skip initial fetch during OAuth callback
   });
 
+  // Traditional username/password login
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
@@ -60,6 +71,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Firebase authentication login
+  const firebaseLoginMutation = useMutation({
+    mutationFn: async (data: FirebaseLoginData) => {
+      const res = await apiRequest("POST", "/api/auth/firebase", data);
+      return await res.json();
+    },
+    onSuccess: (user: SelectUser) => {
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Login successful",
+        description: `Welcome, ${user.fullName}!`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Login failed",
+        description: error.message || "Authentication failed",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Traditional registration
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       const res = await apiRequest("POST", "/api/register", credentials);
@@ -83,6 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      // Sign out from Firebase
+      await signOut(auth);
+      // Sign out from backend session
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
@@ -111,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        firebaseLoginMutation,
         refetch,
       }}
     >
