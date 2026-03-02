@@ -5,10 +5,18 @@ AR360 is a full-stack e-commerce platform focused on professional-grade exercise
 
 ## Architecture Overview
 - **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Express.js + PostgreSQL (local) + Drizzle ORM
-- **Authentication**: Passport.js (local strategy + Google OAuth)
+- **Backend**: Express.js + PostgreSQL (Supabase) + Drizzle ORM
+- **Authentication**: Firebase Auth (Google Sign-in + Email/Password)
 - **Payments**: Stripe integration
 - **Styling**: Tailwind CSS + Radix UI components
+- **Database**: Supabase PostgreSQL (Transaction Pooler)
+
+## Deployment Configuration
+- Single Node.js Express server serving both API and static frontend
+- Port: 3000
+- Build: `npm run build` (Vite build + esbuild)
+- Start: `npm run start` (NODE_ENV=production node dist/index.js)
+- CORS enabled for production domains
 
 ## User Personas
 1. **Public Users**: Can browse products, view public items
