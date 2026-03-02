@@ -475,30 +475,60 @@ export class DatabaseStorage implements IStorage {
     };
     const user = await this.createUser(regularUser);
 
-    // Sample categories
+    // Sample categories - Recovery Products
     const categoriesData = [
       {
-        name: "Joint & Muscle",
-        description: "Products for joint and muscle recovery",
+        name: "Hot/Cold Therapy",
+        description: "Hot and cold therapy products for recovery",
+        imageUrl: "https://images.unsplash.com/photo-1554344728-77cf90d9ed26?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+        productCount: 0
+      },
+      {
+        name: "Topicals",
+        description: "Topical recovery products and treatments",
         imageUrl: "https://images.unsplash.com/photo-1588286840104-8957b019727f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
         productCount: 0
       },
       {
-        name: "Spine & Back",
-        description: "Products for spine and back recovery",
+        name: "Electro Therapy",
+        description: "Electro therapy devices and equipment",
         imageUrl: "https://images.unsplash.com/photo-1547919307-1ecb10702e6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
         productCount: 0
       },
       {
+        name: "Self-Care Tools",
+        description: "Self-care tools for recovery and wellness",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+        productCount: 0
+      },
+      {
+        name: "Recovery Garments",
+        description: "Recovery garments and apparel",
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+        productCount: 0
+      },
+      {
         name: "Compression Therapy",
-        description: "Compression products for recovery",
+        description: "Compression therapy products for recovery",
         imageUrl: "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
         productCount: 0
       },
       {
-        name: "Heat & Cold Therapy",
-        description: "Heat and cold therapy products",
-        imageUrl: "https://images.unsplash.com/photo-1554344728-77cf90d9ed26?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+        name: "Recovery Patches",
+        description: "Recovery patches for targeted relief",
+        imageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+        productCount: 0
+      },
+      {
+        name: "Kinesiology Tape",
+        description: "Kinesiology tape for support and recovery",
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+        productCount: 0
+      },
+      {
+        name: "Braces",
+        description: "Braces and supports for injury recovery",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
         productCount: 0
       }
     ];
