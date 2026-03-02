@@ -10,13 +10,8 @@ export default function MembershipPage() {
   const benefits = [
     {
       icon: Shield,
-      title: "Exclusive Products",
-      description: "Access to member-only recovery tools and products not available to the general public."
-    },
-    {
-      icon: Users,
-      title: "Doctor Resources",
-      description: "Shop from specialized doctor storefronts with curated professional-grade equipment."
+      title: "Exclusive Pricing",
+      description: "Access to member-only pricing on recovery tools and products not available to the general public."
     },
     {
       icon: Calendar,

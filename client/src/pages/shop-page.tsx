@@ -35,8 +35,8 @@ export default function ShopPage() {
         {/* Main Content */}
         <div className="lg:w-3/4">
           <div className="mb-8">
-            <h1 className="text-3xl font-montserrat font-bold text-primary mb-2">Shop Recovery Products</h1>
-            <p className="text-secondary">Browse our collection of specialized recovery products for your healing journey.</p>
+            <h1 className="text-3xl font-montserrat font-bold text-primary mb-2">Shop Exercise, Performance & Injury Recovery Products</h1>
+            <p className="text-secondary">Browse our collection of specialized recovery products for your recovery journey.</p>
           </div>
 
           <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="mb-8">
@@ -75,11 +75,7 @@ export default function ShopPage() {
               <ul className="space-y-2">
                 <li className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-primary mr-2" />
-                  <span className="text-sm">Exclusive Products</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckIcon className="h-4 w-4 text-primary mr-2" />
-                  <span className="text-sm">Doctor Storefronts</span>
+                  <span className="text-sm">Exclusive Pricing</span>
                 </li>
                 <li className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-primary mr-2" />
@@ -96,40 +92,6 @@ export default function ShopPage() {
                   Become a Member
                 </a>
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Visibility</CardTitle>
-              <CardDescription>Understanding product access levels</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center mb-1">
-                    <div className="w-3 h-3 bg-[#28A745] rounded-full mr-2"></div>
-                    <span className="font-medium">PUBLIC</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Available to all visitors</p>
-                </div>
-                
-                <div>
-                  <div className="flex items-center mb-1">
-                    <div className="w-3 h-3 bg-[#E65100] rounded-full mr-2"></div>
-                    <span className="font-medium">MEMBERS</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Exclusive to AR360 members</p>
-                </div>
-                
-                <div>
-                  <div className="flex items-center mb-1">
-                    <div className="w-3 h-3 bg-[#DC3545] rounded-full mr-2"></div>
-                    <span className="font-medium">DOCTOR</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Available only to healthcare professionals</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

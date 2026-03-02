@@ -34,14 +34,9 @@ export default function HomePage() {
   // Benefits data
   const benefits = [
     {
-      title: "Exclusive Products",
-      description: "Access to member-only recovery tools and products not available to the general public.",
+      title: "Exclusive Pricing",
+      description: "Access to member-only pricing on recovery tools and products not available to the general public.",
       icon: benefitIcons.exclusiveProducts
-    },
-    {
-      title: "Doctor Resources",
-      description: "Shop from specialized doctor storefronts with curated professional-grade equipment.",
-      icon: benefitIcons.doctorResources
     },
     {
       title: "Lifetime Access",
