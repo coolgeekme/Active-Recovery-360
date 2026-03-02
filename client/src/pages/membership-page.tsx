@@ -53,7 +53,7 @@ export default function MembershipPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Active Recovery 360 Membership</h1>
         <p className="text-xl text-secondary max-w-3xl mx-auto">
-          Join our alliance for a one-time fee of $29 and unlock exclusive access to premium recovery products and resources.
+          Join our recovery community for a one-time fee of $29.00 and unlock exclusive access to premium recovery products, member-only pricing, and exclusive recovery resources.
         </p>
       </div>
 
