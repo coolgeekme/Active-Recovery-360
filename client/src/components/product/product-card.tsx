@@ -103,9 +103,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="w-full h-48 object-cover cursor-pointer"
           />
         </Link>
-        <div className="absolute top-2 right-2">
-          {renderVisibilityBadge()}
-        </div>
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <Link href={`/product/${product.id}`}>

@@ -95,28 +95,6 @@ export default function ProductGrid({
       {title && (
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-montserrat font-bold text-primary">{title}</h2>
-          {showFilters && (
-            <div className="flex items-center space-x-4">
-              <Select
-                value={visibility || "all"}
-                onValueChange={(value) => {
-                  // Set visibility to undefined when "all" is selected to not filter in API
-                  setVisibility(value === "all" ? undefined : value);
-                }}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by visibility" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getVisibilityOptions().map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
       )}
       
