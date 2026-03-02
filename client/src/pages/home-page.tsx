@@ -127,11 +127,26 @@ export default function HomePage() {
                   LIMITED TIME OFFER
                 </span>
                 <h3 className="text-2xl font-montserrat font-bold text-white mb-3">
-                  Receive a FREE Recovery Kit ($35 value)
+                  Why Join Active Recovery 360
                 </h3>
-                <p className="text-white mb-6">
-                  Sign up today and receive our exclusive starter recovery kit as a welcome gift. Includes compression bands, recovery guide, and more.
-                </p>
+                <ul className="text-white mb-6 space-y-2">
+                  <li className="flex items-center">
+                    <span className="mr-2">•</span>
+                    Access to member-only pricing
+                  </li>
+                  <li className="flex items-center">
+                    <span className="mr-2">•</span>
+                    Free Recovery Kit ($39 Value)
+                  </li>
+                  <li className="flex items-center">
+                    <span className="mr-2">•</span>
+                    Early Bird Access to new product offerings
+                  </li>
+                  <li className="flex items-center">
+                    <span className="mr-2">•</span>
+                    Discounts on Clinical Recovery Services
+                  </li>
+                </ul>
                 <Button asChild className="font-montserrat font-semibold btn-secondary-enhanced">
                   <Link href="/membership">Join Now for $29</Link>
                 </Button>
