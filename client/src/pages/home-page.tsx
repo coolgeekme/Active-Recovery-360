@@ -195,7 +195,7 @@ export default function HomePage() {
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-montserrat font-bold text-primary mb-2">Featured Doctor Storefronts</h2>
+              <h2 className="text-3xl font-montserrat font-bold text-primary mb-2">HCP Storefronts</h2>
               <p className="text-secondary max-w-xl mx-auto">
                 Explore specialized shops curated by medical professionals with products tailored to specific recovery needs.
               </p>
@@ -250,6 +250,22 @@ export default function HomePage() {
       {/* CTA Banner */}
       <section className="py-12 bg-primary">
         <div className="container mx-auto px-4">
+          {/* Healthcare Professional Section */}
+          <div className="flex flex-col md:flex-row items-center justify-between mb-10 pb-10 border-b border-white border-opacity-20">
+            <div className="mb-6 md:mb-0">
+              <h2 className="text-3xl font-montserrat font-bold text-white mb-2">Are You a Healthcare Professional?</h2>
+              <p className="text-white text-opacity-90 max-w-xl">
+                Join the Active Recovery 360 as a healthcare provider and create your own customized storefront with recovery products targeted to your patients needs.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button asChild className="font-montserrat bg-primary text-white border-2 border-white hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
+                <Link href="/auth?tab=register">Join as HCP</Link>
+              </Button>
+            </div>
+          </div>
+          
+          {/* Member Join Section */}
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="mb-6 md:mb-0">
               <h2 className="text-3xl font-montserrat font-bold text-white mb-2">Ready to Join Active Recovery 360?</h2>

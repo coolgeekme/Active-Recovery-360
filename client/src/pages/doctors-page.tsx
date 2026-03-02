@@ -50,7 +50,7 @@ export default function DoctorsPage() {
       <div className="mt-16 bg-primary bg-opacity-5 rounded-lg p-8 text-center">
         <h2 className="text-2xl font-montserrat font-bold text-primary mb-4">Are You a Healthcare Professional?</h2>
         <p className="text-lg text-secondary mb-6 max-w-2xl mx-auto">
-          Join the Exercise Recovery Alliance as a healthcare provider and create your own specialized storefront with curated product recommendations.
+          Join the Active Recovery 360 as a healthcare provider and create your own customized storefront with recovery products targeted to your patients needs.
         </p>
         <Button asChild size="lg" className="font-montserrat font-semibold btn-primary-enhanced">
           <a href="/auth?tab=register">
