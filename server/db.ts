@@ -8,5 +8,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+// Configure for Supabase Transaction Pooler
+export const pool = new pg.Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  // Disable prepared statements for Supabase Transaction Pooler compatibility
+  statement_timeout: 30000,
+  query_timeout: 30000,
+});
+
 export const db = drizzle(pool, { schema });
