@@ -193,7 +193,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
       <CardHeader>
         <CardTitle className="text-center">Become a Member</CardTitle>
         <CardDescription className="text-center">
-          Join our recovery community for a one-time fee of $29.00
+          Join our recovery community for a one-time fee of $29
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -116,7 +116,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-montserrat font-bold text-primary mb-2">Exclusive Membership Benefits</h2>
             <p className="text-secondary max-w-xl mx-auto">
-              Join our recovery community for a one-time fee of $29.00 and unlock exclusive access to premium recovery products, member-only pricing, and exclusive recovery resources.
+              Join our recovery community for a one-time fee of $29 and unlock exclusive access to premium recovery products, member-only pricing, and exclusive recovery resources.
             </p>
           </div>
 
