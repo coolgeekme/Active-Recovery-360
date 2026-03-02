@@ -3,9 +3,9 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDSXNmLxpA_-Y2d8LueMTr9XXqXnt1pp2A",
-  authDomain: "active-recovey-360.firebaseapp.com",
-  projectId: "active-recovey-360",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
 };
 
 // Initialize Firebase (singleton pattern)

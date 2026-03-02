@@ -24,8 +24,13 @@ async function comparePasswords(supplied: string, stored: string) {
 // Verify Firebase ID token
 async function verifyFirebaseToken(idToken: string): Promise<any> {
   // Call Firebase's token verification endpoint
+  const firebaseApiKey = process.env.FIREBASE_API_KEY;
+  if (!firebaseApiKey) {
+    throw new Error("FIREBASE_API_KEY environment variable is not set");
+  }
+  
   const response = await fetch(
-    `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=AIzaSyDSXNmLxpA_-Y2d8LueMTr9XXqXnt1pp2A`,
+    `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${firebaseApiKey}`,
     {
       method: "POST",
       headers: {
