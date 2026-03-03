@@ -1,19 +1,9 @@
-// Vercel Serverless API Entry Point
-import express from 'express';
-import cors from 'cors';
-import session from 'express-session';
-import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
-import bcrypt from 'bcrypt';
 import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq, and, sql, asc } from 'drizzle-orm';
-import Stripe from 'stripe';
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
-import { z } from 'zod';
+import { eq, and } from 'drizzle-orm';
+import { pgTable, text, serial, integer, boolean, timestamp } from 'drizzle-orm/pg-core';
 
-// Schema definitions
+// Schema
 const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -62,205 +52,174 @@ const testimonials = pgTable("testimonials", {
 });
 
 // Database connection
-const pool = new pg.Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-const db = drizzle(pool);
+let pool;
+let db;
 
-// Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16'
-});
-
-// Create Express app
-const app = express();
-
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true
-}));
-app.use(express.json());
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Products
-app.get('/api/products', async (req, res) => {
-  try {
-    const { featured, categoryId, visibility } = req.query;
-    let query = db.select().from(products);
-    
-    const conditions = [];
-    if (featured === 'true') conditions.push(eq(products.featured, true));
-    if (categoryId) conditions.push(eq(products.categoryId, parseInt(categoryId)));
-    if (visibility) conditions.push(eq(products.visibility, visibility));
-    
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-    
-    const result = await query;
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ error: 'Failed to fetch products' });
-  }
-});
-
-app.get('/api/products/:id', async (req, res) => {
-  try {
-    const [product] = await db.select().from(products).where(eq(products.id, parseInt(req.params.id)));
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch product' });
-  }
-});
-
-// Categories
-app.get('/api/categories', async (req, res) => {
-  try {
-    const result = await db.select().from(categories);
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    res.status(500).json({ error: 'Failed to fetch categories' });
-  }
-});
-
-app.get('/api/categories/:id', async (req, res) => {
-  try {
-    const [category] = await db.select().from(categories).where(eq(categories.id, parseInt(req.params.id)));
-    if (!category) return res.status(404).json({ error: 'Category not found' });
-    res.json(category);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch category' });
-  }
-});
-
-// Doctors
-app.get('/api/doctors', async (req, res) => {
-  try {
-    const result = await db.select().from(users).where(eq(users.isDoctor, true));
-    const doctorsWithoutPasswords = result.map(({ password, ...rest }) => rest);
-    res.json(doctorsWithoutPasswords);
-  } catch (error) {
-    console.error('Error fetching doctors:', error);
-    res.status(500).json({ error: 'Failed to fetch doctors' });
-  }
-});
-
-app.get('/api/doctors/:id', async (req, res) => {
-  try {
-    const [doctor] = await db.select().from(users).where(and(eq(users.id, parseInt(req.params.id)), eq(users.isDoctor, true)));
-    if (!doctor) return res.status(404).json({ error: 'Doctor not found' });
-    const { password, ...doctorWithoutPassword } = doctor;
-    res.json(doctorWithoutPassword);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch doctor' });
-  }
-});
-
-// Testimonials
-app.get('/api/testimonials', async (req, res) => {
-  try {
-    const { featured } = req.query;
-    let query = db.select().from(testimonials);
-    if (featured === 'true') {
-      query = query.where(eq(testimonials.featured, true));
-    }
-    const result = await query;
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching testimonials:', error);
-    res.status(500).json({ error: 'Failed to fetch testimonials' });
-  }
-});
-
-// Firebase Auth
-app.post('/api/auth/firebase', async (req, res) => {
-  try {
-    const { idToken, email, fullName, profileImage } = req.body;
-    if (!idToken || !email) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Verify Firebase token
-    const firebaseApiKey = process.env.FIREBASE_API_KEY;
-    const response = await fetch(
-      `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${firebaseApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      }
-    );
-
-    if (!response.ok) {
-      return res.status(401).json({ error: 'Invalid Firebase token' });
-    }
-
-    // Check if user exists
-    const [existingUser] = await db.select().from(users).where(eq(users.email, email));
-    
-    if (existingUser) {
-      const { password, ...userWithoutPassword } = existingUser;
-      return res.json(userWithoutPassword);
-    }
-
-    // Create new user
-    const [newUser] = await db.insert(users).values({
-      username: email.split('@')[0] || `user_${Date.now()}`,
-      email,
-      fullName: fullName || 'User',
-      password: '',
-      isMember: false,
-      isAdmin: false,
-      isDoctor: false,
-      profileImage: profileImage || null,
-    }).returning();
-
-    const { password, ...userWithoutPassword } = newUser;
-    res.json(userWithoutPassword);
-  } catch (error) {
-    console.error('Firebase auth error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
-  }
-});
-
-// User endpoint (returns 401 for unauthenticated - sessions don't persist in serverless)
-app.get('/api/user', (req, res) => {
-  res.status(401).json({ error: 'Not authenticated' });
-});
-
-// Stripe payment intent
-app.post('/api/create-payment-intent', async (req, res) => {
-  try {
-    const { amount } = req.body;
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100),
-      currency: 'usd',
-      metadata: { type: 'membership' }
+function getDb() {
+  if (!pool) {
+    pool = new pg.Pool({ 
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
     });
-    res.json({ clientSecret: paymentIntent.client_secret });
-  } catch (error) {
-    console.error('Stripe error:', error);
-    res.status(500).json({ error: 'Payment failed' });
+    db = drizzle(pool);
   }
-});
+  return db;
+}
 
-// Discount code validation
-app.post('/api/discount-codes/validate', async (req, res) => {
+export default async function handler(req, res) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const db = getDb();
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const path = url.pathname.replace('/api', '');
+
   try {
-    const { code } = req.body;
-    // For now, return not found - implement discount codes table if needed
-    res.status(404).json({ message: 'Invalid discount code' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to validate discount code' });
-  }
-});
+    // Health check
+    if (path === '/health' || path === '/health/') {
+      return res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    }
 
-export default app;
+    // Products
+    if (path === '/products' || path === '/products/') {
+      if (req.method === 'GET') {
+        const featured = url.searchParams.get('featured');
+        const categoryId = url.searchParams.get('categoryId');
+        
+        let query = db.select().from(products);
+        const conditions = [];
+        
+        if (featured === 'true') conditions.push(eq(products.featured, true));
+        if (categoryId) conditions.push(eq(products.categoryId, parseInt(categoryId)));
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+        
+        const result = await query;
+        return res.json(result);
+      }
+    }
+
+    // Single product
+    const productMatch = path.match(/^\/products\/(\d+)$/);
+    if (productMatch) {
+      const [product] = await db.select().from(products).where(eq(products.id, parseInt(productMatch[1])));
+      if (!product) return res.status(404).json({ error: 'Product not found' });
+      return res.json(product);
+    }
+
+    // Categories
+    if (path === '/categories' || path === '/categories/') {
+      if (req.method === 'GET') {
+        const result = await db.select().from(categories);
+        return res.json(result);
+      }
+    }
+
+    // Single category
+    const categoryMatch = path.match(/^\/categories\/(\d+)$/);
+    if (categoryMatch) {
+      const [category] = await db.select().from(categories).where(eq(categories.id, parseInt(categoryMatch[1])));
+      if (!category) return res.status(404).json({ error: 'Category not found' });
+      return res.json(category);
+    }
+
+    // Doctors
+    if (path === '/doctors' || path === '/doctors/') {
+      if (req.method === 'GET') {
+        const result = await db.select().from(users).where(eq(users.isDoctor, true));
+        const doctorsWithoutPasswords = result.map(({ password, ...rest }) => rest);
+        return res.json(doctorsWithoutPasswords);
+      }
+    }
+
+    // Single doctor
+    const doctorMatch = path.match(/^\/doctors\/(\d+)$/);
+    if (doctorMatch) {
+      const [doctor] = await db.select().from(users).where(and(eq(users.id, parseInt(doctorMatch[1])), eq(users.isDoctor, true)));
+      if (!doctor) return res.status(404).json({ error: 'Doctor not found' });
+      const { password, ...doctorWithoutPassword } = doctor;
+      return res.json(doctorWithoutPassword);
+    }
+
+    // Testimonials
+    if (path === '/testimonials' || path === '/testimonials/') {
+      if (req.method === 'GET') {
+        const featured = url.searchParams.get('featured');
+        let query = db.select().from(testimonials);
+        if (featured === 'true') {
+          query = query.where(eq(testimonials.featured, true));
+        }
+        const result = await query;
+        return res.json(result);
+      }
+    }
+
+    // Firebase Auth
+    if (path === '/auth/firebase' || path === '/auth/firebase/') {
+      if (req.method === 'POST') {
+        const { idToken, email, fullName, profileImage } = req.body;
+        if (!idToken || !email) {
+          return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Verify Firebase token
+        const firebaseApiKey = process.env.FIREBASE_API_KEY;
+        const response = await fetch(
+          `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${firebaseApiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          }
+        );
+
+        if (!response.ok) {
+          return res.status(401).json({ error: 'Invalid Firebase token' });
+        }
+
+        // Check if user exists
+        const [existingUser] = await db.select().from(users).where(eq(users.email, email));
+        
+        if (existingUser) {
+          const { password, ...userWithoutPassword } = existingUser;
+          return res.json(userWithoutPassword);
+        }
+
+        // Create new user
+        const [newUser] = await db.insert(users).values({
+          username: email.split('@')[0] || `user_${Date.now()}`,
+          email,
+          fullName: fullName || 'User',
+          password: '',
+          isMember: false,
+          isAdmin: false,
+          isDoctor: false,
+          profileImage: profileImage || null,
+        }).returning();
+
+        const { password, ...userWithoutPassword } = newUser;
+        return res.json(userWithoutPassword);
+      }
+    }
+
+    // User (no session in serverless)
+    if (path === '/user' || path === '/user/') {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Default 404
+    return res.status(404).json({ error: 'Not found', path });
+
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({ error: 'Internal server error', message: error.message });
+  }
+}
