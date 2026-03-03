@@ -4,13 +4,51 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
 import Stripe from "stripe";
-import { 
-  insertProductSchema, 
-  insertCategorySchema, 
-  insertCartItemSchema,
-  insertOrderSchema,
-  insertDiscountCodeSchema
-} from "@shared/schema";
+import { IUser } from "./types";
+
+// Zod schemas for validation (replacing Drizzle schemas)
+const insertProductSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  price: z.number().positive(),
+  imageUrl: z.string().nullable().optional(),
+  visibility: z.enum(['public', 'member', 'doctor']),
+  categoryId: z.string(),
+  stockQuantity: z.number().int().nonnegative().default(0),
+  featured: z.boolean().default(false),
+  doctorIds: z.array(z.string()).optional(),
+});
+
+const insertCategorySchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  imageUrl: z.string().nullable().optional(),
+  productCount: z.number().int().nonnegative().default(0),
+});
+
+const insertCartItemSchema = z.object({
+  userId: z.string(),
+  productId: z.string(),
+  quantity: z.number().int().positive().default(1),
+});
+
+const insertOrderSchema = z.object({
+  userId: z.string(),
+  totalAmount: z.number().positive(),
+  status: z.enum(['pending', 'completed', 'cancelled']).default('pending'),
+  items: z.any(),
+  shippingAddress: z.string().min(1),
+});
+
+const insertDiscountCodeSchema = z.object({
+  code: z.string().min(1),
+  description: z.string().min(1),
+  discountType: z.enum(['percentage', 'fixed']),
+  discountValue: z.number().positive(),
+  isActive: z.boolean().default(true),
+  usageLimit: z.number().int().positive().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+});
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -42,6 +80,9 @@ const isMember = (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize storage (connects to MongoDB)
+  await storage.init();
+  
   // Setup authentication routes
   setupAuth(app);
 
@@ -124,12 +165,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } catch (error) {
             console.error("Error updating discount code usage:", error);
-            // Don't fail the payment confirmation if discount update fails
           }
         }
         
         // Update user to be a member
-        const updatedUser = await storage.updateUser(req.user!.id, { isMember: true });
+        const user = req.user as IUser;
+        const updatedUser = await storage.updateUser(user.id!, { isMember: true });
         
         if (updatedUser) {
           const { password, ...userWithoutPassword } = updatedUser;
@@ -151,30 +192,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { visibility, categoryId, featured, doctorId } = req.query;
       
-      // Filter options
       const filters: any = {};
       
-      // Only filter by visibility if it's explicitly specified
-      if (visibility) {
-        filters.visibility = visibility as string;
-      }
-      
-      if (categoryId) filters.categoryId = parseInt(categoryId as string);
+      if (visibility) filters.visibility = visibility as string;
+      if (categoryId) filters.categoryId = categoryId as string;
       if (featured) filters.featured = featured === 'true';
-      if (doctorId) filters.doctorId = parseInt(doctorId as string);
-      
-      // Note: We're allowing public users to view all products
-      // They just can't purchase member or doctor products
-      // This is intentionally commented out now
-      /* 
-      if (filters.visibility === "member" && (!req.isAuthenticated() || !req.user.isMember)) {
-        return res.status(403).json({ message: "Membership required to view these products" });
-      }
-      
-      if (filters.visibility === "doctor" && (!req.isAuthenticated() || !req.user.isDoctor)) {
-        return res.status(403).json({ message: "Doctor access required to view these products" });
-      }
-      */
+      if (doctorId) filters.doctorId = doctorId as string;
       
       const products = await storage.getProducts(filters);
       res.json(products);
@@ -185,25 +208,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/products/:id", async (req, res) => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = req.params.id;
       const product = await storage.getProduct(productId);
       
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
       }
-      
-      // Note: We're allowing public users to view all product details
-      // They just can't purchase member or doctor products
-      // This is intentionally commented out now
-      /*
-      if (product.visibility === "member" && (!req.isAuthenticated() || !req.user.isMember)) {
-        return res.status(403).json({ message: "Membership required to view this product" });
-      }
-      
-      if (product.visibility === "doctor" && (!req.isAuthenticated() || !req.user.isDoctor)) {
-        return res.status(403).json({ message: "Doctor access required to view this product" });
-      }
-      */
       
       res.json(product);
     } catch (error) {
@@ -227,7 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/products/:id", isAdmin, async (req, res) => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = req.params.id;
       const productData = req.body;
       
       const updatedProduct = await storage.updateProduct(productId, productData);
@@ -244,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/products/:id", isAdmin, async (req, res) => {
     try {
-      const productId = parseInt(req.params.id);
+      const productId = req.params.id;
       const success = await storage.deleteProduct(productId);
       
       if (!success) {
@@ -269,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/categories/:id", async (req, res) => {
     try {
-      const categoryId = parseInt(req.params.id);
+      const categoryId = req.params.id;
       const category = await storage.getCategory(categoryId);
       
       if (!category) {
@@ -300,7 +310,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const doctors = await storage.getDoctors();
       res.json(doctors.map(doctor => {
-        // Remove password from response
         const { password, ...doctorWithoutPassword } = doctor;
         return doctorWithoutPassword;
       }));
@@ -311,14 +320,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/doctors/:id", async (req, res) => {
     try {
-      const doctorId = parseInt(req.params.id);
+      const doctorId = req.params.id;
       const doctor = await storage.getDoctor(doctorId);
       
       if (!doctor) {
         return res.status(404).json({ message: "Doctor not found" });
       }
       
-      // Remove password from response
       const { password, ...doctorWithoutPassword } = doctor;
       res.json(doctorWithoutPassword);
     } catch (error) {
@@ -329,12 +337,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cart routes (members only)
   app.get("/api/cart", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user as IUser;
+      const userId = user.id!;
       const cartItems = await storage.getCartItems(userId);
       
       // Get product details for each cart item
       const cartWithProducts = await Promise.all(
-        cartItems.map(async (item) => {
+        cartItems.map(async (item: any) => {
           const product = await storage.getProduct(item.productId);
           return {
             ...item,
@@ -351,7 +360,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/cart", isMember, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user as IUser;
+      const userId = user.id!;
       const cartItemData = insertCartItemSchema.parse({
         ...req.body,
         userId
@@ -365,12 +375,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check membership for visibility
-      if (product.visibility === "member" && !req.user!.isMember) {
+      if (product.visibility === "member" && !user.isMember) {
         return res.status(403).json({ message: "Membership required to add this product to cart" });
       }
       
       // Check doctor visibility
-      if (product.visibility === "doctor" && !req.user!.isDoctor) {
+      if (product.visibility === "doctor" && !user.isDoctor) {
         return res.status(403).json({ message: "Doctor access required to add this product to cart" });
       }
       
@@ -393,8 +403,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/cart/:id", isAuthenticated, async (req, res) => {
     try {
-      const cartItemId = parseInt(req.params.id);
+      const cartItemId = req.params.id;
       const { quantity } = req.body;
+      const user = req.user as IUser;
       
       // Verify cart item belongs to user
       const cartItem = await storage.getCartItem(cartItemId);
@@ -403,7 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Cart item not found" });
       }
       
-      if (cartItem.userId !== req.user!.id) {
+      if (cartItem.userId !== user.id) {
         return res.status(403).json({ message: "Not authorized to update this cart item" });
       }
       
@@ -428,7 +439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/cart/:id", isAuthenticated, async (req, res) => {
     try {
-      const cartItemId = parseInt(req.params.id);
+      const cartItemId = req.params.id;
+      const user = req.user as IUser;
       
       // Verify cart item belongs to user
       const cartItem = await storage.getCartItem(cartItemId);
@@ -437,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Cart item not found" });
       }
       
-      if (cartItem.userId !== req.user!.id) {
+      if (cartItem.userId !== user.id) {
         return res.status(403).json({ message: "Not authorized to delete this cart item" });
       }
       
@@ -456,9 +468,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Order routes
   app.get("/api/orders", isAuthenticated, async (req, res) => {
     try {
+      const user = req.user as IUser;
       // Regular users can only see their own orders
       // Admins can see all orders
-      const userId = req.user!.isAdmin ? undefined : req.user!.id;
+      const userId = user.isAdmin ? undefined : user.id;
       const orders = await storage.getOrders(userId);
       res.json(orders);
     } catch (error) {
@@ -468,7 +481,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/orders/:id", isAuthenticated, async (req, res) => {
     try {
-      const orderId = parseInt(req.params.id);
+      const orderId = req.params.id;
+      const user = req.user as IUser;
       const order = await storage.getOrder(orderId);
       
       if (!order) {
@@ -476,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Users can only see their own orders unless they're an admin
-      if (order.userId !== req.user!.id && !req.user!.isAdmin) {
+      if (order.userId !== user.id && !user.isAdmin) {
         return res.status(403).json({ message: "Not authorized to view this order" });
       }
       
@@ -488,7 +502,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", isMember, async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const user = req.user as IUser;
+      const userId = user.id!;
       
       // Get cart items
       const cartItems = await storage.getCartItems(userId);
@@ -500,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate total amount
       let totalAmount = 0;
       const orderItems = await Promise.all(
-        cartItems.map(async (item) => {
+        cartItems.map(async (item: any) => {
           const product = await storage.getProduct(item.productId);
           if (!product) {
             throw new Error(`Product with ID ${item.productId} not found`);
@@ -543,7 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin order management
   app.put("/api/orders/:id/status", isAdmin, async (req, res) => {
     try {
-      const orderId = parseInt(req.params.id);
+      const orderId = req.params.id;
       const { status } = req.body;
       
       if (!status || !["pending", "completed", "cancelled"].includes(status)) {
@@ -585,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if code is expired
-      if (discountCode.expiresAt && new Date() > discountCode.expiresAt) {
+      if (discountCode.expiresAt && new Date() > new Date(discountCode.expiresAt)) {
         return res.status(400).json({ message: "This discount code has expired" });
       }
       
@@ -634,7 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.put("/api/discount-codes/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const discountCodeId = parseInt(req.params.id);
+      const discountCodeId = req.params.id;
       const discountCodeData = req.body;
       
       const updatedDiscountCode = await storage.updateDiscountCode(discountCodeId, discountCodeData);
@@ -651,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.delete("/api/discount-codes/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const discountCodeId = parseInt(req.params.id);
+      const discountCodeId = req.params.id;
       const success = await storage.deleteDiscountCode(discountCodeId);
       
       if (!success) {
@@ -683,11 +698,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User profile update route
   app.patch("/api/user/profile", isAuthenticated, async (req, res) => {
     try {
-      if (!req.user) {
+      const user = req.user as IUser;
+      if (!user) {
         return res.status(401).json({ message: "User not authenticated" });
       }
       
-      const userId = req.user.id;
+      const userId = user.id!;
       const updates = req.body;
       
       // Validate that we're only updating allowed profile fields
@@ -736,7 +752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/admin/users/:id/role", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const userId = parseInt(req.params.id);
+      const userId = req.params.id;
       const roleUpdates = req.body;
       
       // Validate that we're only updating role-related fields
@@ -777,22 +793,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Category management routes
-  app.post("/api/categories", isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const categoryData = insertCategorySchema.parse(req.body);
-      const category = await storage.createCategory(categoryData);
-      res.status(201).json(category);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid category data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create category" });
-    }
-  });
-
   app.put("/api/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const categoryId = parseInt(req.params.id);
+      const categoryId = req.params.id;
       const categoryData = req.body;
       
       const updatedCategory = await storage.updateCategory(categoryId, categoryData);
@@ -809,7 +812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/categories/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const categoryId = parseInt(req.params.id);
+      const categoryId = req.params.id;
       const success = await storage.deleteCategory(categoryId);
       
       if (!success) {

@@ -1,19 +1,22 @@
-import pg from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from "@shared/schema";
+import mongoose from 'mongoose';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/ar360';
+
+let isConnected = false;
+
+export async function connectDB() {
+  if (isConnected) {
+    return;
+  }
+
+  try {
+    await mongoose.connect(MONGO_URL);
+    isConnected = true;
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    throw error;
+  }
 }
 
-// Configure for Supabase Transaction Pooler
-export const pool = new pg.Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  // Disable prepared statements for Supabase Transaction Pooler compatibility
-  statement_timeout: 30000,
-  query_timeout: 30000,
-});
-
-export const db = drizzle(pool, { schema });
+export { mongoose };

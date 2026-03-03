@@ -4,11 +4,11 @@ import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcrypt";
 import { storage } from "./storage";
-import { User as SelectUser, InsertUser } from "@shared/schema";
+import { IUser, InsertUser } from "./types";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends IUser {}
   }
 }
 
@@ -23,7 +23,6 @@ async function comparePasswords(supplied: string, stored: string) {
 
 // Verify Firebase ID token
 async function verifyFirebaseToken(idToken: string): Promise<any> {
-  // Call Firebase's token verification endpoint
   const firebaseApiKey = process.env.FIREBASE_API_KEY;
   if (!firebaseApiKey) {
     throw new Error("FIREBASE_API_KEY environment variable is not set");
@@ -100,8 +99,11 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
+  // Serialize user id to session (now uses string id)
+  passport.serializeUser((user: any, done) => done(null, user.id));
+  
+  // Deserialize user from session (now uses string id)
+  passport.deserializeUser(async (id: string, done) => {
     try {
       const user = await storage.getUser(id);
       done(null, user);
@@ -113,7 +115,7 @@ export function setupAuth(app: Express) {
   // Register a new user
   app.post("/api/register", async (req, res, next) => {
     try {
-      const userData: InsertUser = req.body;
+      const userData = req.body;
       
       // Check if username already exists
       const existingUserByUsername = await storage.getUserByUsername(userData.username);
@@ -130,10 +132,15 @@ export function setupAuth(app: Express) {
       // Hash password
       const hashedPassword = await hashPassword(userData.password);
       
-      // Create user with hashed password
+      // Create user with hashed password and defaults
       const user = await storage.createUser({
-        ...userData,
+        username: userData.username,
+        email: userData.email,
+        fullName: userData.fullName,
         password: hashedPassword,
+        isMember: false,
+        isAdmin: false,
+        isDoctor: false,
       });
 
       // Log in the user
@@ -151,7 +158,8 @@ export function setupAuth(app: Express) {
   // Login
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
     // Return user without password
-    const { password, ...userWithoutPassword } = req.user as SelectUser;
+    const user = req.user as IUser;
+    const { password, ...userWithoutPassword } = user;
     res.status(200).json(userWithoutPassword);
   });
 
@@ -205,7 +213,7 @@ export function setupAuth(app: Express) {
           counter++;
         }
         
-        const newUser: InsertUser = {
+        const newUser = {
           username: finalUsername,
           email: email,
           fullName: fullName || "User",
@@ -247,7 +255,8 @@ export function setupAuth(app: Express) {
       return res.sendStatus(401);
     }
     // Return user without password
-    const { password, ...userWithoutPassword } = req.user as SelectUser;
+    const user = req.user as IUser;
+    const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   });
 
@@ -258,14 +267,15 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: "You must be logged in to purchase a membership" });
       }
 
-      const userId = (req.user as SelectUser).id;
-      const user = await storage.getUser(userId);
+      const user = req.user as IUser;
+      const userId = user.id!;
+      const currentUser = await storage.getUser(userId);
 
-      if (!user) {
+      if (!currentUser) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      if (user.isMember) {
+      if (currentUser.isMember) {
         return res.status(400).json({ message: "You are already a member" });
       }
 

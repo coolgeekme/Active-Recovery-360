@@ -1,0 +1,157 @@
+<analysis>**original_problem_statement:**
+The user wants to build a full-stack e-commerce platform, AR360, for professional-grade exercise recovery products. The platform is designed for three user roles: the general public, paying members, and healthcare professionals (doctors), each with distinct access levels and features.
+
+**PRODUCT REQUIREMENTS:**
+- **User System:** Account registration/login (username/password), Google OAuth, and role-based access (Public, Member, Doctor, Admin).
+- **E-Commerce:** A product catalog with three visibility levels (public, member-only, doctor-exclusive), category organization, a shopping cart, and a checkout process.
+- **Order Management:** System to track order statuses (Pending, Completed, Canceled).
+- **Discounts:** A system for percentage or fixed-value discount codes.
+- **Payments:** Stripe integration for both membership purchases and product checkouts.
+- **Doctor-Specific Features:** Personalized storefronts for doctors to showcase their profiles and recommend products, along with a public directory of healthcare providers.
+- **Admin Dashboard:** A comprehensive management suite for products, orders, categories, users, and discounts.
+- **Design:** The user requested to copy the design from the website .
+
+**User's preferred language**: English
+
+**what currently exists?**
+The application is a full-stack project using a Vite/TypeScript frontend and an Express.js backend. The initial setup and environment configuration, including supervisor and a reverse proxy, have been completed. Authentication has been implemented using Firebase for both email/password and Google Sign-in. The UI has been updated with several text and content changes as requested by the user.
+
+A significant pivot occurred when deployment attempts to Vercel (necessitated by the original PostgreSQL database) failed repeatedly. The user then approved a migration to MongoDB to align with the native Emergent deployment environment. This migration is currently in progress.
+
+**Last working item**:
+-   **Last item agent was working:** Migrating the application's backend from PostgreSQL (using Drizzle ORM) to MongoDB (using Mongoose). The agent has already created the new Mongoose schemas and started implementing the new data access layer.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** backend testing agent
+-   **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1:** The application is not deployable.
+    -   **Priority:** P0
+    -   **Description:** The original PostgreSQL database is incompatible with the standard Emergent deployment environment. Multiple attempts to configure the project for Vercel deployment failed.
+    -   **Status:** BLOCKED
+    -   **Why fix this issue and what will be achieved with the fix?** The user's primary goal is to have a deployable application. Fixing this will unblock the entire project.
+    -   **Is recurring issue?** Y
+    -   **Blocked on other issue:** The resolution is blocked by the completion of the Migrate to MongoDB task.
+
+**In progress Task List**:
+-   **Task 1:** Migrate the backend from PostgreSQL to MongoDB.
+    -   **Priority:** P0
+    -   **Description:** The entire backend data layer needs to be rewritten to use Mongoose and MongoDB instead of Drizzle and PostgreSQL.
+    -   **Where to resume:** Continue implementing the methods within . This file will replace the old . All methods for user, product, order, and category management need to be completed. Subsequently, update  and  to import from and use this new MongoDB storage module.
+    -   **What will be achieved with this?** This will make the application compatible with the Emergent deployment environment and resolve the critical deployment issue.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** No.
+
+**Upcoming and Future Tasks**
+- **Upcoming Tasks:**
+  - **(P0) Seed Database:** After completing the migration, create a seeding script or function within the MongoDB storage layer to populate initial data (admin user, categories, products) similar to the old implementation.
+  - **(P0) Cleanup Obsolete Files:** Remove files related to the old PostgreSQL setup and failed Vercel deployment. This includes , , , , and the  directory.
+  - **(P1) Full E2E Testing:** After migration, conduct a thorough end-to-end test of all existing features, including registration, login, product viewing, and the checkout flow, to ensure no regressions occurred.
+
+- **Future Tasks:**
+  - **Doctor Storefronts:** Implement the personalized pages for healthcare professionals.
+  - **Admin Dashboard:** Build out the full management suite for all data models.
+  - **Design Parity:** Continue to align the application's design and features more closely with the reference site .
+
+**Completed work in this session**
+- **Recently completed:**
+  - Project Environment Setup for a non-standard Vite/Express application. (DONE)
+  - Firebase Authentication integration (Email/Password + Google Sign-in). (DONE)
+  - Multiple UI/content updates on Home, Membership, and Shop pages. (DONE)
+  - Updated product categories based on user list. (DONE)
+  - Added a PREVIEW watermark across all pages. (DONE)
+
+**Earlier issues found/mentioned but not fixed**
+-   None. All identified issues have either been resolved or are being addressed by the current migration task.
+
+**Known issue recurrence from previous fork**
+- N/A
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS, Shadcn/UI
+- **Backend:** Node.js, Express.js
+- **Database:** PostgreSQL with Drizzle ORM (**Migrating to MongoDB with Mongoose**)
+- **Authentication:** Firebase (Email/Password, Google Sign-in), Passport.js, express-session
+- **Deployment:** Targeting Emergent's native deployment after abandoning Vercel.
+
+**key DB schema**
+The application is migrating from a PostgreSQL schema to a MongoDB schema. The new Mongoose schemas are defined in :
+-   **User**: 
+-   **Product**: 
+-   **Category**: 
+-   **Order**: 
+-   **And others:** CartItem, Testimonial, DiscountCode.
+
+**changes in tech stack**
+-   **Database Migration:** A critical, in-progress migration from PostgreSQL (using Supabase and Drizzle ORM) to **MongoDB (with Mongoose)**.
+
+**All files of reference**
+-   : Defines the new MongoDB schemas using Mongoose.
+-   : The new data access layer for MongoDB (currently in progress).
+-   : Contains Passport.js and session logic; will need to be updated to use the new MongoDB storage.
+-   : Defines all API endpoints; will need to be updated to use the new MongoDB storage.
+-   : Contains all Node.js dependencies. Key additions will be  and removal of , , etc.
+
+**Areas that need refactoring**:
+- The entire backend data access layer needs to be refactored to use Mongoose instead of Drizzle.
+- All files related to PostgreSQL, Drizzle, and the failed Vercel deployment should be removed to clean up the codebase. This includes , , , , and .
+
+**key api endpoints**
+- , ,  (Authentication)
+-  (Product Catalog)
+-  (Categories)
+-  (Shopping Cart)
+-  (Order Management)
+-  (Stripe Payments)
+-  (Admin Functions)
+
+**Critical Info for New Agent**
+- **Your immediate and primary task is to complete the migration to MongoDB.** This is the only path forward to a deployable application, as agreed upon with the user.
+- Do not attempt to fix the Vercel deployment. That path has been abandoned.
+- Once the migration is complete, you must re-implement the data seeding logic for the new database.
+- After the migration, perform a full cleanup of all obsolete files related to PostgreSQL and Vercel to avoid confusion.
+- The application uses a non-standard Vite/Express structure. The custom supervisor configuration () is essential for running the app in the local environment.
+
+**documents and test reports created in this job**
+- 
+- 
+- 
+- 
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.   - **Status:** In Progress. User gave final approval for the MongoDB migration.
+2.   - **Status:** Actioned. User initiated the idea to migrate.
+3.   - **Status:** Obsolete. User reported a persistent Vercel error.
+4.   - **Status:** Obsolete. User confirmed file content on GitHub during Vercel debugging.
+5.   - **Status:** Obsolete. User reported Vercel was using cached, old code.
+6.   - **Status:** Obsolete. User shared a screenshot of Vercel settings.
+7.   - **Status:** Obsolete. User specified a deployment branch for Vercel.
+8.   - **Status:** Obsolete. User shared Vercel logs showing incorrect code being run.
+9.   - **Status:** Obsolete. User confirmed a push to GitHub for Vercel deployment.
+10.  - **Status:** Obsolete. User shared a screenshot of a 404 error on Vercel.
+
+**Project Health Check:**
+-   **Broken:** The application is non-functional as it is in the middle of a database migration. The backend cannot connect to a database or serve data until the migration to MongoDB is complete.
+
+**3rd Party Integrations**
+-   **Firebase Authentication:** Used for user login (Email/Password, Google Sign-in). Requires user-provided keys.
+-   **Stripe:** Used for payments. Currently uses a test key.
+-   **PostgreSQL (Supabase) / Drizzle ORM:** The old database stack that is being actively removed.
+-   **MongoDB (Mongoose):** The new database stack that is being integrated.
+
+**Testing status**
+-   **Testing agent used after significant changes:** YES
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** []
+-   **Known regressions:** The entire application is non-functional due to the ongoing database migration.
+
+**Credentials to test flow:**
+Seed data will need to be created for MongoDB. The previous PostgreSQL implementation used test users like / and /.
+
+**What agent forgot to execute**
+The agent correctly identified the root cause of the deployment failures and collaborated with the user on a decisive pivot to MongoDB. All subsequent actions have been logically directed toward this new goal. No tasks have been forgotten; the current task is simply large and incomplete.</analysis>

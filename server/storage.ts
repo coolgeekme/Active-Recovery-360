@@ -1,452 +1,458 @@
-import { 
-  users, 
-  User, 
-  InsertUser, 
-  products,
-  Product,
-  InsertProduct,
-  categories,
-  Category,
-  InsertCategory,
-  orders,
-  Order,
-  InsertOrder,
-  cartItems,
-  CartItem,
-  InsertCartItem,
-  testimonials,
-  Testimonial,
-  InsertTestimonial,
-  discountCodes,
-  DiscountCode,
-  InsertDiscountCode
-} from "@shared/schema";
-import session from "express-session";
-import createMemoryStore from "memorystore";
+import bcrypt from 'bcrypt';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
+import { User, Product, Category, Order, CartItem, Testimonial, DiscountCode } from './models';
+import { connectDB, mongoose } from './db';
+import { transformDoc, transformDocs } from './types';
 
-const MemoryStore = createMemoryStore(session);
-
-// modify the interface with any CRUD methods
-// you might need
 export interface IStorage {
+  sessionStore: session.Store;
+  init(): Promise<void>;
+  
   // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUsers(): Promise<User[]>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
-  getDoctors(): Promise<User[]>;
-  getDoctor(id: number): Promise<User | undefined>;
-
+  getUser(id: string): Promise<any>;
+  getUsers(): Promise<any[]>;
+  getUserByUsername(username: string): Promise<any>;
+  getUserByEmail(email: string): Promise<any>;
+  createUser(userData: any): Promise<any>;
+  updateUser(id: string, userData: any): Promise<any>;
+  getDoctors(): Promise<any[]>;
+  getDoctor(id: string): Promise<any>;
+  
   // Product operations
-  getProducts(filters?: { 
-    visibility?: string; 
-    categoryId?: number; 
-    featured?: boolean;
-    doctorId?: number;
-  }): Promise<Product[]>;
-  getProduct(id: number): Promise<Product | undefined>;
-  createProduct(product: InsertProduct): Promise<Product>;
-  updateProduct(id: number, productData: Partial<Product>): Promise<Product | undefined>;
-  deleteProduct(id: number): Promise<boolean>;
-
+  getProducts(filters?: any): Promise<any[]>;
+  getProduct(id: string): Promise<any>;
+  createProduct(productData: any): Promise<any>;
+  updateProduct(id: string, productData: any): Promise<any>;
+  deleteProduct(id: string): Promise<boolean>;
+  
   // Category operations
-  getCategories(): Promise<Category[]>;
-  getCategory(id: number): Promise<Category | undefined>;
-  createCategory(category: InsertCategory): Promise<Category>;
-  updateCategory(id: number, categoryData: Partial<Category>): Promise<Category | undefined>;
-  deleteCategory(id: number): Promise<boolean>;
-
+  getCategories(): Promise<any[]>;
+  getCategory(id: string): Promise<any>;
+  createCategory(categoryData: any): Promise<any>;
+  updateCategory(id: string, categoryData: any): Promise<any>;
+  deleteCategory(id: string): Promise<boolean>;
+  
   // Order operations
-  getOrders(userId?: number): Promise<Order[]>;
-  getOrder(id: number): Promise<Order | undefined>;
-  createOrder(order: InsertOrder): Promise<Order>;
-  updateOrderStatus(id: number, status: string): Promise<Order | undefined>;
-
+  getOrders(userId?: string): Promise<any[]>;
+  getOrder(id: string): Promise<any>;
+  createOrder(orderData: any): Promise<any>;
+  updateOrderStatus(id: string, status: string): Promise<any>;
+  
   // Cart operations
-  getCartItems(userId: number): Promise<CartItem[]>;
-  getCartItem(id: number): Promise<CartItem | undefined>;
-  createCartItem(cartItem: InsertCartItem): Promise<CartItem>;
-  updateCartItemQuantity(id: number, quantity: number): Promise<CartItem | undefined>;
-  deleteCartItem(id: number): Promise<boolean>;
-  clearCart(userId: number): Promise<boolean>;
-
+  getCartItems(userId: string): Promise<any[]>;
+  getCartItem(id: string): Promise<any>;
+  createCartItem(cartItemData: any): Promise<any>;
+  updateCartItemQuantity(id: string, quantity: number): Promise<any>;
+  deleteCartItem(id: string): Promise<boolean>;
+  clearCart(userId: string): Promise<boolean>;
+  
   // Testimonial operations
-  getTestimonials(featured?: boolean): Promise<Testimonial[]>;
-  createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
-
+  getTestimonials(featured?: boolean): Promise<any[]>;
+  createTestimonial(testimonialData: any): Promise<any>;
+  
   // Discount code operations
-  getDiscountCodes(): Promise<DiscountCode[]>;
-  getDiscountCode(id: number): Promise<DiscountCode | undefined>;
-  getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined>;
-  createDiscountCode(discountCode: InsertDiscountCode): Promise<DiscountCode>;
-  updateDiscountCode(id: number, data: Partial<DiscountCode>): Promise<DiscountCode | undefined>;
-  deleteDiscountCode(id: number): Promise<boolean>;
-  incrementDiscountCodeUsage(id: number): Promise<DiscountCode | undefined>;
-
-  // Session store
-  sessionStore: any; // Using any for now to avoid sessionStore type issues
+  getDiscountCodes(): Promise<any[]>;
+  getDiscountCode(id: string): Promise<any>;
+  getDiscountCodeByCode(code: string): Promise<any>;
+  createDiscountCode(discountCodeData: any): Promise<any>;
+  updateDiscountCode(id: string, data: any): Promise<any>;
+  deleteDiscountCode(id: string): Promise<boolean>;
+  incrementDiscountCodeUsage(id: string): Promise<any>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private products: Map<number, Product>;
-  private categories: Map<number, Category>;
-  private orders: Map<number, Order>;
-  private cartItems: Map<number, CartItem>;
-  private testimonials: Map<number, Testimonial>;
-  currentUserId: number;
-  currentProductId: number;
-  currentCategoryId: number;
-  currentOrderId: number;
-  currentCartItemId: number;
-  currentTestimonialId: number;
-  sessionStore: session.SessionStore;
+export class MongoStorage implements IStorage {
+  private initialized = false;
+  public sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.products = new Map();
-    this.categories = new Map();
-    this.orders = new Map();
-    this.cartItems = new Map();
-    this.testimonials = new Map();
-    
-    this.currentUserId = 1;
-    this.currentProductId = 1;
-    this.currentCategoryId = 1;
-    this.currentOrderId = 1;
-    this.currentCartItemId = 1;
-    this.currentTestimonialId = 1;
-    
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24 hours
+    const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/ar360';
+    this.sessionStore = MongoStore.create({
+      mongoUrl,
+      collectionName: 'sessions',
+      ttl: 30 * 24 * 60 * 60, // 30 days
     });
-
-    // Initialize some test data
-    this.initializeData();
   }
 
-  // User methods
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+  async init() {
+    if (this.initialized) return;
+    await connectDB();
+    await this.initializeData();
+    this.initialized = true;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
-    );
+  // Password hashing
+  async hashPassword(password: string): Promise<string> {
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
-    );
+  async comparePasswords(supplied: string, stored: string): Promise<boolean> {
+    return bcrypt.compare(supplied, stored);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const createdAt = new Date();
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      isMember: false,
-      isAdmin: false,
-      createdAt
-    };
-    this.users.set(id, user);
-    return user;
+  // User operations
+  async getUser(id: string) {
+    const doc = await User.findById(id).lean();
+    return transformDoc(doc);
   }
 
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-
-    const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+  async getUsers() {
+    const docs = await User.find().lean();
+    return transformDocs(docs);
   }
 
-  async getDoctors(): Promise<User[]> {
-    return Array.from(this.users.values()).filter(user => user.isDoctor);
+  async getUserByUsername(username: string) {
+    const doc = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } }).lean();
+    return transformDoc(doc);
   }
 
-  async getDoctor(id: number): Promise<User | undefined> {
-    const user = await this.getUser(id);
-    if (user && user.isDoctor) {
-      return user;
-    }
-    return undefined;
+  async getUserByEmail(email: string) {
+    const doc = await User.findOne({ email }).lean();
+    return transformDoc(doc);
   }
 
-  // Product methods
-  async getProducts(filters?: { 
-    visibility?: string; 
-    categoryId?: number; 
-    featured?: boolean;
-    doctorId?: number;
-  }): Promise<Product[]> {
-    let filteredProducts = Array.from(this.products.values());
+  async createUser(userData: any) {
+    const user = new User(userData);
+    await user.save();
+    return transformDoc(user.toObject());
+  }
+
+  async updateUser(id: string, userData: any) {
+    const doc = await User.findByIdAndUpdate(id, userData, { new: true }).lean();
+    return transformDoc(doc);
+  }
+
+  async getDoctors() {
+    const docs = await User.find({ isDoctor: true }).lean();
+    return transformDocs(docs);
+  }
+
+  async getDoctor(id: string) {
+    const doc = await User.findOne({ _id: id, isDoctor: true }).lean();
+    return transformDoc(doc);
+  }
+
+  // Product operations
+  async getProducts(filters?: { visibility?: string; categoryId?: string; featured?: boolean; doctorId?: string }) {
+    const query: any = {};
     
     if (filters) {
-      if (filters.visibility) {
-        filteredProducts = filteredProducts.filter(p => p.visibility === filters.visibility);
-      }
-      
-      if (filters.categoryId) {
-        filteredProducts = filteredProducts.filter(p => p.categoryId === filters.categoryId);
-      }
-      
-      if (filters.featured !== undefined) {
-        filteredProducts = filteredProducts.filter(p => p.featured === filters.featured);
-      }
+      if (filters.visibility) query.visibility = filters.visibility;
+      if (filters.categoryId) query.categoryId = filters.categoryId;
+      if (filters.featured !== undefined) query.featured = filters.featured;
+      if (filters.doctorId) query.doctorIds = filters.doctorId;
+    }
+    
+    const docs = await Product.find(query).lean();
+    return transformDocs(docs);
+  }
 
-      if (filters.doctorId !== undefined) {
-        filteredProducts = filteredProducts.filter(p => 
-          p.doctorIds && p.doctorIds.includes(filters.doctorId!.toString())
-        );
+  async getProduct(id: string) {
+    const doc = await Product.findById(id).lean();
+    return transformDoc(doc);
+  }
+
+  async createProduct(productData: any) {
+    const product = new Product(productData);
+    await product.save();
+    
+    // Update category product count
+    if (product.categoryId) {
+      await Category.findByIdAndUpdate(product.categoryId, { $inc: { productCount: 1 } });
+    }
+    
+    return transformDoc(product.toObject());
+  }
+
+  async updateProduct(id: string, productData: any) {
+    const oldProduct = await Product.findById(id);
+    const doc = await Product.findByIdAndUpdate(id, productData, { new: true }).lean();
+    
+    // Update category counts if category changed
+    if (oldProduct && doc && oldProduct.categoryId?.toString() !== productData.categoryId?.toString()) {
+      if (oldProduct.categoryId) {
+        await Category.findByIdAndUpdate(oldProduct.categoryId, { $inc: { productCount: -1 } });
+      }
+      if (productData.categoryId) {
+        await Category.findByIdAndUpdate(productData.categoryId, { $inc: { productCount: 1 } });
       }
     }
     
-    return filteredProducts;
+    return transformDoc(doc);
   }
 
-  async getProduct(id: number): Promise<Product | undefined> {
-    return this.products.get(id);
-  }
-
-  async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const id = this.currentProductId++;
-    const createdAt = new Date();
-    const product: Product = { ...insertProduct, id, createdAt };
-    this.products.set(id, product);
-    
-    // Update product count for category
-    const category = await this.getCategory(product.categoryId);
-    if (category) {
-      await this.updateCategory(category.id, { 
-        productCount: category.productCount + 1 
-      });
-    }
-    
-    return product;
-  }
-
-  async updateProduct(id: number, productData: Partial<Product>): Promise<Product | undefined> {
-    const product = this.products.get(id);
-    if (!product) return undefined;
-
-    const updatedProduct = { ...product, ...productData };
-    this.products.set(id, updatedProduct);
-    return updatedProduct;
-  }
-
-  async deleteProduct(id: number): Promise<boolean> {
-    const product = this.products.get(id);
+  async deleteProduct(id: string) {
+    const product = await Product.findById(id);
     if (!product) return false;
     
-    // Update product count for category
-    const category = await this.getCategory(product.categoryId);
-    if (category) {
-      await this.updateCategory(category.id, { 
-        productCount: Math.max(0, category.productCount - 1) 
-      });
+    if (product.categoryId) {
+      await Category.findByIdAndUpdate(product.categoryId, { $inc: { productCount: -1 } });
     }
     
-    return this.products.delete(id);
-  }
-
-  // Category methods
-  async getCategories(): Promise<Category[]> {
-    return Array.from(this.categories.values());
-  }
-
-  async getCategory(id: number): Promise<Category | undefined> {
-    return this.categories.get(id);
-  }
-
-  async createCategory(insertCategory: InsertCategory): Promise<Category> {
-    const id = this.currentCategoryId++;
-    const category: Category = { ...insertCategory, id };
-    this.categories.set(id, category);
-    return category;
-  }
-
-  async updateCategory(id: number, categoryData: Partial<Category>): Promise<Category | undefined> {
-    const category = this.categories.get(id);
-    if (!category) return undefined;
-
-    const updatedCategory = { ...category, ...categoryData };
-    this.categories.set(id, updatedCategory);
-    return updatedCategory;
-  }
-
-  // Order methods
-  async getOrders(userId?: number): Promise<Order[]> {
-    let allOrders = Array.from(this.orders.values());
-    if (userId) {
-      return allOrders.filter(order => order.userId === userId);
-    }
-    return allOrders;
-  }
-
-  async getOrder(id: number): Promise<Order | undefined> {
-    return this.orders.get(id);
-  }
-
-  async createOrder(insertOrder: InsertOrder): Promise<Order> {
-    const id = this.currentOrderId++;
-    const createdAt = new Date();
-    const order: Order = { ...insertOrder, id, createdAt };
-    this.orders.set(id, order);
-    return order;
-  }
-
-  async updateOrderStatus(id: number, status: string): Promise<Order | undefined> {
-    const order = this.orders.get(id);
-    if (!order) return undefined;
-
-    const updatedOrder = { ...order, status };
-    this.orders.set(id, updatedOrder);
-    return updatedOrder;
-  }
-
-  // Cart methods
-  async getCartItems(userId: number): Promise<CartItem[]> {
-    return Array.from(this.cartItems.values()).filter(
-      item => item.userId === userId
-    );
-  }
-
-  async getCartItem(id: number): Promise<CartItem | undefined> {
-    return this.cartItems.get(id);
-  }
-
-  async createCartItem(insertCartItem: InsertCartItem): Promise<CartItem> {
-    // Check if item is already in cart
-    const existingItems = await this.getCartItems(insertCartItem.userId);
-    const existingItem = existingItems.find(
-      item => item.productId === insertCartItem.productId
-    );
-    
-    if (existingItem) {
-      // Update quantity instead of creating new item
-      return this.updateCartItemQuantity(
-        existingItem.id, 
-        existingItem.quantity + insertCartItem.quantity
-      ) as Promise<CartItem>;
-    }
-    
-    const id = this.currentCartItemId++;
-    const createdAt = new Date();
-    const cartItem: CartItem = { ...insertCartItem, id, createdAt };
-    this.cartItems.set(id, cartItem);
-    return cartItem;
-  }
-
-  async updateCartItemQuantity(id: number, quantity: number): Promise<CartItem | undefined> {
-    const cartItem = this.cartItems.get(id);
-    if (!cartItem) return undefined;
-
-    const updatedCartItem = { ...cartItem, quantity };
-    this.cartItems.set(id, updatedCartItem);
-    return updatedCartItem;
-  }
-
-  async deleteCartItem(id: number): Promise<boolean> {
-    return this.cartItems.delete(id);
-  }
-
-  async clearCart(userId: number): Promise<boolean> {
-    const userCartItems = await this.getCartItems(userId);
-    for (const item of userCartItems) {
-      this.cartItems.delete(item.id);
-    }
+    await Product.findByIdAndDelete(id);
     return true;
   }
 
-  // Testimonial methods
-  async getTestimonials(featured?: boolean): Promise<Testimonial[]> {
-    let allTestimonials = Array.from(this.testimonials.values());
+  // Category operations
+  async getCategories() {
+    const docs = await Category.find().lean();
+    return transformDocs(docs);
+  }
+
+  async getCategory(id: string) {
+    const doc = await Category.findById(id).lean();
+    return transformDoc(doc);
+  }
+
+  async createCategory(categoryData: any) {
+    const category = new Category(categoryData);
+    await category.save();
+    return transformDoc(category.toObject());
+  }
+
+  async updateCategory(id: string, categoryData: any) {
+    const doc = await Category.findByIdAndUpdate(id, categoryData, { new: true }).lean();
+    return transformDoc(doc);
+  }
+
+  async deleteCategory(id: string) {
+    await Category.findByIdAndDelete(id);
+    return true;
+  }
+
+  // Order operations
+  async getOrders(userId?: string) {
+    if (userId) {
+      const docs = await Order.find({ userId }).lean();
+      return transformDocs(docs);
+    }
+    const docs = await Order.find().lean();
+    return transformDocs(docs);
+  }
+
+  async getOrder(id: string) {
+    const doc = await Order.findById(id).lean();
+    return transformDoc(doc);
+  }
+
+  async createOrder(orderData: any) {
+    const order = new Order(orderData);
+    await order.save();
+    return transformDoc(order.toObject());
+  }
+
+  async updateOrderStatus(id: string, status: string) {
+    const doc = await Order.findByIdAndUpdate(id, { status }, { new: true }).lean();
+    return transformDoc(doc);
+  }
+
+  // Cart operations
+  async getCartItems(userId: string) {
+    const docs = await CartItem.find({ userId }).lean();
+    return transformDocs(docs);
+  }
+
+  async getCartItem(id: string) {
+    const doc = await CartItem.findById(id).lean();
+    return transformDoc(doc);
+  }
+
+  async createCartItem(cartItemData: any) {
+    // Check if item already exists in cart
+    const existingItem = await CartItem.findOne({
+      userId: cartItemData.userId,
+      productId: cartItemData.productId
+    });
+    
+    if (existingItem) {
+      const newQuantity = existingItem.quantity + (cartItemData.quantity || 1);
+      return this.updateCartItemQuantity(existingItem._id.toString(), newQuantity);
+    }
+    
+    const cartItem = new CartItem({
+      ...cartItemData,
+      quantity: cartItemData.quantity || 1
+    });
+    await cartItem.save();
+    return transformDoc(cartItem.toObject());
+  }
+
+  async updateCartItemQuantity(id: string, quantity: number) {
+    const doc = await CartItem.findByIdAndUpdate(id, { quantity }, { new: true }).lean();
+    return transformDoc(doc);
+  }
+
+  async deleteCartItem(id: string) {
+    await CartItem.findByIdAndDelete(id);
+    return true;
+  }
+
+  async clearCart(userId: string) {
+    await CartItem.deleteMany({ userId });
+    return true;
+  }
+
+  // Testimonial operations
+  async getTestimonials(featured?: boolean) {
     if (featured !== undefined) {
-      return allTestimonials.filter(t => t.featured === featured);
+      const docs = await Testimonial.find({ featured }).lean();
+      return transformDocs(docs);
     }
-    return allTestimonials;
+    const docs = await Testimonial.find().lean();
+    return transformDocs(docs);
   }
 
-  async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
-    const id = this.currentTestimonialId++;
-    const testimonial: Testimonial = { ...insertTestimonial, id };
-    this.testimonials.set(id, testimonial);
-    return testimonial;
+  async createTestimonial(testimonialData: any) {
+    const testimonial = new Testimonial(testimonialData);
+    await testimonial.save();
+    return transformDoc(testimonial.toObject());
   }
 
-  // Initialize sample data for development
-  private async initializeData() {
-    // Sample categories
-    const categories = [
-      {
-        name: "Joint & Muscle",
-        description: "Products for joint and muscle recovery",
-        imageUrl: "https://images.unsplash.com/photo-1588286840104-8957b019727f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-        productCount: 0
-      },
-      {
-        name: "Spine & Back",
-        description: "Products for spine and back recovery",
-        imageUrl: "https://images.unsplash.com/photo-1547919307-1ecb10702e6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-        productCount: 0
-      },
-      {
-        name: "Compression Therapy",
-        description: "Compression products for recovery",
-        imageUrl: "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-        productCount: 0
-      },
-      {
-        name: "Heat & Cold Therapy",
-        description: "Heat and cold therapy products",
-        imageUrl: "https://images.unsplash.com/photo-1554344728-77cf90d9ed26?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-        productCount: 0
-      }
-    ];
+  // Discount code operations
+  async getDiscountCodes() {
+    const docs = await DiscountCode.find().sort({ createdAt: 1 }).lean();
+    return transformDocs(docs);
+  }
 
-    for (const category of categories) {
-      await this.createCategory(category);
+  async getDiscountCode(id: string) {
+    const doc = await DiscountCode.findById(id).lean();
+    return transformDoc(doc);
+  }
+
+  async getDiscountCodeByCode(code: string) {
+    const doc = await DiscountCode.findOne({ code: code.toUpperCase() }).lean();
+    return transformDoc(doc);
+  }
+
+  async createDiscountCode(discountCodeData: any) {
+    const discountCode = new DiscountCode({
+      ...discountCodeData,
+      code: discountCodeData.code.toUpperCase()
+    });
+    await discountCode.save();
+    return transformDoc(discountCode.toObject());
+  }
+
+  async updateDiscountCode(id: string, data: any) {
+    const doc = await DiscountCode.findByIdAndUpdate(id, data, { new: true }).lean();
+    return transformDoc(doc);
+  }
+
+  async deleteDiscountCode(id: string) {
+    await DiscountCode.findByIdAndDelete(id);
+    return true;
+  }
+
+  async incrementDiscountCodeUsage(id: string) {
+    const doc = await DiscountCode.findByIdAndUpdate(id, { $inc: { usedCount: 1 } }, { new: true }).lean();
+    return transformDoc(doc);
+  }
+
+  // Initialize sample data
+  async initializeData() {
+    // Check if data already exists
+    const userCount = await User.countDocuments();
+    
+    // Create Kevin MacPherson admin if not exists
+    const kevinUser = await this.getUserByEmail("kevinmacpherson08@gmail.com");
+    if (!kevinUser) {
+      console.log("Creating Kevin MacPherson admin user");
+      const kevinHashedPassword = await this.hashPassword("Recovery25!");
+      await this.createUser({
+        username: "kevinmacpherson08",
+        password: kevinHashedPassword,
+        email: "kevinmacpherson08@gmail.com",
+        fullName: "Kevin MacPherson",
+        isAdmin: true,
+        isMember: true,
+        isDoctor: false
+      });
+      console.log("Kevin MacPherson admin user created successfully");
     }
 
-    // Sample testimonials
-    const testimonials = [
-      {
-        author: "Dr. Karen Miller",
-        role: "Physical Therapist",
-        content: "The Exercise Recovery Alliance has transformed how I treat my patients. The professional-grade products available through the membership are superior to anything I've used before.",
-        imageUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80",
-        featured: true
-      },
-      {
-        author: "James Wilson",
-        role: "Professional Athlete",
-        content: "The member-only products have been instrumental in my recovery from a serious knee injury. I couldn't have made such quick progress without these specialized tools.",
-        imageUrl: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80",
-        featured: true
-      },
-      {
-        author: "Dr. Robert Thompson",
-        role: "Sports Medicine Clinic",
-        content: "As a clinic owner, I appreciate having access to the doctor-specific products. The quality and efficacy of these tools have made a noticeable difference in our patient outcomes.",
-        imageUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80",
-        featured: true
-      }
+    if (userCount > 1) {
+      console.log("Database already has data, skipping full initialization");
+      return;
+    }
+
+    console.log("Initializing database with sample data");
+
+    // Create admin user
+    const adminHashedPassword = await this.hashPassword("password");
+    const admin = await this.createUser({
+      username: "admin",
+      password: adminHashedPassword,
+      email: "admin@example.com",
+      fullName: "Admin User",
+      isAdmin: true,
+      isMember: true,
+      isDoctor: false
+    });
+
+    // Create doctor user
+    const doctor = await this.createUser({
+      username: "doctor",
+      password: adminHashedPassword,
+      email: "doctor@example.com",
+      fullName: "Dr. Jane Smith",
+      isAdmin: false,
+      isMember: true,
+      isDoctor: true,
+      doctorTitle: "MD, PT",
+      doctorSpecialty: "Sports Medicine, Rehabilitation",
+      doctorBio: "Specializing in sports injuries and rehabilitation techniques for athletes of all levels."
+    });
+
+    // Create categories
+    const categoriesData = [
+      { name: "Hot/Cold Therapy", description: "Hot and cold therapy products for recovery", imageUrl: "https://images.unsplash.com/photo-1554344728-77cf90d9ed26?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Topicals", description: "Topical recovery products and treatments", imageUrl: "https://images.unsplash.com/photo-1588286840104-8957b019727f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Electro Therapy", description: "Electro therapy devices and equipment", imageUrl: "https://images.unsplash.com/photo-1547919307-1ecb10702e6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Self-Care Tools", description: "Self-care tools for recovery and wellness", imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Recovery Garments", description: "Recovery garments and apparel", imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Compression Therapy", description: "Compression therapy products for recovery", imageUrl: "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Recovery Patches", description: "Recovery patches for targeted relief", imageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Kinesiology Tape", description: "Kinesiology tape for support and recovery", imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 },
+      { name: "Braces", description: "Braces and supports for injury recovery", imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80", productCount: 0 }
     ];
 
-    for (const testimonial of testimonials) {
-      await this.createTestimonial(testimonial);
+    const createdCategories: any[] = [];
+    for (const categoryData of categoriesData) {
+      const category = await this.createCategory(categoryData);
+      createdCategories.push(category);
     }
+
+    // Create products
+    const productsData = [
+      { name: "Professional Recovery Bands Set", description: "Set of 5 professional-grade resistance bands with varying tensions for targeted muscle recovery.", price: 3995, visibility: "public", categoryId: createdCategories[3].id, stockQuantity: 50, featured: true, imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b", doctorIds: [doctor.id] },
+      { name: "Joint Mobility Kit", description: "Complete kit for joint mobility including resistance tools and guided exercise program.", price: 7995, visibility: "member", categoryId: createdCategories[3].id, stockQuantity: 30, featured: true, imageUrl: "https://images.unsplash.com/photo-1518611012118-696072aa579a" },
+      { name: "Premium Posture Corrector", description: "Medical-grade posture correction system with smart sensor technology.", price: 12995, visibility: "public", categoryId: createdCategories[4].id, stockQuantity: 40, featured: true, imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b" },
+      { name: "Therapeutic Back Support System", description: "Professional-grade back support system with heat therapy integration.", price: 18995, visibility: "doctor", categoryId: createdCategories[4].id, stockQuantity: 15, featured: false, imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b", doctorIds: [doctor.id] },
+      { name: "Advanced Compression Sleeves", description: "Set of compression sleeves for arms and legs with graduated pressure technology.", price: 4995, visibility: "public", categoryId: createdCategories[5].id, stockQuantity: 60, featured: true, imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b" },
+      { name: "Professional Compression System", description: "Full-body compression therapy system for enhanced recovery and circulation.", price: 29995, visibility: "doctor", categoryId: createdCategories[5].id, stockQuantity: 10, featured: false, imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b", doctorIds: [doctor.id] },
+      { name: "Digital Heat Therapy Wrap", description: "Smart heat therapy wrap with digital temperature control and timer.", price: 8995, visibility: "public", categoryId: createdCategories[0].id, stockQuantity: 45, featured: true, imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b" },
+      { name: "Professional Cold Therapy Unit", description: "Medical-grade cold therapy system with continuous flow technology.", price: 24995, visibility: "member", categoryId: createdCategories[0].id, stockQuantity: 20, featured: true, imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b" },
+      { name: "Contrast Therapy System", description: "Advanced system combining both heat and cold therapy with digital controls.", price: 34995, visibility: "doctor", categoryId: createdCategories[0].id, stockQuantity: 15, featured: false, imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b", doctorIds: [doctor.id] }
+    ];
+
+    for (const productData of productsData) {
+      await this.createProduct(productData);
+    }
+
+    // Create testimonials
+    const testimonialsData = [
+      { author: "Dr. Karen Miller", role: "Physical Therapist", content: "Active Recovery 360 offers products that match what we use in our clinic. I recommend these to all my patients for continued care at home.", featured: true },
+      { author: "Michael Johnson", role: "Professional Athlete", content: "Since becoming a member, I've had access to recovery tools that have significantly reduced my injury recovery time. Well worth the membership fee!", featured: true },
+      { author: "Sarah Thomson", role: "Yoga Instructor", content: "I recommend Active Recovery 360 to all my yoga students. The quality of their products and the educational resources are exceptional.", featured: true }
+    ];
+
+    for (const testimonialData of testimonialsData) {
+      await this.createTestimonial(testimonialData);
+    }
+
+    console.log("Database initialization complete");
   }
 }
 
-import { DatabaseStorage } from './database-storage';
-
-// Use DatabaseStorage instead of MemStorage
-export const storage = new DatabaseStorage();
+export const storage = new MongoStorage();
