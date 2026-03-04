@@ -6,162 +6,165 @@ Build a full-stack e-commerce platform, "AR360," for professional-grade exercise
 - **Members**: Access to exclusive products and discounts
 - **Doctors/Healthcare Providers**: Access to professional-grade products and personalized storefronts
 
-## Core Requirements
-- User registration/login (username/password + Google OAuth via Firebase)
-- Role-based access control (Public, Member, Doctor, Admin)
-- Product catalog with visibility levels (public, member-only, doctor-exclusive)
-- Category organization
-- Shopping cart and checkout
-- Order management (Pending, Completed, Canceled)
-- Discount code system (percentage or fixed value)
-- Stripe integration for payments
-- Doctor storefronts
-- Admin dashboard
+## Tech Stack (UPDATED - March 4, 2026)
 
-## Tech Stack
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS, Shadcn/UI
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB with Mongoose
-- **Authentication**: Firebase (Email/Password, Google Sign-in), Passport.js sessions
+### Previous Stack (Deprecated)
+- Node.js/Express backend
+- PostgreSQL with Drizzle ORM
+- Vite serving both frontend and backend
+
+### Current Stack (Production-Ready)
+- **Backend**: FastAPI (Python) - Port 8002
+- **Frontend**: React + Vite - Port 3000
+- **Database**: MongoDB with Motor (async driver)
+- **Authentication**: JWT tokens + Firebase OAuth
 - **Payments**: Stripe
+- **Proxy**: Node.js http-proxy - Port 8001
 
 ## Architecture
 
 ```
 /app
-├── client/              # React frontend (Vite)
-│   └── src/
-│       ├── components/  # UI components
-│       ├── pages/       # Page components
-│       ├── hooks/       # Custom hooks
-│       └── lib/         # Utilities, Firebase config
-├── server/              # Express backend
-│   ├── auth.ts          # Authentication (Passport.js + Firebase)
-│   ├── db.ts            # MongoDB connection
-│   ├── models.ts        # Mongoose schemas
-│   ├── routes.ts        # API routes
-│   ├── storage.ts       # MongoDB data access layer
-│   ├── types.ts         # TypeScript interfaces
-│   └── index.ts         # Server entry point
-└── package.json
+├── backend/                 # FastAPI backend
+│   ├── server.py           # Main FastAPI application
+│   ├── routes/             # API route handlers
+│   │   ├── auth.py         # Authentication (login, register, Firebase)
+│   │   ├── products.py     # Product CRUD
+│   │   ├── categories.py   # Category CRUD
+│   │   ├── cart.py         # Shopping cart
+│   │   ├── orders.py       # Order management
+│   │   ├── doctors.py      # Doctor profiles
+│   │   ├── testimonials.py # Testimonials
+│   │   ├── discount_codes.py # Discount codes
+│   │   ├── payments.py     # Stripe integration
+│   │   └── admin.py        # Admin endpoints
+│   ├── services/           # Business logic
+│   │   ├── auth.py         # JWT & password hashing
+│   │   └── database.py     # MongoDB connection
+│   ├── models/             # Pydantic schemas
+│   │   └── schemas.py      # Request/Response models
+│   ├── requirements.txt    # Python dependencies
+│   └── .env               # Environment variables
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── components/    # UI components
+│   │   ├── pages/         # Page components
+│   │   ├── hooks/         # Custom hooks (auth, cart)
+│   │   ├── lib/           # Utilities
+│   │   └── types/         # TypeScript types
+│   ├── package.json
+│   └── vite.config.ts
+├── api-proxy.ts           # Reverse proxy (8001 -> 8002/3000)
+└── memory/                # Documentation
 ```
-
-## Database Schema (MongoDB)
-
-### User
-- username, email, fullName, password
-- isMember, isAdmin, isDoctor
-- doctorTitle, doctorSpecialty, doctorBio, profileImage
-
-### Product
-- name, description, price (cents), imageUrl
-- visibility: 'public' | 'member' | 'doctor'
-- categoryId, stockQuantity, featured, doctorIds
-
-### Category
-- name, description, imageUrl, productCount
-
-### Order
-- userId, totalAmount, status, items, shippingAddress
-
-### CartItem
-- userId, productId, quantity
-
-### DiscountCode
-- code, description, discountType, discountValue
-- isActive, usageLimit, usedCount, expiresAt
-
-### Testimonial
-- author, role, content, imageUrl, featured
 
 ## API Endpoints
 
-### Public
-- `GET /api/products` - List products (with filters)
-- `GET /api/products/:id` - Get product
-- `GET /api/categories` - List categories
-- `GET /api/testimonials` - List testimonials
-- `GET /api/doctors` - List doctors
-- `POST /api/discount-codes/validate` - Validate discount code
+### Health
+- `GET /health` - Health check
+- `GET /api/health` - API health check
 
 ### Authentication
-- `POST /api/register` - Register new user
-- `POST /api/login` - Login (username/password)
-- `POST /api/auth/firebase` - Firebase authentication
+- `POST /api/register` - Register new user (returns JWT)
+- `POST /api/login` - Login (returns JWT)
+- `POST /api/auth/firebase` - Firebase OAuth (returns JWT)
 - `POST /api/logout` - Logout
-- `GET /api/user` - Get current user
+- `GET /api/user` - Get current user (requires JWT)
 
-### Members Only
+### Products
+- `GET /api/products` - List products (with filters)
+- `GET /api/products/:id` - Get product
+- `POST /api/products` - Create (admin)
+- `PUT /api/products/:id` - Update (admin)
+- `DELETE /api/products/:id` - Delete (admin)
+
+### Categories
+- `GET /api/categories` - List categories
+- `GET /api/categories/:id` - Get category
+- `POST /api/categories` - Create (admin)
+- `PUT /api/categories/:id` - Update (admin)
+- `DELETE /api/categories/:id` - Delete (admin)
+
+### Cart (Members only)
 - `GET /api/cart` - Get cart items
 - `POST /api/cart` - Add to cart
-- `PUT /api/cart/:id` - Update cart item
-- `DELETE /api/cart/:id` - Remove from cart
-- `POST /api/orders` - Create order
-- `GET /api/orders` - Get user orders
+- `PUT /api/cart/:id` - Update quantity
+- `DELETE /api/cart/:id` - Remove item
 
-### Admin Only
+### Orders (Members only)
+- `GET /api/orders` - Get user orders
+- `POST /api/orders` - Create order
+- `PUT /api/orders/:id/status` - Update status (admin)
+
+### Payments
+- `POST /api/create-payment-intent` - Create Stripe payment
+- `POST /api/confirm-membership-payment` - Confirm membership
+
+### Admin
 - `GET /api/admin/users` - List all users
 - `PATCH /api/admin/users/:id/role` - Update user roles
-- `POST /api/products` - Create product
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
-- `POST /api/categories` - Create category
-- `PUT /api/categories/:id` - Update category
-- `DELETE /api/categories/:id` - Delete category
-- `GET /api/discount-codes` - List discount codes
-- `POST /api/discount-codes` - Create discount code
-- `PUT /api/discount-codes/:id` - Update discount code
-- `DELETE /api/discount-codes/:id` - Delete discount code
+- `GET /api/admin/orders` - List all orders
 
-## What's Been Implemented
+## Database Collections (MongoDB)
 
-### March 3, 2026 - MongoDB Migration Complete ✅
-- Migrated entire backend from PostgreSQL/Drizzle to MongoDB/Mongoose
-- Created new data access layer (storage.ts) with MongoDB operations
-- Updated authentication to work with MongoDB string IDs
-- Implemented proper _id to id transformation for API responses
-- Added connect-mongo for session storage
-- Cleaned up obsolete PostgreSQL/Vercel files
-- All 28 backend tests passing
-- Frontend fully functional with MongoDB backend
-
-### Previous Work
-- Firebase Authentication (Email/Password + Google Sign-in)
-- UI updates and content changes
-- Product categories from user requirements
-- PREVIEW watermark across pages
-
-## Test Credentials
-- **Admin (API only)**: admin / password
-- **Kevin (API only)**: kevinmacpherson08 / Recovery25!
-- **Frontend**: Use Firebase Google Sign-in or create account
-
-## Remaining Tasks
-
-### P1 - High Priority
-- [ ] Full E2E testing of checkout flow with Stripe
-- [ ] Doctor storefront implementation
-- [ ] Admin dashboard build-out
-
-### P2 - Medium Priority
-- [ ] Design parity with activerecovery360.com
-- [ ] Profile management improvements
-- [ ] Order history display
-
-### P3 - Low Priority
-- [ ] Email notifications for orders
-- [ ] Product reviews/ratings
-- [ ] Wishlist functionality
+- **users**: User accounts with roles
+- **products**: Product catalog
+- **categories**: Product categories
+- **cart_items**: Shopping cart
+- **orders**: Order history
+- **testimonials**: Customer testimonials
+- **discount_codes**: Discount codes
+- **sessions**: (optional) Session storage
 
 ## Environment Variables
+
+### Backend (.env)
 ```
 MONGO_URL=mongodb://localhost:27017/ar360
-SESSION_SECRET=ar360-session-secret-key-2024
-STRIPE_SECRET_KEY=sk_test_emergent
+DB_NAME=ar360
+SESSION_SECRET=<secret>
+STRIPE_SECRET_KEY=<stripe-key>
 FIREBASE_API_KEY=<firebase-key>
 ```
 
-## Deployment
-- Application is now deployable on Emergent's native environment
-- Uses MongoDB (running locally or can be configured for remote)
-- No longer requires PostgreSQL or Vercel
+### Frontend (.env)
+```
+VITE_API_URL=
+VITE_FIREBASE_API_KEY=<firebase-key>
+VITE_FIREBASE_AUTH_DOMAIN=<domain>
+VITE_FIREBASE_PROJECT_ID=<project-id>
+```
+
+## What's Been Completed
+
+### March 4, 2026 - Complete Tech Stack Rebuild
+- ✅ Rebuilt backend with FastAPI (Python)
+- ✅ All API endpoints implemented
+- ✅ JWT authentication system
+- ✅ Firebase OAuth support
+- ✅ MongoDB async operations
+- ✅ Stripe payment integration
+- ✅ Frontend updated for JWT tokens
+- ✅ API proxy configured correctly
+
+### Previous Completions
+- ✅ Firebase Authentication
+- ✅ UI design and components
+- ✅ Product categories
+- ✅ Shopping cart
+- ✅ Checkout flow
+
+## Remaining Tasks
+
+### P0 - Ready for Testing
+- [ ] Deploy to Emergent production
+- [ ] Full E2E testing
+
+### P1 - Future Features
+- [ ] Doctor storefronts
+- [ ] Admin dashboard improvements
+- [ ] Design parity with activerecovery360.com
+
+## Test Credentials
+- **Admin**: admin / password
+- **Kevin**: kevinmacpherson08 / Recovery25!
