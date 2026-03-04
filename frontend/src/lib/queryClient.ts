@@ -1,6 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-const API_URL = import.meta.env.VITE_API_URL || process.env.REACT_APP_BACKEND_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 // Token storage
 export function getToken(): string | null {
