@@ -50,10 +50,20 @@ const insertDiscountCodeSchema = z.object({
   expiresAt: z.string().datetime().nullable().optional(),
 });
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
-});
+// Initialize Stripe lazily
+let stripeInstance: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+    }
+    stripeInstance = new Stripe(key, {
+      apiVersion: "2023-10-16",
+    });
+  }
+  return stripeInstance;
+}
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: any, res: any, next: any) => {
@@ -82,6 +92,15 @@ const isMember = (req: any, res: any, next: any) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize storage (connects to MongoDB)
   await storage.init();
+  
+  // Health check endpoint for deployment
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+  
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
   
   // Setup authentication routes
   setupAuth(app);
@@ -126,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const paymentIntent = await stripe.paymentIntents.create({
+      const paymentIntent = await getStripe().paymentIntents.create({
         amount: Math.round(finalAmount * 100), // Convert to cents
         currency: "usd",
         metadata: {
@@ -152,7 +171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { paymentIntentId } = req.body;
       
       // Retrieve the payment intent from Stripe
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      const paymentIntent = await getStripe().paymentIntents.retrieve(paymentIntentId);
       
       if (paymentIntent.status === "succeeded" && paymentIntent.metadata.type === "membership") {
         // If payment used a discount code, increment its usage
