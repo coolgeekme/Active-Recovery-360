@@ -1,12 +1,15 @@
 import mongoose from 'mongoose';
 
-const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/ar360';
-
 let isConnected = false;
 
 export async function connectDB() {
   if (isConnected) {
     return;
+  }
+
+  const MONGO_URL = process.env.MONGO_URL;
+  if (!MONGO_URL) {
+    throw new Error('MONGO_URL environment variable is not set');
   }
 
   try {

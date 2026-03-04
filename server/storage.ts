@@ -63,15 +63,21 @@ export interface IStorage {
 
 export class MongoStorage implements IStorage {
   private initialized = false;
-  public sessionStore: session.Store;
+  private _sessionStore: session.Store | null = null;
 
-  constructor() {
-    const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/ar360';
-    this.sessionStore = MongoStore.create({
-      mongoUrl,
-      collectionName: 'sessions',
-      ttl: 30 * 24 * 60 * 60, // 30 days
-    });
+  get sessionStore(): session.Store {
+    if (!this._sessionStore) {
+      const mongoUrl = process.env.MONGO_URL;
+      if (!mongoUrl) {
+        throw new Error("MONGO_URL environment variable is not set");
+      }
+      this._sessionStore = MongoStore.create({
+        mongoUrl,
+        collectionName: 'sessions',
+        ttl: 30 * 24 * 60 * 60, // 30 days
+      });
+    }
+    return this._sessionStore;
   }
 
   async init() {

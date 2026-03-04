@@ -46,30 +46,44 @@ app.use((req, res, next) => {
 
 // Initialize and start server
 const startServer = async () => {
-  const server = await registerRoutes(app);
+  console.log('[STARTUP] Starting server initialization...');
+  console.log('[STARTUP] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[STARTUP] MONGO_URL:', process.env.MONGO_URL ? 'SET' : 'NOT SET');
+  
+  try {
+    console.log('[STARTUP] Registering routes...');
+    const server = await registerRoutes(app);
+    console.log('[STARTUP] Routes registered successfully');
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    console.error(err);
-  });
+      res.status(status).json({ message });
+      console.error(err);
+    });
 
-  // Setup Vite in development, serve static in production
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    // Setup Vite in development, serve static in production
+    if (app.get("env") === "development") {
+      console.log('[STARTUP] Setting up Vite dev server...');
+      await setupVite(app, server);
+    } else {
+      console.log('[STARTUP] Serving static files (production mode)...');
+      serveStatic(app);
+    }
+
+    const port = process.env.PORT || 3000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+    }, () => {
+      console.log(`[STARTUP] Server ready and listening on port ${port}`);
+      log(`serving on port ${port}`);
+    });
+  } catch (error) {
+    console.error('[STARTUP] Failed to start server:', error);
+    process.exit(1);
   }
-
-  const port = process.env.PORT || 3000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 };
 
 // Start server
