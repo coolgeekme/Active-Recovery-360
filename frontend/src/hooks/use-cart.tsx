@@ -16,7 +16,7 @@ type CartContextType = {
   cartItems: CartItemWithProduct[];
   isLoading: boolean;
   error: Error | null;
-  addToCart: (productId: string, quantity: number) => Promise<void>;
+  addToCart: (productId: string, quantity: number, variantSku?: string) => Promise<void>;
   updateCartItemQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -38,8 +38,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   });
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
-      const res = await apiRequest("POST", "/api/cart", { productId, quantity });
+    mutationFn: async ({ productId, quantity, variantSku }: { productId: string; quantity: number; variantSku?: string }) => {
+      const body: any = { productId, quantity };
+      if (variantSku) body.variantSku = variantSku;
+      const res = await apiRequest("POST", "/api/cart", body);
       return await res.json();
     },
     onSuccess: () => {
@@ -87,7 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const addToCart = async (productId: string, quantity: number) => {
+  const addToCart = async (productId: string, quantity: number, variantSku?: string) => {
     if (!user) {
       toast({
         title: "Not logged in",
@@ -106,7 +108,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    await addToCartMutation.mutateAsync({ productId, quantity });
+    await addToCartMutation.mutateAsync({ productId, quantity, variantSku });
   };
 
   const updateCartItemQuantity = async (cartItemId: string, quantity: number) => {

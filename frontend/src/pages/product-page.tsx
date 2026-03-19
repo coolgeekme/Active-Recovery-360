@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Product } from "@/types";
+import { Product, ProductVariant } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,13 @@ import {
   Card, 
   CardContent
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Loader2, 
   MinusCircle, 
@@ -26,6 +33,7 @@ export default function ProductPage() {
   const productId = id; // Keep as string for MongoDB ObjectId
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   
   const { user } = useAuth();
   const { addToCart } = useCart();
@@ -34,6 +42,54 @@ export default function ProductPage() {
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: [`/api/products/${productId}`],
   });
+
+  // Extract unique attribute options from variants
+  const variantOptions = useMemo(() => {
+    if (!product?.hasVariants || !product.variants?.length) return null;
+    
+    const options: { [key: string]: string[] } = {};
+    
+    product.variants.forEach(variant => {
+      Object.entries(variant.attributes).forEach(([key, value]) => {
+        if (value) {
+          if (!options[key]) options[key] = [];
+          if (!options[key].includes(value)) options[key].push(value);
+        }
+      });
+    });
+    
+    return options;
+  }, [product]);
+
+  // Get current price and stock based on selected variant
+  const currentPrice = selectedVariant?.price ?? product?.price ?? 0;
+  const currentStock = selectedVariant?.stockQuantity ?? product?.stockQuantity ?? 0;
+
+  // Set initial variant when product loads
+  useMemo(() => {
+    if (product?.hasVariants && product.variants?.length && !selectedVariant) {
+      setSelectedVariant(product.variants[0]);
+    }
+  }, [product, selectedVariant]);
+
+  // Handle variant selection
+  const handleVariantChange = (attributeKey: string, value: string) => {
+    if (!product?.variants) return;
+    
+    // Find variant that matches all current selections plus the new one
+    const currentAttributes = selectedVariant?.attributes || {};
+    const newAttributes = { ...currentAttributes, [attributeKey]: value };
+    
+    const matchingVariant = product.variants.find(v => {
+      return Object.entries(newAttributes).every(([key, val]) => {
+        return v.attributes[key as keyof typeof v.attributes] === val;
+      });
+    });
+    
+    if (matchingVariant) {
+      setSelectedVariant(matchingVariant);
+    }
+  };
 
   // All products are viewable by all users now
   const canView = () => !!product;
@@ -89,10 +145,16 @@ export default function ProductPage() {
 
     try {
       setIsAddingToCart(true);
-      await addToCart(productId, quantity);
+      // Pass variant SKU if product has variants
+      const variantSku = product?.hasVariants ? selectedVariant?.sku : undefined;
+      await addToCart(productId, quantity, variantSku);
+      
+      const itemName = product?.hasVariants && selectedVariant 
+        ? `${product?.name} (${selectedVariant.name})` 
+        : product?.name;
       toast({
         title: "Added to cart",
-        description: `${product?.name} has been added to your cart`,
+        description: `${itemName} has been added to your cart`,
       });
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -175,10 +237,49 @@ export default function ProductPage() {
           <h1 className="text-3xl font-montserrat font-bold text-primary mb-2">{product.name}</h1>
           
           <div className="text-2xl font-bold text-primary mb-4">
-            {formatPrice(product.price)}
+            {formatPrice(currentPrice)}
           </div>
           
           <p className="text-secondary mb-6">{product.description}</p>
+          
+          {/* Variant Selectors */}
+          {product.hasVariants && variantOptions && (
+            <div className="space-y-4 mb-6">
+              {Object.entries(variantOptions).map(([attributeKey, values]) => (
+                <div key={attributeKey} className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground capitalize">
+                    {attributeKey === 'packSize' ? 'Pack Size' : attributeKey}
+                  </label>
+                  <Select
+                    value={selectedVariant?.attributes[attributeKey as keyof typeof selectedVariant.attributes] || ''}
+                    onValueChange={(value) => handleVariantChange(attributeKey, value)}
+                  >
+                    <SelectTrigger className="w-full" data-testid={`variant-select-${attributeKey}`}>
+                      <SelectValue placeholder={`Select ${attributeKey}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {values.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+              
+              {selectedVariant && (
+                <div className="text-sm text-muted-foreground">
+                  Selected: <span className="font-medium text-foreground">{selectedVariant.name}</span>
+                  {selectedVariant.stockQuantity > 0 ? (
+                    <span className="ml-2 text-green-600">({selectedVariant.stockQuantity} in stock)</span>
+                  ) : (
+                    <span className="ml-2 text-red-600">(Out of stock)</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           
           {canPurchase() ? (
             <div className="space-y-4">
@@ -249,12 +350,12 @@ export default function ProductPage() {
           <div className="mt-6 border-t pt-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="text-sm">
-                <span className="font-medium text-muted-foreground">Categories:</span>
-                <span className="ml-2 text-secondary">Recovery, Therapy</span>
+                <span className="font-medium text-muted-foreground">Brand:</span>
+                <span className="ml-2 text-secondary">{product.brand || 'N/A'}</span>
               </div>
               <div className="text-sm">
                 <span className="font-medium text-muted-foreground">Stock:</span>
-                <span className="ml-2 text-secondary">{product.stockQuantity} available</span>
+                <span className="ml-2 text-secondary">{currentStock} available</span>
               </div>
             </div>
           </div>

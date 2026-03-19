@@ -24,6 +24,20 @@ export interface InsertUser {
   fullName: string;
 }
 
+export interface ProductVariant {
+  sku: string;
+  name: string;
+  price: number;
+  stockQuantity: number;
+  attributes: {
+    size?: string;
+    color?: string;
+    side?: string;
+    strength?: string;
+    packSize?: string;
+  };
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -36,6 +50,9 @@ export interface Product {
   featured: boolean;
   doctorIds?: string[];
   createdAt?: string;
+  brand?: string;
+  hasVariants?: boolean;
+  variants?: ProductVariant[];
 }
 
 export interface Category {

@@ -54,17 +54,31 @@ class UserResponse(UserBase):
     class Config:
         populate_by_name = True
 
+# Product Variant Model
+class ProductVariant(BaseModel):
+    sku: str
+    name: str  # Display name like "Size M" or "Black - Large"
+    price: int
+    stock_quantity: int = Field(default=0, alias="stockQuantity")
+    attributes: dict = {}  # e.g., {"size": "M", "color": "Grey"}
+    
+    class Config:
+        populate_by_name = True
+
 # Product Models
 class ProductBase(BaseModel):
     name: str
     description: str
-    price: int
+    price: int  # Base price (or price of first variant)
     image_url: Optional[str] = Field(default=None, alias="imageUrl")
     visibility: str = "public"
     category_id: str = Field(alias="categoryId")
     stock_quantity: int = Field(default=0, alias="stockQuantity")
     featured: bool = False
     doctor_ids: List[str] = Field(default=[], alias="doctorIds")
+    brand: Optional[str] = None
+    variants: List[ProductVariant] = []  # Empty for simple products
+    has_variants: bool = Field(default=False, alias="hasVariants")
 
     class Config:
         populate_by_name = True

@@ -23,127 +23,110 @@ Build a full-stack e-commerce platform, "AR360," for professional-grade exercise
 │   ├── server.py           # Main FastAPI application
 │   ├── routes/             # API route handlers
 │   │   ├── auth.py         # Authentication (login, register, Firebase)
-│   │   ├── products.py     # Product CRUD
+│   │   ├── products.py     # Product CRUD with variants support
 │   │   ├── categories.py   # Category CRUD
-│   │   ├── cart.py         # Shopping cart
+│   │   ├── cart.py         # Shopping cart (supports variant SKU)
 │   │   ├── orders.py       # Order management
 │   │   ├── doctors.py      # Doctor profiles
 │   │   ├── testimonials.py # Testimonials
 │   │   ├── discount_codes.py # Discount codes
 │   │   ├── payments.py     # Stripe integration
 │   │   ├── admin.py        # Admin endpoints
-│   │   └── seed.py         # Database seeding utilities
+│   │   └── seed.py         # Database seeding & variant consolidation
 │   ├── services/           # Business logic
-│   │   ├── auth.py         # JWT & password hashing
-│   │   └── database.py     # MongoDB connection
-│   ├── models/             # Pydantic schemas
-│   │   └── schemas.py      # Request/Response models
+│   ├── models/             # Pydantic schemas (includes ProductVariant)
 │   ├── tests/              # Test files
-│   │   └── test_ar360_fastapi.py
-│   ├── requirements.txt    # Python dependencies
-│   └── .env               # Environment variables
-├── frontend/               # React frontend
-│   ├── src/
-│   │   ├── components/    # UI components
-│   │   ├── pages/         # Page components
-│   │   ├── hooks/         # Custom hooks (auth, cart)
-│   │   ├── lib/           # Utilities
-│   │   └── types/         # TypeScript types
-│   ├── package.json
-│   └── vite.config.ts
-└── memory/                # Documentation
+│   └── requirements.txt
+└── frontend/               # React frontend
+    ├── src/
+    │   ├── components/
+    │   ├── pages/
+    │   │   └── product-page.tsx  # Updated with variant selectors
+    │   ├── hooks/
+    │   │   └── use-cart.tsx      # Updated to support variantSku
+    │   ├── types/
+    │   │   └── index.ts          # Updated with ProductVariant type
+    │   └── ...
+    └── ...
 ```
 
 ## What's Been Completed
 
-### March 19, 2026 - Product Images & Bug Fixes
-- ✅ Added stock images to all 69 products via `/api/seed/add-images` endpoint
-- ✅ Fixed 34 products with missing images
-- ✅ Fixed 26 products with broken external URLs
-- ✅ Testing agent fixed critical MongoDB ObjectId parsing bug in product-page.tsx
-- ✅ Fixed cart hook type definitions (number -> string for MongoDB IDs)
-- ✅ All 32 backend API tests passing
-- ✅ Full E2E testing completed successfully
+### March 19, 2026 - Product Variants Feature
+- ✅ **Product Variant System Implemented**: Products can now have variants (size, color, strength, etc.)
+- ✅ **Variant Consolidation**: 43 variant products merged into 13 parent products with variants array
+- ✅ **Dynamic Dropdowns**: Product detail page shows dropdowns for each variant attribute
+- ✅ **Price Updates**: Price dynamically updates based on selected variant
+- ✅ **Stock per Variant**: Each variant tracks its own stock quantity
+- ✅ **Cart Integration**: Cart now supports adding products with specific variant SKU
 
-### March 4, 2026 - Complete Tech Stack Rebuild
-- ✅ Rebuilt backend with FastAPI (Python)
-- ✅ All API endpoints implemented
-- ✅ JWT authentication system
-- ✅ Firebase OAuth support
-- ✅ MongoDB async operations
-- ✅ Stripe payment integration
-- ✅ Frontend updated for JWT tokens
-- ✅ 69 products in database with images
+### Variant Products Created:
+1. Hot/Cold Compression Sleeve (4 sizes: M, L, XL, XXL)
+2. NanoXtreme Topical Pain Relief (4 sizes: 1oz, 3.3oz Tube, 3.3oz Pump, 32oz)
+3. Incrediwear Knee Sleeve (6 variants: Grey/Black × M/L/XL)
+4. Incrediwear Ankle Sleeve (4 variants: Grey/Black × S/M/L)
+5. Incrediwear Elbow Sleeve (2 sizes: S/M, L)
+6. Incrediwear Hip Brace (5 variants: Left/Right × S/M/L)
+7. Incrediwear Shoulder Brace (3 sizes: S, M, L)
+8. Incrediwear Back Brace (4 sizes: S, M, L, XL)
+9. Marc Pro Reusable Electrode (2 pack sizes: 4-Pack, 10-Pack)
+10. Tiger Tail Muscle Roller (3 sizes: 11", 18", 22")
+11. Tiger Cane Acupressure Hook (2 colors: Blue, Orange)
+12. CBD Recovery Extreme Sports Cream (2 strengths: 400mg, 800mg)
+13. CBD Lion Transdermal Patch 4-Pack (2 colors: Black, Tan)
 
-## API Endpoints
-
-### Health
-- `GET /health` - Health check
-- `GET /api/health` - API health check
-
-### Authentication
-- `POST /api/register` - Register new user (returns JWT)
-- `POST /api/login` - Login (returns JWT)
-- `POST /api/auth/firebase` - Firebase OAuth (returns JWT)
-- `POST /api/logout` - Logout
-- `GET /api/user` - Get current user (requires JWT)
-
-### Products
-- `GET /api/products` - List products (with filters)
-- `GET /api/products/:id` - Get product by MongoDB ObjectId
-- `POST /api/products` - Create (admin)
-- `PUT /api/products/:id` - Update (admin)
-- `DELETE /api/products/:id` - Delete (admin)
-
-### Categories
-- `GET /api/categories` - List categories
-- `GET /api/categories/:id` - Get category
-
-### Cart (Members only)
-- `GET /api/cart` - Get cart items
-- `POST /api/cart` - Add to cart
-- `PUT /api/cart/:id` - Update quantity
-- `DELETE /api/cart/:id` - Remove item
-
-### Seed (Admin only)
-- `GET /api/seed/seed-status` - Check database status
-- `POST /api/seed/seed-database` - Seed categories and products
-- `POST /api/seed/add-images` - Add images to products without images
-- `POST /api/seed/fix-broken-images` - Replace broken external URLs with stock images
+### Previous Sessions:
+- ✅ Product images added to all products
+- ✅ MongoDB ObjectId parsing bug fixed
+- ✅ Cart type definitions fixed
+- ✅ Full E2E testing (32/32 backend tests passed)
 
 ## Database Status
 
-- **Products**: 69 (all with stock images from Unsplash)
+- **Products**: 39 total (13 with variants, 26 standalone)
 - **Categories**: 9
-- **Users**: Admin seeded on startup
+- **Total Variants**: 43 across 13 products
+
+## API Endpoints
+
+### Products (Updated)
+- `GET /api/products` - Returns products with `hasVariants` and `variants[]` fields
+- `GET /api/products/:id` - Returns single product with full variant details
+
+### Seed (Admin)
+- `POST /api/seed/consolidate-variants` - **NEW** Merges variant products into parent products
+
+### Product Variant Schema
+```json
+{
+  "hasVariants": true,
+  "variants": [
+    {
+      "sku": "hot-cold-compression-sleeve-m",
+      "name": "M",
+      "price": 2900,
+      "stockQuantity": 10,
+      "attributes": { "size": "M" }
+    }
+  ]
+}
+```
 
 ## Test Credentials
 - **Admin**: admin / password
-- **Kevin**: kevinmacpherson08 / Recovery25!
 
 ## Remaining Tasks
 
 ### P1 - Next Priority
-- [ ] Complete Stripe checkout flow testing
-- [ ] Add more product-specific images (currently using category-level stock images)
-- [ ] Implement discount code validation in checkout
+- [ ] Test cart with variant products end-to-end
+- [ ] Update order history to show variant details
+- [ ] Add variant info to checkout summary
 
 ### P2 - Future Features
-- [ ] Doctor storefronts (personalized pages)
-- [ ] Admin dashboard improvements
-- [ ] Design parity with activerecovery360.com reference
-- [ ] Order history and tracking
-- [ ] Email notifications
-
-### Technical Debt
-- [ ] Add `.limit()` to unbounded database queries in database.py
-- [ ] Add data-testid attributes to all interactive elements
-- [ ] Improve error handling in cart operations
-
-## Known Issues (Resolved)
-- ~~Product detail page showing "Product Not Found"~~ - Fixed: parseInt() was truncating MongoDB ObjectIds
-- ~~Products missing images~~ - Fixed: Added stock images via seed endpoint
-- ~~Cart type errors~~ - Fixed: Updated ID types from number to string
+- [ ] Doctor storefronts
+- [ ] Admin dashboard for managing variants
+- [ ] Discount codes per variant
+- [ ] UI alignment with activerecovery360.com
 
 ## Environment Variables
 

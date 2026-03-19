@@ -312,3 +312,255 @@ async def fix_broken_images(admin: dict = Depends(require_admin)):
         "updated_count": updated_count,
         "skipped_products": skipped
     }
+
+# Define variant product groups for consolidation
+VARIANT_GROUPS = [
+    {
+        "base_name": "Hot/Cold Compression Sleeve",
+        "pattern": "Hot/Cold Compression Sleeve - Size",
+        "description": "Safely and easily treat various parts of arms and legs with 360° of even coverage and compression",
+        "brand": "Requine Products",
+        "category": "Hot/Cold Therapy",
+        "visibility": "public",
+        "variant_type": "size",
+        "extract_variant": lambda name: name.replace("Hot/Cold Compression Sleeve - Size ", "")
+    },
+    {
+        "base_name": "NanoXtreme Topical Pain Relief",
+        "pattern": "NanoXtreme Topical Pain Relief",
+        "description": "Professional-grade topical pain relief cream for muscle and joint recovery",
+        "brand": "Nano Extreme",
+        "category": "Topicals",
+        "visibility": "public",
+        "variant_type": "size",
+        "extract_variant": lambda name: name.replace("NanoXtreme Topical Pain Relief Cream - ", "").replace("NanoXtreme Topical Pain Relief - ", "")
+    },
+    {
+        "base_name": "Incrediwear Knee Sleeve",
+        "pattern": "Incrediwear Knee Sleeve -",
+        "description": "Bioactive wearable IR sleeve for knee recovery and support",
+        "brand": "Incrediwear",
+        "category": "Recovery Garments",
+        "visibility": "public",
+        "variant_type": "color_size",
+        "extract_variant": lambda name: name.replace("Incrediwear Knee Sleeve - ", "")
+    },
+    {
+        "base_name": "Incrediwear Ankle Sleeve",
+        "pattern": "Incrediwear Ankle Sleeve -",
+        "description": "Bioactive wearable IR ankle sleeve for recovery and support",
+        "brand": "Incrediwear",
+        "category": "Recovery Garments",
+        "visibility": "public",
+        "variant_type": "color_size",
+        "extract_variant": lambda name: name.replace("Incrediwear Ankle Sleeve - ", "")
+    },
+    {
+        "base_name": "Incrediwear Elbow Sleeve",
+        "pattern": "Incrediwear Elbow Sleeve -",
+        "description": "Bioactive wearable IR elbow sleeve for recovery and support",
+        "brand": "Incrediwear",
+        "category": "Recovery Garments",
+        "visibility": "public",
+        "variant_type": "size",
+        "extract_variant": lambda name: name.replace("Incrediwear Elbow Sleeve - ", "")
+    },
+    {
+        "base_name": "Incrediwear Hip Brace",
+        "pattern": "Incrediwear Hip Brace -",
+        "description": "Bioactive wearable IR hip brace for recovery and support",
+        "brand": "Incrediwear",
+        "category": "Braces",
+        "visibility": "public",
+        "variant_type": "side_size",
+        "extract_variant": lambda name: name.replace("Incrediwear Hip Brace - ", "")
+    },
+    {
+        "base_name": "Incrediwear Shoulder Brace",
+        "pattern": "Incrediwear Shoulder Brace -",
+        "description": "Bioactive wearable IR shoulder brace for recovery and support",
+        "brand": "Incrediwear",
+        "category": "Braces",
+        "visibility": "public",
+        "variant_type": "size",
+        "extract_variant": lambda name: name.replace("Incrediwear Shoulder Brace - ", "")
+    },
+    {
+        "base_name": "Incrediwear Back Brace",
+        "pattern": "Incrediwear Back Brace -",
+        "description": "Bioactive wearable IR back brace for recovery and support",
+        "brand": "Incrediwear",
+        "category": "Braces",
+        "visibility": "public",
+        "variant_type": "size",
+        "extract_variant": lambda name: name.replace("Incrediwear Back Brace - ", "")
+    },
+    {
+        "base_name": "Marc Pro Reusable Electrode",
+        "pattern": "Marc Pro Reusable Electrode -",
+        "description": "Reusable electrodes for Marc Pro electrotherapy device",
+        "brand": "MarcPro",
+        "category": "Electro Therapy",
+        "visibility": "public",
+        "variant_type": "pack_size",
+        "extract_variant": lambda name: name.replace("Marc Pro Reusable Electrode - ", "")
+    },
+    {
+        "base_name": "Tiger Tail Muscle Roller",
+        "pattern": "Tiger Tail Original",
+        "description": "Professional muscle roller stick for self-massage and recovery",
+        "brand": "Tiger Tail",
+        "category": "Self-Care Tools",
+        "visibility": "public",
+        "variant_type": "size",
+        "extract_variant": lambda name: name.replace("Tiger Tail Original ", "").replace(" Muscle Roller", "")
+    },
+    {
+        "base_name": "Tiger Cane Acupressure Hook",
+        "pattern": "Tiger Cane Acupressure Hook -",
+        "description": "Acupressure massage hook for trigger point therapy",
+        "brand": "Tiger Tail",
+        "category": "Self-Care Tools",
+        "visibility": "public",
+        "variant_type": "color",
+        "extract_variant": lambda name: name.replace("Tiger Cane Acupressure Hook - ", "")
+    },
+    {
+        "base_name": "CBD Recovery Extreme Sports Cream",
+        "pattern": "CBD Recovery Extreme Sports Cream",
+        "description": "CBD-infused recovery sports cream for muscle relief",
+        "brand": "Tree Lotion",
+        "category": "Topicals",
+        "visibility": "member",
+        "variant_type": "strength",
+        "extract_variant": lambda name: name.replace("CBD Recovery Extreme Sports Cream ", "")
+    },
+    {
+        "base_name": "CBD Lion Transdermal Patch 4-Pack",
+        "pattern": "CBD Lion Transdermal Patch 4-Pack -",
+        "description": "CBD transdermal patch 4-pack with 40mg CBD per patch",
+        "brand": "CBD Lion",
+        "category": "Recovery Patches",
+        "visibility": "member",
+        "variant_type": "color",
+        "extract_variant": lambda name: name.replace("CBD Lion Transdermal Patch 4-Pack - ", "")
+    },
+]
+
+@router.post("/consolidate-variants")
+async def consolidate_variants(admin: dict = Depends(require_admin)):
+    """Consolidate variant products into single products with variant arrays. Admin only."""
+    products_coll = get_collection("products")
+    categories_coll = get_collection("categories")
+    
+    results = {
+        "consolidated_groups": 0,
+        "variants_merged": 0,
+        "products_deleted": 0,
+        "groups_processed": []
+    }
+    
+    for group in VARIANT_GROUPS:
+        # Find all products matching this group's pattern
+        matching_products = await products_coll.find({
+            "name": {"$regex": f"^{group['pattern']}", "$options": "i"}
+        }).to_list(length=50)
+        
+        if len(matching_products) < 2:
+            # Need at least 2 variants to consolidate
+            continue
+        
+        # Get category ID
+        category = await categories_coll.find_one({"name": group["category"]})
+        category_id = str(category["_id"]) if category else None
+        
+        # Get image from first product or from map
+        image_url = None
+        for pattern, url in PRODUCT_IMAGE_MAP.items():
+            if pattern in group["base_name"]:
+                image_url = url
+                break
+        if not image_url and matching_products:
+            image_url = matching_products[0].get("imageUrl")
+        
+        # Build variants array
+        variants = []
+        product_ids_to_delete = []
+        min_price = float('inf')
+        total_stock = 0
+        
+        for prod in matching_products:
+            variant_name = group["extract_variant"](prod["name"])
+            variant = {
+                "sku": f"{group['base_name'].replace(' ', '-').lower()}-{variant_name.replace(' ', '-').replace('/', '-').lower()}",
+                "name": variant_name,
+                "price": prod.get("price", 0),
+                "stockQuantity": prod.get("stockQuantity", 0),
+                "attributes": {}
+            }
+            
+            # Parse attributes based on variant type
+            if group["variant_type"] == "color_size":
+                parts = variant_name.split(" ")
+                if len(parts) >= 2:
+                    variant["attributes"] = {"color": parts[0], "size": parts[1]}
+                else:
+                    variant["attributes"] = {"size": variant_name}
+            elif group["variant_type"] == "side_size":
+                parts = variant_name.split(" ")
+                if len(parts) >= 2:
+                    variant["attributes"] = {"side": parts[0], "size": parts[1]}
+                else:
+                    variant["attributes"] = {"size": variant_name}
+            elif group["variant_type"] == "size":
+                variant["attributes"] = {"size": variant_name}
+            elif group["variant_type"] == "color":
+                variant["attributes"] = {"color": variant_name}
+            elif group["variant_type"] == "strength":
+                variant["attributes"] = {"strength": variant_name}
+            elif group["variant_type"] == "pack_size":
+                variant["attributes"] = {"packSize": variant_name}
+            
+            variants.append(variant)
+            product_ids_to_delete.append(prod["_id"])
+            
+            if prod.get("price", 0) < min_price:
+                min_price = prod.get("price", 0)
+            total_stock += prod.get("stockQuantity", 0)
+        
+        # Create the consolidated product
+        consolidated_product = {
+            "name": group["base_name"],
+            "description": group["description"],
+            "price": min_price if min_price != float('inf') else 0,  # Base price is lowest variant
+            "imageUrl": image_url,
+            "visibility": group["visibility"],
+            "categoryId": category_id,
+            "stockQuantity": total_stock,
+            "featured": False,
+            "doctorIds": [],
+            "brand": group["brand"],
+            "hasVariants": True,
+            "variants": variants,
+            "createdAt": datetime.utcnow()
+        }
+        
+        # Insert new consolidated product
+        await products_coll.insert_one(consolidated_product)
+        
+        # Delete old variant products
+        for pid in product_ids_to_delete:
+            await products_coll.delete_one({"_id": pid})
+        
+        results["consolidated_groups"] += 1
+        results["variants_merged"] += len(variants)
+        results["products_deleted"] += len(product_ids_to_delete)
+        results["groups_processed"].append({
+            "name": group["base_name"],
+            "variants_count": len(variants)
+        })
+    
+    return {
+        "message": f"Consolidated {results['consolidated_groups']} product groups",
+        "results": results
+    }

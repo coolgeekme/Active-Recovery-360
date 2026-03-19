@@ -21,7 +21,10 @@ def transform_product(doc: dict) -> dict:
         "stockQuantity": doc.get("stockQuantity", 0),
         "featured": doc.get("featured", False),
         "doctorIds": [str(d) for d in doc.get("doctorIds", [])],
-        "createdAt": doc.get("createdAt")
+        "createdAt": doc.get("createdAt"),
+        "brand": doc.get("brand"),
+        "hasVariants": doc.get("hasVariants", False),
+        "variants": doc.get("variants", [])
     }
 
 @router.get("/products")
