@@ -23,7 +23,7 @@ import ProductGrid from "@/components/product/product-grid";
 
 export default function ProductPage() {
   const { id } = useParams();
-  const productId = parseInt(id);
+  const productId = id; // Keep as string for MongoDB ObjectId
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   

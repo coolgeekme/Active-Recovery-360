@@ -17,6 +17,7 @@ from routes.testimonials import router as testimonials_router
 from routes.discount_codes import router as discount_codes_router
 from routes.admin import router as admin_router
 from routes.payments import router as payments_router
+from routes.seed import router as seed_router
 from services.database import connect_db, close_db
 
 @asynccontextmanager
@@ -66,6 +67,7 @@ app.include_router(testimonials_router, prefix="/api", tags=["Testimonials"])
 app.include_router(discount_codes_router, prefix="/api", tags=["Discount Codes"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(payments_router, prefix="/api", tags=["Payments"])
+app.include_router(seed_router, prefix="/api/seed", tags=["Seed"])
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

@@ -17,13 +17,13 @@ ON CONFLICT (email) DO NOTHING;
 
 ```bash
 # Test products endpoint (public)
-curl -s https://ar360-mongo-preview.preview.emergentagent.com/api/products | head -100
+curl -s https://ar360-shop.preview.emergentagent.com/api/products | head -100
 
 # Test user endpoint (should return 401 if not logged in)
-curl -s https://ar360-mongo-preview.preview.emergentagent.com/api/user
+curl -s https://ar360-shop.preview.emergentagent.com/api/user
 
 # Test login
-curl -X POST https://ar360-mongo-preview.preview.emergentagent.com/api/login \
+curl -X POST https://ar360-shop.preview.emergentagent.com/api/login \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"testpass"}'
 ```
@@ -41,7 +41,7 @@ await page.context.add_cookies([{
     "secure": True,
     "sameSite": "Lax"
 }])
-await page.goto("https://ar360-mongo-preview.preview.emergentagent.com")
+await page.goto("https://ar360-shop.preview.emergentagent.com")
 ```
 
 ## Google OAuth Flow Testing

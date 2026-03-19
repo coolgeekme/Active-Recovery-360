@@ -16,9 +16,9 @@ type CartContextType = {
   cartItems: CartItemWithProduct[];
   isLoading: boolean;
   error: Error | null;
-  addToCart: (productId: number, quantity: number) => Promise<void>;
-  updateCartItemQuantity: (cartItemId: number, quantity: number) => Promise<void>;
-  removeFromCart: (cartItemId: number) => Promise<void>;
+  addToCart: (productId: string, quantity: number) => Promise<void>;
+  updateCartItemQuantity: (cartItemId: string, quantity: number) => Promise<void>;
+  removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
 };
 
@@ -38,7 +38,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   });
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: number; quantity: number }) => {
+    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
       const res = await apiRequest("POST", "/api/cart", { productId, quantity });
       return await res.json();
     },
@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   });
 
   const updateCartItemMutation = useMutation({
-    mutationFn: async ({ cartItemId, quantity }: { cartItemId: number; quantity: number }) => {
+    mutationFn: async ({ cartItemId, quantity }: { cartItemId: string; quantity: number }) => {
       const res = await apiRequest("PUT", `/api/cart/${cartItemId}`, { quantity });
       return await res.json();
     },
@@ -72,7 +72,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   });
 
   const removeCartItemMutation = useMutation({
-    mutationFn: async (cartItemId: number) => {
+    mutationFn: async (cartItemId: string) => {
       await apiRequest("DELETE", `/api/cart/${cartItemId}`);
     },
     onSuccess: () => {
@@ -87,7 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const addToCart = async (productId: number, quantity: number) => {
+  const addToCart = async (productId: string, quantity: number) => {
     if (!user) {
       toast({
         title: "Not logged in",
@@ -109,11 +109,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await addToCartMutation.mutateAsync({ productId, quantity });
   };
 
-  const updateCartItemQuantity = async (cartItemId: number, quantity: number) => {
+  const updateCartItemQuantity = async (cartItemId: string, quantity: number) => {
     await updateCartItemMutation.mutateAsync({ cartItemId, quantity });
   };
 
-  const removeFromCart = async (cartItemId: number) => {
+  const removeFromCart = async (cartItemId: string) => {
     await removeCartItemMutation.mutateAsync(cartItemId);
   };
 
