@@ -4,12 +4,14 @@ from datetime import datetime, timedelta
 from typing import Optional
 import os
 import httpx
+import secrets
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SECRET_KEY = os.environ.get("SESSION_SECRET", "ar360-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30
+RESET_TOKEN_EXPIRE_HOURS = 1
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -35,6 +37,18 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+def generate_reset_token() -> str:
+    """Generate a secure random reset token"""
+    return secrets.token_urlsafe(32)
+
+def create_reset_token_expiry() -> datetime:
+    """Create expiry time for reset token (1 hour from now)"""
+    return datetime.utcnow() + timedelta(hours=RESET_TOKEN_EXPIRE_HOURS)
+
+def is_reset_token_valid(expiry: datetime) -> bool:
+    """Check if reset token is still valid"""
+    return datetime.utcnow() < expiry
 
 async def verify_firebase_token(id_token: str) -> Optional[dict]:
     firebase_api_key = os.environ.get("FIREBASE_API_KEY")

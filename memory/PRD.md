@@ -1,132 +1,114 @@
 # AR360 - Active Recovery 360 E-Commerce Platform
 
 ## Original Problem Statement
-Build a full-stack e-commerce platform, "AR360," for professional-grade exercise recovery products. The platform supports three user roles:
-- **Public**: Can browse products
-- **Members**: Access to exclusive products and discounts
-- **Doctors/Healthcare Providers**: Access to professional-grade products and personalized storefronts
+Build a full-stack e-commerce platform, "AR360," for professional-grade exercise recovery products. The platform supports four user roles:
+- **Non-Member (Public)**: Can browse public products
+- **Member**: Paid users with access to exclusive products and discounts
+- **Healthcare Professional (HCP)**: Verified professionals with access to doctor-grade products
+- **Admin**: Full system management access
 
-## Tech Stack (Current - March 2026)
+## Tech Stack
 
 ### Production Stack
 - **Backend**: FastAPI (Python) - Port 8001
 - **Frontend**: React + Vite - Port 3000
 - **Database**: MongoDB with Motor (async driver)
-- **Authentication**: JWT tokens + Firebase OAuth
+- **Authentication**: Hybrid (Firebase OAuth + Custom JWT)
 - **Payments**: Stripe (test mode)
+- **Email**: Resend
 
-## Architecture
+## User Roles & Permissions
 
-```
-/app
-├── backend/                 # FastAPI backend
-│   ├── server.py           # Main FastAPI application
-│   ├── routes/             # API route handlers
-│   │   ├── auth.py         # Authentication (login, register, Firebase)
-│   │   ├── products.py     # Product CRUD with variants support
-│   │   ├── categories.py   # Category CRUD
-│   │   ├── cart.py         # Shopping cart (supports variant SKU)
-│   │   ├── orders.py       # Order management
-│   │   ├── doctors.py      # Doctor profiles
-│   │   ├── testimonials.py # Testimonials
-│   │   ├── discount_codes.py # Discount codes
-│   │   ├── payments.py     # Stripe integration
-│   │   ├── admin.py        # Admin endpoints
-│   │   └── seed.py         # Database seeding & variant consolidation
-│   ├── services/           # Business logic
-│   ├── models/             # Pydantic schemas (includes ProductVariant)
-│   ├── tests/              # Test files
-│   └── requirements.txt
-└── frontend/               # React frontend
-    ├── src/
-    │   ├── components/
-    │   ├── pages/
-    │   │   └── product-page.tsx  # Updated with variant selectors
-    │   ├── hooks/
-    │   │   └── use-cart.tsx      # Updated to support variantSku
-    │   ├── types/
-    │   │   └── index.ts          # Updated with ProductVariant type
-    │   └── ...
-    └── ...
-```
+| Role | Browse Public | Browse Member | Browse HCP | Checkout | Admin Panel |
+|------|--------------|---------------|------------|----------|-------------|
+| Non-Member | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Member | ✅ | ✅ | ❌ | ✅ | ❌ |
+| HCP (Approved) | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Admin | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## What's Been Completed
 
-### March 19, 2026 - Product Variants Feature
-- ✅ **Product Variant System Implemented**: Products can now have variants (size, color, strength, etc.)
-- ✅ **Variant Consolidation**: 43 variant products merged into 13 parent products with variants array
-- ✅ **Dynamic Dropdowns**: Product detail page shows dropdowns for each variant attribute
-- ✅ **Price Updates**: Price dynamically updates based on selected variant
-- ✅ **Stock per Variant**: Each variant tracks its own stock quantity
-- ✅ **Cart Integration**: Cart now supports adding products with specific variant SKU
+### March 19, 2026 - Authentication & User Roles
 
-### Variant Products Created:
-1. Hot/Cold Compression Sleeve (4 sizes: M, L, XL, XXL)
-2. NanoXtreme Topical Pain Relief (4 sizes: 1oz, 3.3oz Tube, 3.3oz Pump, 32oz)
-3. Incrediwear Knee Sleeve (6 variants: Grey/Black × M/L/XL)
-4. Incrediwear Ankle Sleeve (4 variants: Grey/Black × S/M/L)
-5. Incrediwear Elbow Sleeve (2 sizes: S/M, L)
-6. Incrediwear Hip Brace (5 variants: Left/Right × S/M/L)
-7. Incrediwear Shoulder Brace (3 sizes: S, M, L)
-8. Incrediwear Back Brace (4 sizes: S, M, L, XL)
-9. Marc Pro Reusable Electrode (2 pack sizes: 4-Pack, 10-Pack)
-10. Tiger Tail Muscle Roller (3 sizes: 11", 18", 22")
-11. Tiger Cane Acupressure Hook (2 colors: Blue, Orange)
-12. CBD Recovery Extreme Sports Cream (2 strengths: 400mg, 800mg)
-13. CBD Lion Transdermal Patch 4-Pack (2 colors: Black, Tan)
+#### Password Reset System
+- ✅ `POST /api/forgot-password` - Request password reset email
+- ✅ `POST /api/reset-password` - Reset password with token
+- ✅ Frontend pages: `/forgot-password` and `/reset-password`
+- ✅ Resend email integration (requires API key)
+- ✅ Secure token generation with 1-hour expiry
 
-### Previous Sessions:
-- ✅ Product images added to all products
-- ✅ MongoDB ObjectId parsing bug fixed
-- ✅ Cart type definitions fixed
-- ✅ Full E2E testing (32/32 backend tests passed)
+#### HCP Approval System
+- ✅ Registration with HCP application (license number, specialty)
+- ✅ `hcpStatus` field: pending → approved/rejected
+- ✅ Admin endpoints for HCP management:
+  - `GET /api/admin/hcp/pending` - List pending applications
+  - `GET /api/admin/hcp/all` - List all applications
+  - `POST /api/admin/hcp/:id/approve` - Approve HCP
+  - `POST /api/admin/hcp/:id/reject` - Reject HCP
+- ✅ Admin HCP Management page at `/admin/hcp`
+- ✅ Email notifications on approval/rejection
+- ✅ Rejected users can reapply via `POST /api/hcp/reapply`
 
-## Database Status
+#### Admin Dashboard Stats
+- ✅ `GET /api/admin/stats` - Dashboard statistics
+  - Total users, members, HCPs, pending HCP applications
+  - Total products, orders, pending orders
 
-- **Products**: 39 total (13 with variants, 26 standalone)
-- **Categories**: 9
-- **Total Variants**: 43 across 13 products
+### Previous Sessions
+- ✅ Product variants system (13 products with variants)
+- ✅ All 39 products have stock images
+- ✅ MongoDB ObjectId parsing fixed
+- ✅ Cart supports variant SKU
 
 ## API Endpoints
 
-### Products (Updated)
-- `GET /api/products` - Returns products with `hasVariants` and `variants[]` fields
-- `GET /api/products/:id` - Returns single product with full variant details
+### Authentication
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/register` | POST | None | Register (supports HCP application) |
+| `/api/login` | POST | None | Login (returns JWT) |
+| `/api/auth/firebase` | POST | None | Firebase OAuth login |
+| `/api/forgot-password` | POST | None | Request password reset |
+| `/api/reset-password` | POST | None | Reset password with token |
+| `/api/hcp/reapply` | POST | JWT | Reapply for HCP status |
 
-### Seed (Admin)
-- `POST /api/seed/consolidate-variants` - **NEW** Merges variant products into parent products
+### Admin
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/admin/stats` | GET | Admin | Dashboard statistics |
+| `/api/admin/users` | GET | Admin | List all users |
+| `/api/admin/hcp/pending` | GET | Admin | Pending HCP applications |
+| `/api/admin/hcp/all` | GET | Admin | All HCP applications |
+| `/api/admin/hcp/:id/approve` | POST | Admin | Approve HCP |
+| `/api/admin/hcp/:id/reject` | POST | Admin | Reject HCP |
 
-### Product Variant Schema
-```json
+## Database Schema Updates
+
+### User Document
+```javascript
 {
-  "hasVariants": true,
-  "variants": [
-    {
-      "sku": "hot-cold-compression-sleeve-m",
-      "name": "M",
-      "price": 2900,
-      "stockQuantity": 10,
-      "attributes": { "size": "M" }
-    }
-  ]
+  _id: ObjectId,
+  username: String,
+  email: String,
+  password: String (hashed),
+  fullName: String,
+  isMember: Boolean,
+  isAdmin: Boolean,
+  isDoctor: Boolean,
+  // HCP Fields
+  licenseNumber: String,
+  specialty: String,
+  hcpStatus: "pending" | "approved" | "rejected" | null,
+  hcpAppliedAt: Date,
+  hcpApprovedAt: Date,
+  hcpRejectedAt: Date,
+  hcpApprovedBy: ObjectId,
+  hcpRejectionReason: String,
+  // Password Reset
+  resetToken: String,
+  resetTokenExpiry: Date
 }
 ```
-
-## Test Credentials
-- **Admin**: admin / password
-
-## Remaining Tasks
-
-### P1 - Next Priority
-- [ ] Test cart with variant products end-to-end
-- [ ] Update order history to show variant details
-- [ ] Add variant info to checkout summary
-
-### P2 - Future Features
-- [ ] Doctor storefronts
-- [ ] Admin dashboard for managing variants
-- [ ] Discount codes per variant
-- [ ] UI alignment with activerecovery360.com
 
 ## Environment Variables
 
@@ -137,13 +119,30 @@ DB_NAME=ar360
 SESSION_SECRET=<secret>
 STRIPE_SECRET_KEY=<stripe-key>
 FIREBASE_API_KEY=<firebase-key>
+
+# Resend Email (required for password reset)
+RESEND_API_KEY=<your-resend-api-key>
+SENDER_EMAIL=onboarding@resend.dev
+FRONTEND_URL=https://ar360-shop.preview.emergentagent.com
 ```
 
-### Frontend (.env)
-```
-VITE_API_URL=
-VITE_FIREBASE_API_KEY=<firebase-key>
-VITE_FIREBASE_AUTH_DOMAIN=<domain>
-VITE_FIREBASE_PROJECT_ID=<project-id>
-REACT_APP_BACKEND_URL=https://ar360-shop.preview.emergentagent.com
-```
+## Test Credentials
+- **Admin**: admin / password
+- **Test HCP**: drsmith / test123 (approved)
+
+## Remaining Tasks
+
+### P1 - Next Priority
+- [ ] **Resend API Key**: User needs to add their Resend API key to enable password reset emails
+- [ ] Test full checkout flow with variant products
+- [ ] Update order history to display variant details
+
+### P2 - Future Features
+- [ ] Doctor storefronts with personalized product recommendations
+- [ ] Admin dashboard enhancements (charts, reports)
+- [ ] Discount codes functionality
+- [ ] UI alignment with activerecovery360.com reference
+
+### Technical Debt
+- [ ] Add `.limit()` to unbounded database queries
+- [ ] Add comprehensive data-testid attributes

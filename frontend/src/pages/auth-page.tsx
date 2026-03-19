@@ -35,9 +35,22 @@ const registerSchema = z.object({
   doctorBio: z.string().optional(),
   profileImage: z.string().optional(),
   isMember: z.boolean().optional(),
+  // HCP application fields
+  isHcpApplication: z.boolean().optional(),
+  licenseNumber: z.string().optional(),
+  specialty: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
+}).refine((data) => {
+  // If applying as HCP, license number is required
+  if (data.isHcpApplication && !data.licenseNumber) {
+    return false;
+  }
+  return true;
+}, {
+  message: "License number is required for Healthcare Professionals",
+  path: ["licenseNumber"],
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -90,8 +103,13 @@ export default function AuthPage() {
       doctorBio: "",
       profileImage: "",
       isMember: false,
+      isHcpApplication: false,
+      licenseNumber: "",
+      specialty: "",
     },
   });
+
+  const isHcpApplication = registerForm.watch("isHcpApplication");
 
   // Handle Google Sign-in
   const handleGoogleSignIn = async () => {
@@ -308,6 +326,14 @@ export default function AuthPage() {
                 </CardContent>
                 <CardFooter className="flex flex-col">
                   <div className="text-sm text-muted-foreground text-center mb-2">
+                    <a 
+                      href="/forgot-password"
+                      className="text-primary hover:underline cursor-pointer"
+                    >
+                      Forgot your password?
+                    </a>
+                  </div>
+                  <div className="text-sm text-muted-foreground text-center mb-2">
                     Don't have an account?{" "}
                     <a 
                       className="text-primary hover:underline cursor-pointer"
@@ -391,6 +417,75 @@ export default function AuthPage() {
                       
                       <FormField
                         control={registerForm.control}
+                        name="isHcpApplication"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-blue-50/50">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="mt-1"
+                                data-testid="hcp-checkbox"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>I am a Healthcare Professional</FormLabel>
+                              <p className="text-sm text-muted-foreground">
+                                Apply for HCP access to professional-grade products. Requires admin approval.
+                              </p>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      {isHcpApplication && (
+                        <div className="space-y-4 border-l-4 border-blue-400 pl-4 ml-4 bg-blue-50/30 p-4 rounded-r-md">
+                          <h3 className="font-semibold text-blue-800">Professional Information</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Your application will be reviewed by our team. You'll be notified via email once approved.
+                          </p>
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="licenseNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>License Number *</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Enter your professional license number" 
+                                    data-testid="license-number-input"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="specialty"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Specialty</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="e.g., Physical Therapy, Sports Medicine" 
+                                    data-testid="specialty-input"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                      
+                      <FormField
+                        control={registerForm.control}
                         name="isDoctor"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -403,9 +498,9 @@ export default function AuthPage() {
                               />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel>I am a healthcare professional</FormLabel>
+                              <FormLabel>Create a Doctor Storefront</FormLabel>
                               <p className="text-sm text-muted-foreground">
-                                Check this if you're a doctor or healthcare provider who wants to create a storefront
+                                Set up a personalized storefront to recommend products to your patients
                               </p>
                             </div>
                           </FormItem>

@@ -13,6 +13,10 @@ export interface User {
   doctorBio?: string | null;
   profileImage?: string | null;
   createdAt?: string;
+  // HCP fields
+  licenseNumber?: string | null;
+  hcpStatus?: 'pending' | 'approved' | 'rejected' | null;
+  specialty?: string | null;
 }
 
 export type SelectUser = User;

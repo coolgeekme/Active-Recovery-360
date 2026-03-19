@@ -13,6 +13,8 @@ import { CartProvider } from "@/hooks/use-cart";
 // Pages
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 import ShopPage from "@/pages/shop-page";
 import MembershipPage from "@/pages/membership-page";
 import MembershipCheckoutPage from "@/pages/membership-checkout-page";
@@ -31,6 +33,7 @@ import CategoryManagement from "@/pages/admin/category-management";
 import UserManagement from "@/pages/admin/user-management";
 import AdminSettings from "@/pages/admin/admin-settings";
 import DiscountManagement from "@/pages/admin/discount-management";
+import HcpManagement from "@/pages/admin/hcp-management";
 
 // Components
 import Header from "@/components/layout/header";
@@ -47,6 +50,8 @@ function AppRouter() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/auth" component={AuthPage} />
+          <Route path="/forgot-password" component={ForgotPasswordPage} />
+          <Route path="/reset-password" component={ResetPasswordPage} />
           <Route path="/shop" component={ShopPage} />
           <Route path="/membership" component={MembershipPage} />
           <Route path="/membership/checkout" component={MembershipCheckoutPage} />
@@ -68,6 +73,7 @@ function AppRouter() {
           <ProtectedRoute path="/admin/categories" component={CategoryManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/users" component={UserManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/discounts" component={DiscountManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/hcp" component={HcpManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/settings" component={AdminSettings} requireAdmin={true} />
           
           {/* Fallback to 404 */}

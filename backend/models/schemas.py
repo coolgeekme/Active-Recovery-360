@@ -39,7 +39,21 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: str = Field(alias="fullName")
+    # HCP fields (optional for regular users)
+    is_hcp_application: bool = Field(default=False, alias="isHcpApplication")
+    license_number: Optional[str] = Field(default=None, alias="licenseNumber")
+    specialty: Optional[str] = Field(default=None)
 
+    class Config:
+        populate_by_name = True
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordReset(BaseModel):
+    token: str
+    new_password: str = Field(alias="newPassword")
+    
     class Config:
         populate_by_name = True
 
