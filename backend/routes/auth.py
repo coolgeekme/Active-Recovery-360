@@ -118,7 +118,11 @@ async def register(user_data: UserCreate):
 async def login(credentials: UserLogin):
     users = get_collection("users")
     
+    # Try to find by username first, then by email
     user = await users.find_one({"username": {"$regex": f"^{credentials.username}$", "$options": "i"}})
+    if not user:
+        # Try by email
+        user = await users.find_one({"email": {"$regex": f"^{credentials.username}$", "$options": "i"}})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     

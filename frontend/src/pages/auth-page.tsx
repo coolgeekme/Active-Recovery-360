@@ -60,7 +60,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const { user, firebaseLoginMutation } = useAuth();
+  const { user, firebaseLoginMutation, loginMutation } = useAuth();
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -143,6 +143,22 @@ export default function AuthPage() {
   const onLoginSubmit = async (data: LoginFormValues) => {
     setIsEmailLoading(true);
     try {
+      // First try JWT backend login (for admin/staff accounts)
+      try {
+        const user = await loginMutation.mutateAsync({
+          username: data.email, // Backend accepts email as username
+          password: data.password,
+        });
+        // If successful, JWT login worked - redirect will happen via useEffect
+        console.log("JWT login successful:", user);
+        navigate("/");
+        return;
+      } catch (jwtError: any) {
+        // JWT login failed, try Firebase
+        console.log("JWT login failed, trying Firebase...", jwtError?.message);
+      }
+      
+      // Try Firebase authentication
       const result = await signInWithEmailAndPassword(auth, data.email, data.password);
       const idToken = await result.user.getIdToken();
       
@@ -277,9 +293,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full mt-4" 
-                        disabled={isEmailLoading || firebaseLoginMutation.isPending}
+                        disabled={isEmailLoading || firebaseLoginMutation.isPending || loginMutation.isPending}
                       >
-                        {isEmailLoading || firebaseLoginMutation.isPending ? (
+                        {isEmailLoading || firebaseLoginMutation.isPending || loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Signing in...

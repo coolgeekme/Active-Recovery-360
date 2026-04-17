@@ -15,6 +15,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
+import AdminLoginPage from "@/pages/admin-login-page";
 import ShopPage from "@/pages/shop-page";
 import MembershipPage from "@/pages/membership-page";
 import MembershipCheckoutPage from "@/pages/membership-checkout-page";
@@ -50,6 +51,7 @@ function AppRouter() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/auth" component={AuthPage} />
+          <Route path="/admin-login" component={AdminLoginPage} />
           <Route path="/forgot-password" component={ForgotPasswordPage} />
           <Route path="/reset-password" component={ResetPasswordPage} />
           <Route path="/shop" component={ShopPage} />
