@@ -83,7 +83,7 @@ export default function AdminPage() {
     },
     { 
       title: "Users", 
-      value: "N/A", 
+      value: "View All", 
       icon: Users,
       href: "/admin/users"
     },
@@ -211,6 +211,12 @@ export default function AdminPage() {
                   <Link href="/admin/users">
                     <Users className="h-4 w-4 mr-2" />
                     Manage Users
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/admin/hcp">
+                    <Users className="h-4 w-4 mr-2" />
+                    HCP Applications
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
