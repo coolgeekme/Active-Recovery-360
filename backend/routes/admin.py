@@ -212,3 +212,22 @@ async def get_admin_stats(admin: dict = Depends(require_admin)):
             "pending": pending_orders
         }
     }
+
+@router.post("/users/{user_id}/make-admin")
+async def make_user_admin(user_id: str, admin: dict = Depends(require_admin)):
+    """Promote a user to admin. Admin only."""
+    users = get_collection("users")
+    
+    try:
+        result = await users.find_one_and_update(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"isAdmin": True}},
+            return_document=True
+        )
+    except:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return transform_user(result)
