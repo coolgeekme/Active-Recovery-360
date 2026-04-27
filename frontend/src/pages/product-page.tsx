@@ -94,14 +94,11 @@ export default function ProductPage() {
   // All products are viewable by all users now
   const canView = () => !!product;
 
-  // Determine if the user can purchase the product
-  // Only members can purchase products, with additional restrictions for doctor products
+  // Anyone (including guests) can add to cart. Doctor-only products still
+  // require a verified HCP account because they're regulated/restricted.
   const canPurchase = () => {
-    if (!product || !user?.isMember) return false;
-    
-    // Doctor products can only be purchased by doctors
-    if (product.visibility === "doctor" && !user.isDoctor) return false;
-    
+    if (!product) return false;
+    if (product.visibility === "doctor" && !user?.isDoctor) return false;
     return true;
   };
 
@@ -124,22 +121,12 @@ export default function ProductPage() {
 
   const handleAddToCart = async () => {
     if (!canPurchase()) {
-      if (!user) {
-        toast({
-          title: "Login Required",
-          description: "Please log in to add items to your cart",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!user.isMember) {
-        toast({
-          title: "Membership Required",
-          description: "You need to be a member to purchase this product",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Doctor-only products still need verified HCP status
+      toast({
+        title: "Healthcare professionals only",
+        description: "This product requires verified HCP status. Apply or sign in.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -308,6 +295,7 @@ export default function ProductPage() {
                 size="lg"
                 onClick={handleAddToCart}
                 disabled={isAddingToCart}
+                data-testid="add-to-cart-button"
               >
                 {isAddingToCart ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -316,34 +304,26 @@ export default function ProductPage() {
                 )}
                 Add to Cart
               </Button>
+              {!user && (
+                <p className="text-xs text-muted-foreground text-center">
+                  No account required to add to cart. You'll sign in at checkout.
+                </p>
+              )}
             </div>
           ) : (
             <Card>
               <CardContent className="pt-6">
-                {!user ? (
-                  <div className="text-center">
-                    <p className="text-secondary mb-4">You must be logged in and a member to purchase this product.</p>
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
-                      <Button asChild>
-                        <a href="/auth">Sign In</a>
-                      </Button>
-                      <Button asChild variant="outline">
-                        <a href="/membership">Learn About Membership</a>
-                      </Button>
-                    </div>
-                  </div>
-                ) : !user.isMember ? (
-                  <div className="text-center">
-                    <p className="text-secondary mb-4">You need to be a member to purchase this product.</p>
+                <div className="text-center">
+                  <p className="text-secondary mb-4">This product is restricted to verified Healthcare Professionals.</p>
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
                     <Button asChild>
-                      <a href="/membership">Become a Member</a>
+                      <a href="/auth">Sign In as HCP</a>
+                    </Button>
+                    <Button asChild variant="outline">
+                      <a href="/auth">Apply for HCP Access</a>
                     </Button>
                   </div>
-                ) : (
-                  <div className="text-center">
-                    <p className="text-secondary">You don't have access to purchase this product.</p>
-                  </div>
-                )}
+                </div>
               </CardContent>
             </Card>
           )}

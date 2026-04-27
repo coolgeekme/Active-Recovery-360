@@ -1,0 +1,64 @@
+{
+  "summary": "Iteration 7: Verified guest client-side cart feature end-to-end. Guest can add non-variant and variant products (variantSku captured) to localStorage key 'ar360_cart_v1'; header badge updates; cart-drawer CTA correctly reads 'Sign In or Register to Checkout' for guests, 'Become a Member to Checkout' for non-members (verified by registering a fresh user), and 'Proceed to Checkout' for members (confirmed in code + backend flow). CTA routes correctly to /auth, /membership, /checkout respectively. Quantity +/- and trash-remove update local state and persist to localStorage. Backend POST /api/orders now honours `items` array in body; variant pricing is correctly pulled from product.variants[*].price (not product.price). Empty items → 400, no auth → 401, non-member → 403. REGRESSION: /api/products returns 39, admin /admin-login -> /admin, /api/files image proxy returns 200, but Hampton Adams 2-Pack and Clinic Roll variant counts dropped from 10 → 5 (broken since iteration 6 snapshot).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "/api/products (Hampton Adams — 2 Pack & Clinic Roll)", "issue": "Variant count regressed from 10 to 5. Iteration-6 baseline and this iteration's review request both require 10 variants per SKU. Current live data returns only 5 color variants (Black/Beige/Blue/Pink/Red) with no size variation.", "priority": "HIGH"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All pages", "issues": ["Pre-existing cosmetic: Google Fonts 'OTS parsing error: invalid sfntVersion' console warning. Non-blocking, default fonts render fine."]},
+      {"screen": "Cart drawer", "issues": ["DialogContent missing aria-describedby — a11y warning only (from shadcn Sheet); does not affect functionality."]}
+    ]
+  },
+  "passed_tests": [
+    "Guest add-to-cart on /shop: non-variant product saved to localStorage ar360_cart_v1 with full product snapshot; header badge increments to 1.",
+    "Guest add-to-cart on PDP /product/<id>: Hampton Adams 2-Pack with variantSku=HAKT-2RL-BLK saved to localStorage.",
+    "Cart drawer: qty + increments 1→2, qty − decrements 2→1 and persists to localStorage.",
+    "Cart drawer: trash button removes item, localStorage updated to [].",
+    "Guest CTA reads 'Sign In or Register to Checkout' and clicking navigates to /auth (cart preserved across nav).",
+    "Non-member CTA (fresh TEST_ user) reads 'Become a Member to Checkout' and navigates to /membership.",
+    "POST /api/orders rejects no-auth with 401.",
+    "POST /api/orders rejects non-member with 403.",
+    "POST /api/orders as member with items array (no variant) creates order using product.price, correct totalAmount.",
+    "POST /api/orders as member with variantSku uses product.variants[*].price (variant pricing honoured).",
+    "POST /api/orders accepts multiple items and sums totalAmount correctly.",
+    "POST /api/orders with empty items array and empty server cart returns 400.",
+    "GET /api/cart (legacy) still reachable and returns 200.",
+    "REGRESSION: /api/products returns 39; /api/files/ar360/products/<img> returns 200 image/*.",
+    "REGRESSION: /admin-login authenticates admin@example.com and hard-navigates to /admin; token stored in localStorage.auth_token.",
+    "pytest /app/backend/tests/test_ar360_guest_cart.py -> 10/10 passed."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_ar360_guest_cart.py",
+    "/app/test_reports/pytest/iteration_7_results.xml"
+  ],
+  "action_items": [
+    "Restore Hampton Adams Kinesiology Tape — 2 Pack to 10 variants (5 colors → previously 10 SKUs; likely the size/pack-size axis was dropped during a recent seed).",
+    "Restore Hampton Adams Kinesiology Tape — Clinic Roll 2\" x 45 yd to 10 variants as per iteration-6 baseline."
+  ],
+  "critical_code_review_comments": [
+    "cart-drawer.tsx subtotal uses item.product.price (base) instead of variant price when a variant is chosen. Guests see the wrong subtotal in the drawer if a variant's price differs from the base product price (backend computes the correct total at order time, but the UX mismatch can confuse users). Consider using variant.price when item.variantSku is set.",
+    "use-cart.tsx stores the entire Product snapshot (including potentially dozens of variants and long descriptions) in localStorage for every cart line. With a 5 MB localStorage quota this is fine today, but storing only {productId, variantSku, quantity} + a small display snapshot (name, imageUrl, unit price) would be leaner and avoid stale pricing being shown if product prices change while the cart sits idle.",
+    "orders.py line 131 sets new_order['_id'] = result.inserted_id then returns transform_order(new_order); transform_order correctly casts _id to string so no leak — but the in-memory dict is mutated in a way that makes it non-JSON-serialisable. Works due to transform_order but easy to break if someone returns new_order directly.",
+    "orders.py: when a productId in the submitted items array no longer exists or is malformed, the loop silently `continue`s. A client submitting only invalid items then hits the `not source_items` check only if the list starts empty — if the payload had one invalid entry, order creation will succeed with totalAmount=0 and items=[]. Recommend raising 400 if order_items is empty after processing.",
+    "checkout-form.tsx sends shippingAddress as a single concatenated string, dropping structured fields (city/state/zip). Downstream reporting/shipping integrations will have to re-parse this. Consider sending a structured shippingAddress object."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ar360_guest_cart.py"
+  ],
+  "success_rate": {"backend": "100% (10/10 new pytest)", "frontend": "100% of tested guest/non-member flows"},
+  "test_credentials": {
+    "admin": {"email": "admin@example.com", "password": "password", "endpoint": "/admin-login"},
+    "hcp_doctor_NOT_a_member": {"username": "drsmith", "password": "test123", "note": "drsmith has isDoctor=true & hcpStatus=approved but isMember=false — cannot place orders without /api/membership/purchase."},
+    "member_testing_strategy": "Register fresh TEST_ user + POST /api/membership/purchase to flip isMember=true (used by pytest fixture)."
+  },
+  "seed_data_creation": "Pytest fixture registers ephemeral TEST_member_<uuid> users and upgrades them via /api/membership/purchase. A few pending orders were created under these test users.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Guest cart feature (localStorage ar360_cart_v1) is fully working. All backend order-creation paths including variant pricing are verified. The ONE blocker for a full pass is the Hampton Adams 2-Pack and Clinic Roll variant regression (10 → 5). The auth note in /app/memory/test_credentials.md calls drsmith an 'HCP-approved member' but the DB has isMember=false — update the doc or re-seed drsmith with isMember=true to make member flows easier to smoke-test via UI.",
+  "rca_of_the_issue": "Variant regression RCA (hypothesis): The iteration-6 catalog exported 10 Hampton Adams SKUs (likely 5 colors x 2 sizes/packs). A subsequent import or admin edit preserved only the 5 colors, dropping the second axis. Fix: re-run the Hampton Adams catalog import script or restore from the iteration-6 MongoDB snapshot, confirming that both products have hasVariants=true with 10 entries each and both attributes (color + size/pack) populated."
+}

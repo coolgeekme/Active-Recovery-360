@@ -39,6 +39,14 @@ export default function CartDrawer() {
 
   const handleCheckout = () => {
     setOpen(false);
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    if (!user.isMember) {
+      navigate("/membership");
+      return;
+    }
     navigate("/checkout");
   };
 
@@ -117,9 +125,19 @@ export default function CartDrawer() {
               onClick={handleCheckout}
               className="w-full btn-primary-enhanced"
               disabled={cartItems.length === 0}
+              data-testid="proceed-to-checkout-btn"
             >
-              Proceed to Checkout
+              {user?.isMember
+                ? "Proceed to Checkout"
+                : user
+                ? "Become a Member to Checkout"
+                : "Sign In or Register to Checkout"}
             </Button>
+            {!user && (
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Your cart will be saved when you sign in.
+              </p>
+            )}
             
             <SheetClose asChild>
               <Button variant="outline" className="w-full mt-2">

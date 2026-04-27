@@ -55,33 +55,64 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
     orders = get_collection("orders")
     cart_items = get_collection("cart_items")
     products = get_collection("products")
-    
-    # Get cart items
-    cursor = cart_items.find({"userId": user["id"]})
-    cart_docs = await cursor.to_list(length=100)
-    
-    if not cart_docs:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-    
-    # Calculate total and build order items
+
     total_amount = 0
     order_items = []
-    
-    for cart_item in cart_docs:
-        product_doc = await products.find_one({"_id": ObjectId(cart_item["productId"])})
+
+    # Prefer items provided in the request body (client-side cart). Fall back
+    # to the server-side cart_items collection for legacy clients.
+    payload_items = order_data.get("items") or []
+    source_items: list[dict] = []
+    if payload_items:
+        for it in payload_items:
+            source_items.append({
+                "productId": it.get("productId"),
+                "quantity": int(it.get("quantity", 1)) or 1,
+                "variantSku": it.get("variantSku"),
+            })
+    else:
+        cursor = cart_items.find({"userId": user["id"]})
+        cart_docs = await cursor.to_list(length=200)
+        for ci in cart_docs:
+            source_items.append({
+                "productId": ci.get("productId"),
+                "quantity": ci.get("quantity", 1),
+                "variantSku": ci.get("variantSku"),
+            })
+
+    if not source_items:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    for item in source_items:
+        try:
+            product_doc = await products.find_one({"_id": ObjectId(item["productId"])})
+        except Exception:
+            continue
         if not product_doc:
             continue
-        
-        item_total = product_doc.get("price", 0) * cart_item.get("quantity", 1)
-        total_amount += item_total
-        
+
+        # Variant pricing if provided
+        unit_price = product_doc.get("price", 0)
+        variant_name = None
+        if item.get("variantSku"):
+            for v in product_doc.get("variants", []) or []:
+                if v.get("sku") == item["variantSku"]:
+                    unit_price = v.get("price", unit_price)
+                    variant_name = v.get("name")
+                    break
+
+        line_total = unit_price * item["quantity"]
+        total_amount += line_total
+
         order_items.append({
-            "productId": str(cart_item["productId"]),
+            "productId": str(item["productId"]),
             "name": product_doc.get("name", ""),
-            "price": product_doc.get("price", 0),
-            "quantity": cart_item.get("quantity", 1)
+            "variantSku": item.get("variantSku"),
+            "variantName": variant_name,
+            "price": unit_price,
+            "quantity": item["quantity"],
         })
-    
+
     # Create order
     new_order = {
         "userId": user["id"],
@@ -89,14 +120,14 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         "status": "pending",
         "items": order_items,
         "shippingAddress": order_data.get("shippingAddress", ""),
-        "createdAt": datetime.utcnow()
+        "createdAt": datetime.utcnow(),
     }
-    
+
     result = await orders.insert_one(new_order)
-    
-    # Clear cart
+
+    # Clear server-side cart for this user (if any)
     await cart_items.delete_many({"userId": user["id"]})
-    
+
     new_order["_id"] = result.inserted_id
     return transform_order(new_order)
 

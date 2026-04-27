@@ -6,7 +6,7 @@ import { Trash2, Minus, Plus, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 
 interface CartItemProps {
-  id: number;
+  id: string;
   product: Product;
   quantity: number;
 }

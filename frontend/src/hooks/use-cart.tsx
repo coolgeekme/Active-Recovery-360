@@ -1,19 +1,21 @@
-import { createContext, ReactNode, useContext } from "react";
-import {
-  useQuery,
-  useMutation,
-} from "@tanstack/react-query";
-import { CartItem, Product } from "@/types";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { createContext, ReactNode, useContext, useEffect, useState, useCallback } from "react";
+import { Product } from "@/types";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
 
-interface CartItemWithProduct extends CartItem {
-  product: Product;
+const STORAGE_KEY = "ar360_cart_v1";
+
+export interface CartItem {
+  id: string;            // local UUID-like id (purely for React keys)
+  productId: string;
+  quantity: number;
+  variantSku?: string;
+  product: Product;      // snapshot at time of add
+  variantImageUrl?: string | null;
 }
 
 type CartContextType = {
-  cartItems: CartItemWithProduct[];
+  cartItems: CartItem[];
   isLoading: boolean;
   error: Error | null;
   addToCart: (productId: string, quantity: number, variantSku?: string) => Promise<void>;
@@ -24,115 +26,105 @@ type CartContextType = {
 
 export const CartContext = createContext<CartContextType | null>(null);
 
+function loadFromStorage(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    /* localStorage may be unavailable (e.g. in private mode) — ignore */
+  }
+}
+
+function genId(): string {
+  return `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => loadFromStorage());
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const {
-    data: cartItems = [],
-    error,
-    isLoading,
-  } = useQuery<CartItemWithProduct[]>({
-    queryKey: ["/api/cart"],
-    enabled: !!user, // Only fetch cart if user is logged in
-  });
+  // Persist on every change
+  useEffect(() => {
+    saveToStorage(cartItems);
+  }, [cartItems]);
 
-  const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity, variantSku }: { productId: string; quantity: number; variantSku?: string }) => {
-      const body: any = { productId, quantity };
-      if (variantSku) body.variantSku = variantSku;
-      const res = await apiRequest("POST", "/api/cart", body);
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add item to cart",
-        variant: "destructive",
-      });
-    },
-  });
+  const addToCart = useCallback(
+    async (productId: string, quantity: number, variantSku?: string) => {
+      try {
+        setIsLoading(true);
+        // Fetch fresh product info (includes variant pricing/imageUrl)
+        const res = await apiRequest("GET", `/api/products/${productId}`);
+        const product: Product = await res.json();
 
-  const updateCartItemMutation = useMutation({
-    mutationFn: async ({ cartItemId, quantity }: { cartItemId: string; quantity: number }) => {
-      const res = await apiRequest("PUT", `/api/cart/${cartItemId}`, { quantity });
-      return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update cart",
-        variant: "destructive",
-      });
-    },
-  });
+        const variant = variantSku
+          ? product.variants?.find((v) => v.sku === variantSku)
+          : undefined;
+        const variantImageUrl = variant?.imageUrl ?? null;
 
-  const removeCartItemMutation = useMutation({
-    mutationFn: async (cartItemId: string) => {
-      await apiRequest("DELETE", `/api/cart/${cartItemId}`);
+        setCartItems((prev) => {
+          // Merge with same productId+variantSku
+          const idx = prev.findIndex(
+            (i) => i.productId === productId && i.variantSku === variantSku
+          );
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...next[idx], quantity: next[idx].quantity + quantity };
+            return next;
+          }
+          return [
+            ...prev,
+            {
+              id: genId(),
+              productId,
+              quantity,
+              variantSku,
+              product,
+              variantImageUrl,
+            },
+          ];
+        });
+      } catch (e: any) {
+        setError(e);
+        toast({
+          title: "Error",
+          description: "Failed to add item to cart",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cart"] });
+    [toast]
+  );
+
+  const updateCartItemQuantity = useCallback(
+    async (cartItemId: string, quantity: number) => {
+      setCartItems((prev) =>
+        prev.map((i) => (i.id === cartItemId ? { ...i, quantity } : i))
+      );
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to remove item from cart",
-        variant: "destructive",
-      });
-    },
-  });
+    []
+  );
 
-  const addToCart = async (productId: string, quantity: number, variantSku?: string) => {
-    if (!user) {
-      toast({
-        title: "Not logged in",
-        description: "Please log in to add items to cart",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!user.isMember) {
-      toast({
-        title: "Membership required",
-        description: "You need to be a member to add items to cart",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    await addToCartMutation.mutateAsync({ productId, quantity, variantSku });
-  };
+  const removeFromCart = useCallback(async (cartItemId: string) => {
+    setCartItems((prev) => prev.filter((i) => i.id !== cartItemId));
+  }, []);
 
-  const updateCartItemQuantity = async (cartItemId: string, quantity: number) => {
-    await updateCartItemMutation.mutateAsync({ cartItemId, quantity });
-  };
-
-  const removeFromCart = async (cartItemId: string) => {
-    await removeCartItemMutation.mutateAsync(cartItemId);
-  };
-
-  const clearCart = async () => {
-    try {
-      // In a real app, we'd have a dedicated endpoint for this
-      // For now, we'll just remove each item one by one
-      const operations = cartItems.map(item => removeFromCart(item.id));
-      await Promise.all(operations);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to clear cart",
-        variant: "destructive",
-      });
-    }
-  };
+  const clearCart = useCallback(async () => {
+    setCartItems([]);
+  }, []);
 
   return (
     <CartContext.Provider

@@ -22,14 +22,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   // All products are viewable by all users now
   const canView = () => true;
 
-  // Determine if the user can purchase the product
-  // Only members can purchase products, with additional restrictions for doctor products
+  // Anyone (including guests) can add to cart. Doctor-only products still
+  // require a verified HCP account because they're regulated/restricted.
   const canPurchase = () => {
-    if (!user?.isMember) return false;
-    
-    // Doctor products can only be purchased by doctors
-    if (product.visibility === "doctor" && !user.isDoctor) return false;
-    
+    if (product.visibility === "doctor" && !user?.isDoctor) return false;
     return true;
   };
 
@@ -42,22 +38,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = async () => {
     if (!canPurchase()) {
-      if (!user) {
-        toast({
-          title: "Login Required",
-          description: "Please log in to add items to your cart",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!user.isMember) {
-        toast({
-          title: "Membership Required",
-          description: "You need to be a member to purchase this product",
-          variant: "destructive",
-        });
-        return;
-      }
+      toast({
+        title: "Healthcare professionals only",
+        description: "This product requires verified HCP status.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -113,11 +98,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-secondary text-sm mb-3 flex-grow">{product.description}</p>
         <div className="flex justify-between items-center mt-2">
           <span className="text-primary font-bold">{formatPrice(product.price)}</span>
-          {canPurchase() ? (
+          {canPurchase() && !product.hasVariants ? (
             <Button
               onClick={handleAddToCart}
               disabled={isAddingToCart}
               className="bg-primary text-white px-3 py-1 text-sm font-montserrat hover:bg-opacity-90 transition"
+              data-testid={`add-to-cart-${product.id}`}
             >
               {isAddingToCart ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

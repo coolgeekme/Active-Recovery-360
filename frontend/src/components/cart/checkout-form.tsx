@@ -41,7 +41,7 @@ export default function CheckoutForm({ subtotal }: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
-  const { clearCart } = useCart();
+  const { clearCart, cartItems } = useCart();
   const [, navigate] = useLocation();
 
   const form = useForm<CheckoutFormValues>({
@@ -63,12 +63,17 @@ export default function CheckoutForm({ subtotal }: CheckoutFormProps) {
     try {
       setIsSubmitting(true);
       
-      // Create order with shipping address
+      // Create order with shipping address and current cart items (local cart)
       const shippingAddress = `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`;
-      
+
       await apiRequest("POST", "/api/orders", {
         shippingAddress,
         paymentMethod: "credit", // In a real app, we would handle payment processing
+        items: cartItems.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          variantSku: i.variantSku,
+        })),
       });
       
       // After successful order, clear the cart

@@ -87,9 +87,10 @@ export interface OrderItem {
 
 export interface CartItem {
   id: string;
-  userId: string;
   productId: string;
   quantity: number;
+  variantSku?: string;
+  variantImageUrl?: string | null;
   product?: Product;
 }
 
