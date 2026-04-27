@@ -83,30 +83,35 @@ CATEGORIES = [
 
 
 def kt_2pack_variants():
-    colors = ["Black", "Tan", "Orange", "Yellow", "Green", "Blue", "Pink",
-              "Purple", "White", "Red"]
-    skus = {"Black": "HAKT-2RL-BLK", "Tan": "HAKT-2RL-TAN", "Orange": "HAKT-2RL-ORG",
-            "Yellow": "HAKT-2RL-YLO", "Green": "HAKT-2RL-GRN", "Blue": "HAKT-2RL-BLU",
-            "Pink": "HAKT-2RL-PNK", "Purple": "HAKT-2RL-PRP", "White": "HAKT-2RL-WHT",
-            "Red": "HAKT-2RL-RED"}
-    img_keys = {c: f"kt_2pack_{c.lower()}" for c in colors}
+    # Curated palette: only Black, Beige (formerly Tan), Blue, Pink, Red
+    # Each variant carries its own colour-matched image_key so the storefront
+    # can swap the main image when the buyer selects a different colour.
+    items = [
+        ("Black", "HAKT-2RL-BLK", "kt_2pack_black"),
+        ("Beige", "HAKT-2RL-TAN", "kt_2pack_tan"),
+        ("Blue",  "HAKT-2RL-BLU", "kt_2pack_blue"),
+        ("Pink",  "HAKT-2RL-PNK", "kt_2pack_pink"),
+        ("Red",   "HAKT-2RL-RED", "kt_2pack_red"),
+    ]
     return [
-        {"sku": skus[c], "name": c, "price": 1499, "stockQuantity": 10,
-         "attributes": {"color": c}, "image_key": img_keys[c]} for c in colors
+        {"sku": sku, "name": color, "price": 1499, "stockQuantity": 10,
+         "attributes": {"color": color}, "image_key": img}
+        for color, sku, img in items
     ]
 
 
 def kt_roll_variants():
-    colors = ["Black", "Tan", "Orange", "Yellow", "Green", "Blue", "Pink",
-              "Purple", "White", "Red"]
-    skus = {"Black": "HAKT-2RL45-BLK", "Tan": "HAKT-2RL45-TAN", "Orange": "HAKT-2RL45-ORG",
-            "Yellow": "HAKT-2RL45-YLO", "Green": "HAKT-2RL45-GRN", "Blue": "HAKT-2RL45-BLU",
-            "Pink": "HAKT-2RL45-PNK", "Purple": "HAKT-2RL45-PRP", "White": "HAKT-2RL45-WHT",
-            "Red": "HAKT-2RL45-RED"}
-    img_keys = {c: f"kt_roll_{c.lower()}" for c in colors}
+    items = [
+        ("Black", "HAKT-2RL45-BLK", "kt_roll_black"),
+        ("Beige", "HAKT-2RL45-TAN", "kt_roll_tan"),
+        ("Blue",  "HAKT-2RL45-BLU", "kt_roll_blue"),
+        ("Pink",  "HAKT-2RL45-PNK", "kt_roll_pink"),
+        ("Red",   "HAKT-2RL45-RED", "kt_roll_red"),
+    ]
     return [
-        {"sku": skus[c], "name": c, "price": 4999, "stockQuantity": 10,
-         "attributes": {"color": c}, "image_key": img_keys[c]} for c in colors
+        {"sku": sku, "name": color, "price": 4999, "stockQuantity": 10,
+         "attributes": {"color": color}, "image_key": img}
+        for color, sku, img in items
     ]
 
 

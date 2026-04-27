@@ -33,6 +33,7 @@ export interface ProductVariant {
   name: string;
   price: number;
   stockQuantity: number;
+  imageUrl?: string | null;
   attributes: {
     size?: string;
     color?: string;

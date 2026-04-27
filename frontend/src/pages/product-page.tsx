@@ -218,9 +218,10 @@ export default function ProductPage() {
         <div>
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
             <img 
-              src={product.imageUrl || "https://via.placeholder.com/500x500?text=No+Image"} 
-              alt={product.name} 
+              src={selectedVariant?.imageUrl || product.imageUrl || "https://via.placeholder.com/500x500?text=No+Image"} 
+              alt={selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name} 
               className="w-full h-auto object-contain aspect-square"
+              data-testid="product-main-image"
             />
           </div>
         </div>
