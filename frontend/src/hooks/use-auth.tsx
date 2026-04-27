@@ -84,6 +84,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.token) {
         setToken(data.token);
       }
+      // Hydrate user query cache synchronously so ProtectedRoute sees the
+      // logged-in user on the very next render after navigate().
+      if (data.user) {
+        queryClient.setQueryData(["/api/user"], data.user);
+      }
       return data.user;
     },
     onSuccess: (user: User) => {

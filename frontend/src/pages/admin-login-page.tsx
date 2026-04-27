@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
     
     try {
-      await loginMutation.mutateAsync({
+      const user = await loginMutation.mutateAsync({
         username: email,
         password: password,
       });
@@ -30,7 +30,11 @@ export default function AdminLoginPage() {
         title: "Login successful",
         description: "Welcome back!",
       });
-      navigate("/admin");
+      // Hard navigation guarantees the freshly-stored token is read on the
+      // next page load, avoiding any React-Query cache hydration races.
+      const dest = user?.isAdmin ? "/admin" : "/";
+      window.location.assign(dest);
+      return;
     } catch (error: any) {
       toast({
         title: "Login failed",
