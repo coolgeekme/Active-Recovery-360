@@ -18,7 +18,9 @@ from routes.discount_codes import router as discount_codes_router
 from routes.admin import router as admin_router
 from routes.payments import router as payments_router
 from routes.seed import router as seed_router
+from routes.files import router as files_router
 from services.database import connect_db, close_db
+from services.storage import init_storage
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +28,11 @@ async def lifespan(app: FastAPI):
     print("[STARTUP] Starting FastAPI server...")
     await connect_db()
     print("[STARTUP] Database connected")
+    try:
+        init_storage()
+        print("[STARTUP] Object storage initialized")
+    except Exception as e:
+        print(f"[STARTUP] Object storage init failed (non-fatal): {e}")
     yield
     # Shutdown
     await close_db()
@@ -68,6 +75,7 @@ app.include_router(discount_codes_router, prefix="/api", tags=["Discount Codes"]
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(payments_router, prefix="/api", tags=["Payments"])
 app.include_router(seed_router, prefix="/api/seed", tags=["Seed"])
+app.include_router(files_router, prefix="/api", tags=["Files"])
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

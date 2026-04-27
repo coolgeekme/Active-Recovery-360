@@ -1,0 +1,79 @@
+{
+  "summary": "Iteration 5: Tested AR360 catalog refresh - 39 consolidated products, variants, image proxy, visibility filters, categories, frontend shop & product detail pages. 16/16 backend pytest tests pass. Shop page and product detail variant selectors work correctly. Found 2 frontend issues: 4 products use a broken Unsplash fallback URL, and the /admin-login frontend form does not appear to call /api/login on submit (redirects straight to /auth).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Product cards (shop & detail)",
+        "issue": "Broken Unsplash fallback URL https://images.unsplash.com/photo-1583912267550-d6c2ac3196c0 (Unsplash returns 404). Used by 4 products: 'Marc Pro Original', 'Marc Pro Reusable Electrodes', 'Squid Go Control Unit', 'Squid Go Body Part Systems'. Renders as a broken/blank image.",
+        "selector": "img with src containing 1583912267550-d6c2ac3196c0",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Admin login (/admin-login)",
+        "issue": "Submitting the Staff Login form with admin@example.com / password (also tried 'admin' / 'password') redirects to /auth instead of an admin area. No /api/login network call was captured during form submit, suggesting the form handler is not calling the backend admin endpoint (or is silently redirecting on Firebase fallback). Backend POST /api/login works correctly (returns JWT with isAdmin=true) per pytest. Result: /admin/products is unreachable via the UI.",
+        "affected_selectors": ["#admin-login form", "/admin/products"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "All pages",
+        "issues": ["Console warning: 'Failed to decode downloaded font: fonts.googleapis.com/css2?family=Open+Sans...' / 'OTS parsing error: invalid sfntVersion' - Google Fonts CSS appears to be served with a font MIME type. Cosmetic only; default fonts render fine."]
+      }
+    ]
+  },
+  "passed_tests": [
+    "GET /api/products returns exactly 39 products with id/name/price/imageUrl/brand/hasVariants/variants",
+    "No MongoDB _id leaks in product responses",
+    "GET /api/products/{id} returns product with variants",
+    "GET /api/products?featured=true returns 4 (>=3) featured products",
+    "GET /api/categories returns 11 categories including 'Cold Compression', 'Exercise Therapy', 'Kinesiology Tape'",
+    "Incrediwear Knee Sleeve has exactly 25 variants",
+    "Hampton Adams Kinesiology Tape — 2 Pack has 10 color variants",
+    "Hampton Adams Kinesiology Tape — Clinic Roll has 10 color variants",
+    "Hot/Cold Compression Sleeve has 4 size variants (S/M/L/XL)",
+    "GET /api/products?visibility=public returns 25 products (majority)",
+    "GET /api/products?visibility=member returns 8 CBD products",
+    "GET /api/products?visibility=doctor returns Marc Pro/Squid Go/Bio Blade etc.",
+    "All 9 /api/files/ar360/products/* image URLs return 200 with image/* content-type",
+    "GET /api/files/{nonexistent} returns 404",
+    "POST /api/login (admin@example.com/password) returns 200 with token + user.isAdmin=true",
+    "Frontend /shop renders 39 product cards with images, prices, descriptions",
+    "Frontend /product/{id} for Hot/Cold Compression Sleeve renders Size dropdown (4 options), changing to L updates 'Selected: Size L (10 in stock)'",
+    "Frontend /product/{id} for Hampton Adams 2-Pack renders Color dropdown showing Black with '10 in stock'"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_ar360_catalog.py",
+    "/app/test_reports/pytest/iteration_5_results.xml"
+  ],
+  "action_items": [
+    "Replace the broken Unsplash fallback URL (photo-1583912267550-d6c2ac3196c0) used by Marc Pro and Squid Go products. Either upload official images to object storage or pick a working Unsplash photo. Affected products: Marc Pro Original, Marc Pro Reusable Electrodes, Squid Go Control Unit, Squid Go Body Part Systems.",
+    "Investigate /admin-login form submit: it should call POST /api/login and store JWT, then route to admin dashboard. Currently it silently redirects to /auth without an /api/login call, blocking access to /admin/products via UI.",
+    "Optional: only 9 of 39 products have official /api/files images; task statement mentioned 27 images uploaded. Confirm whether more products should be mapped to uploaded images instead of Unsplash fallbacks."
+  ],
+  "critical_code_review_comments": [
+    "Image fallback strategy hardcodes Unsplash URLs that can become 404 (e.g., 1583912267550-d6c2ac3196c0). Consider a single bundled placeholder asset served from /api/files for resilience.",
+    "Login response shape changed to {token, user:{...}} (with user.isAdmin) - older test_ar360_api.py expected flat user object; updated test in test_ar360_catalog.py handles new shape.",
+    "Frontend admin-login flow: ensure the Sign In button's onSubmit handler awaits POST /api/login, persists token, then navigates to /admin (not /auth)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ar360_catalog.py"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 catalog tests passed)",
+    "frontend": "~85% (shop + product detail + variant selectors work; admin-login & broken fallback image fail)"
+  },
+  "test_credentials": {
+    "admin": {"email": "admin@example.com", "password": "password", "endpoint": "POST /api/login {username,password} - works at API level"}
+  },
+  "seed_data_creation": "None (verified existing 39-product import).",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Catalog refresh verified at API level: 39 products, variants intact, image proxy works for all 9 local images. Open issues: (1) 4 products use a 404 Unsplash URL (1583912267550-d6c2ac3196c0); (2) /admin-login form does not POST /api/login - redirects to /auth without API call. Backend admin login API itself is fine. Tests in /app/backend/tests/test_ar360_catalog.py.",
+  "rca_of_the_issue": "Broken images: products without an uploaded official asset fall back to a hardcoded Unsplash photo ID that is no longer hosted on Unsplash, returning 404 and rendering blank in the browser. Admin login: form submit handler is not invoking POST /api/login (no network call observed); likely the page is wired to Firebase or rerouting before the staff endpoint executes."
+}
