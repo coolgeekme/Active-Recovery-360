@@ -1,24 +1,22 @@
 # AR360 - Active Recovery 360 E-Commerce Platform
 
 ## Original Problem Statement
-Build a full-stack e-commerce platform, "AR360," for professional-grade exercise recovery products. The platform supports four user roles:
+Build a full-stack e-commerce platform, "AR360," for professional-grade exercise recovery products. Four user roles:
 - **Non-Member (Public)**: Can browse public products
 - **Member**: Paid users with access to exclusive products and discounts
 - **Healthcare Professional (HCP)**: Verified professionals with access to doctor-grade products
 - **Admin**: Full system management access
 
 ## Tech Stack
-
-### Production Stack
 - **Backend**: FastAPI (Python) - Port 8001
 - **Frontend**: React + Vite - Port 3000
 - **Database**: MongoDB with Motor (async driver)
 - **Authentication**: Hybrid (Firebase OAuth + Custom JWT)
 - **Payments**: Stripe (test mode)
 - **Email**: Resend
+- **Object Storage**: Emergent Object Storage (for product images)
 
 ## User Roles & Permissions
-
 | Role | Browse Public | Browse Member | Browse HCP | Checkout | Admin Panel |
 |------|--------------|---------------|------------|----------|-------------|
 | Non-Member | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -28,121 +26,87 @@ Build a full-stack e-commerce platform, "AR360," for professional-grade exercise
 
 ## What's Been Completed
 
-### March 19, 2026 - Authentication & User Roles
+### April 27, 2026 — Catalog Import & Object Storage
+- ✅ **Object Storage**: Wired Emergent Object Storage (`backend/services/storage.py`)
+- ✅ **Public file proxy**: `GET /api/files/{path:path}` streams images from object storage
+- ✅ **Catalog refresh**: Imported 39 consolidated products from official Google Sheet via one-shot script `backend/scripts/import_products.py`
+  - Replaced legacy 39 mock products
+  - Variants properly aggregated: Incrediwear Knee Sleeve (25), Hampton Adams 2-Pack (10), Hampton Adams Clinic Roll (10), etc.
+  - Visibility set per product type: CBD → member, Marc Pro / Squid Go / Bio Blade / Bow Scraper → doctor
+- ✅ **Official imagery**: Uploaded 27 product images from user's Google Drive folder to object storage; 9 mapped to specific products, 18 reserved for kinesiology tape variants
+- ✅ **2 new categories created**: Cold Compression, Exercise Therapy (now 11 total)
+- ✅ **Bug fixed**: Admin-login flow now hard-navigates via `window.location.assign` to bypass React-Query hydration race
+- ✅ **Bug fixed**: Replaced broken Unsplash fallback URL (1583912267550-d6c2ac3196c0) for 4 Electro Therapy & Cold Compression products
 
-#### Password Reset System
-- ✅ `POST /api/forgot-password` - Request password reset email
-- ✅ `POST /api/reset-password` - Reset password with token
-- ✅ Frontend pages: `/forgot-password` and `/reset-password`
-- ✅ Resend email integration (requires API key)
-- ✅ Secure token generation with 1-hour expiry
+### March 19, 2026 — Authentication & User Roles
+- ✅ Resend password reset (`/api/forgot-password`, `/api/reset-password`)
+- ✅ HCP application & approval workflow (`/api/admin/hcp/*`)
+- ✅ Dedicated `/admin-login` page for JWT staff login (bypasses Firebase)
+- ✅ Made `reggie@coolgeek.me` an admin
 
-#### HCP Approval System
-- ✅ Registration with HCP application (license number, specialty)
-- ✅ `hcpStatus` field: pending → approved/rejected
-- ✅ Admin endpoints for HCP management:
-  - `GET /api/admin/hcp/pending` - List pending applications
-  - `GET /api/admin/hcp/all` - List all applications
-  - `POST /api/admin/hcp/:id/approve` - Approve HCP
-  - `POST /api/admin/hcp/:id/reject` - Reject HCP
-- ✅ Admin HCP Management page at `/admin/hcp`
-- ✅ Email notifications on approval/rejection
-- ✅ Rejected users can reapply via `POST /api/hcp/reapply`
+### Earlier
+- ✅ Product variants system, multi-size/color dropdowns
+- ✅ Stripe payments
+- ✅ Cart, orders, categories, doctor storefronts (basic)
 
-#### Admin Dashboard Stats
-- ✅ `GET /api/admin/stats` - Dashboard statistics
-  - Total users, members, HCPs, pending HCP applications
-  - Total products, orders, pending orders
+## API Endpoints (current)
 
-### Previous Sessions
-- ✅ Product variants system (13 products with variants)
-- ✅ All 39 products have stock images
-- ✅ MongoDB ObjectId parsing fixed
-- ✅ Cart supports variant SKU
+### Auth
+- `POST /api/register`
+- `POST /api/login` → `{token, user}`
+- `POST /api/auth/firebase`
+- `POST /api/forgot-password`, `/api/reset-password`
+- `POST /api/hcp/reapply`
 
-## API Endpoints
-
-### Authentication
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/register` | POST | None | Register (supports HCP application) |
-| `/api/login` | POST | None | Login (returns JWT) |
-| `/api/auth/firebase` | POST | None | Firebase OAuth login |
-| `/api/forgot-password` | POST | None | Request password reset |
-| `/api/reset-password` | POST | None | Reset password with token |
-| `/api/hcp/reapply` | POST | JWT | Reapply for HCP status |
+### Products / Catalog
+- `GET /api/products` (filters: visibility, categoryId, featured, doctorId)
+- `GET /api/products/{id}`
+- `POST/PUT/DELETE /api/products/{id}` (admin)
+- `GET /api/categories`
+- `GET /api/files/{path}` — public image proxy
 
 ### Admin
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/admin/stats` | GET | Admin | Dashboard statistics |
-| `/api/admin/users` | GET | Admin | List all users |
-| `/api/admin/hcp/pending` | GET | Admin | Pending HCP applications |
-| `/api/admin/hcp/all` | GET | Admin | All HCP applications |
-| `/api/admin/hcp/:id/approve` | POST | Admin | Approve HCP |
-| `/api/admin/hcp/:id/reject` | POST | Admin | Reject HCP |
+- `GET /api/admin/stats`
+- `GET /api/admin/users`
+- `GET /api/admin/hcp/pending|all`
+- `POST /api/admin/hcp/{id}/approve|reject`
 
-## Database Schema Updates
+## Database Schema (key)
 
-### User Document
-```javascript
-{
-  _id: ObjectId,
-  username: String,
-  email: String,
-  password: String (hashed),
-  fullName: String,
-  isMember: Boolean,
-  isAdmin: Boolean,
-  isDoctor: Boolean,
-  // HCP Fields
-  licenseNumber: String,
-  specialty: String,
-  hcpStatus: "pending" | "approved" | "rejected" | null,
-  hcpAppliedAt: Date,
-  hcpApprovedAt: Date,
-  hcpRejectedAt: Date,
-  hcpApprovedBy: ObjectId,
-  hcpRejectionReason: String,
-  // Password Reset
-  resetToken: String,
-  resetTokenExpiry: Date
-}
+### products
+```
+{ _id, name, description, price, imageUrl, visibility, categoryId,
+  stockQuantity, featured, doctorIds, brand, hasVariants,
+  variants: [{sku, name, price, stockQuantity, attributes}],
+  createdAt }
+```
+
+### users
+```
+{ _id, username, email, password, fullName, isMember, isAdmin, isDoctor,
+  licenseNumber, specialty, hcpStatus, hcpAppliedAt, ...,
+  resetToken, resetTokenExpiry }
 ```
 
 ## Environment Variables
-
-### Backend (.env)
 ```
-MONGO_URL=mongodb://localhost:27017/ar360
-DB_NAME=ar360
-SESSION_SECRET=<secret>
-STRIPE_SECRET_KEY=<stripe-key>
-FIREBASE_API_KEY=<firebase-key>
-
-# Resend Email (required for password reset)
-RESEND_API_KEY=<your-resend-api-key>
-SENDER_EMAIL=onboarding@resend.dev
-FRONTEND_URL=https://ar360-shop.preview.emergentagent.com
+MONGO_URL, DB_NAME
+SESSION_SECRET, JWT secret
+STRIPE_SECRET_KEY
+FIREBASE_API_KEY
+RESEND_API_KEY, SENDER_EMAIL, FRONTEND_URL
+EMERGENT_LLM_KEY        # for Object Storage
+OBJ_STORAGE_APP_NAME=ar360
 ```
 
-## Test Credentials
-- **Admin**: admin / password
-- **Test HCP**: drsmith / test123 (approved)
+## Test Credentials (also in /app/memory/test_credentials.md)
+- Admin: `admin@example.com` / `password` (use `/admin-login`)
+- HCP: `drsmith` / `test123` (approved)
 
-## Remaining Tasks
-
-### P1 - Next Priority
-- [ ] **Resend API Key**: User needs to add their Resend API key to enable password reset emails
-- [ ] Test full checkout flow with variant products
-- [ ] Update order history to display variant details
-
-### P2 - Future Features
-- [ ] Doctor storefronts with personalized product recommendations
-- [ ] Admin dashboard enhancements (charts, reports)
-- [ ] Discount codes functionality
-- [ ] UI alignment with activerecovery360.com reference
-
-### Technical Debt
-- [ ] Add `.limit()` to unbounded database queries
-- [ ] Add comprehensive data-testid attributes
+## Remaining Tasks (P1/P2)
+- [ ] **(P1)** Stripe checkout flow E2E with new variant products
+- [ ] **(P1)** Admin dashboard: include category count in `/api/admin/stats` (currently hard-coded "Categories: 4")
+- [ ] **(P2)** Doctor storefronts with personalized recommendations
+- [ ] **(P2)** Discount code application at checkout
+- [ ] **(P2)** UI alignment with `activerecovery360.com` reference
+- [ ] **(Tech debt)** Add `.limit()` to unbounded DB queries in services/database.py
