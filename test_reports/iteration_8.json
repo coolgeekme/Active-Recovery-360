@@ -1,0 +1,51 @@
+{
+  "summary": "Iteration 8: Verified Admin Product Management end-to-end via Playwright after the string-ID + imageUrl-validation fix in /app/frontend/src/pages/admin/product-management.tsx. All 23 atomic checks passed: admin/products renders 39 products with correct category names, prices ($X.YY format from cents), visibility badges (PUBLIC/MEMBERS/DOCTOR), stock, featured flag; CREATE submits with relative imageUrl '/api/files/test.jpg' (loosened schema accepts it), shows 'Product created' toast and the new row appears + persists in /api/products; EDIT prefills name and price-in-dollars correctly, updating price 12.34 -> 99.99 produces 'Product updated' toast, table shows $99.99, and DB stores 9999 cents; DELETE opens the confirmation dialog showing the product name, clicking 'Delete Product' shows 'Product deleted' toast, dialog closes, row is removed from the table, and the product is gone from /api/products (count returns to 39). Filters by visibility (Members -> 8 rows) and Featured-only (4 rows) both work. REGRESSION verified: /api/products = 39, no 'Unknown' categories. Test product cleanup complete.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin Product Management", "issues": ["No data-testid attributes on admin table rows / Add / Edit / Delete buttons / form fields. Tests had to rely on title=, placeholder=, and text= selectors which are brittle. Recommend adding data-testid on: add-product-btn, edit-product-btn-{id}, delete-product-btn-{id}, confirm-delete-btn, cancel-delete-btn, product-name-input, product-price-input, product-imageurl-input, visibility-select, category-select."]},
+      {"screen": "All pages (pre-existing)", "issues": ["Google Fonts OTS parsing warning (cosmetic, default font fallback works)."]}
+    ]
+  },
+  "passed_tests": [
+    "POST /api/login admin@example.com/password returns 200 + token + isAdmin:true",
+    "/admin/products loads 'Showing 39 of 39 products' with all rows rendered",
+    "Category names render correctly (no 'Unknown' anywhere)",
+    "Visibility badges (PUBLIC/MEMBERS/DOCTOR) render",
+    "Prices render in $X.YY format",
+    "Filter Featured-only narrows table to 4 featured products",
+    "Filter Visibility=Members narrows table to 8 member-only products",
+    "Reset Filters returns to 39 rows",
+    "Add Product dialog opens; relative imageUrl '/api/files/test.jpg' accepted (no schema error)",
+    "Create Product -> 'Product created' toast + row appears in table + GET /api/products shows new product (price 1234 cents, imageUrl preserved)",
+    "Pencil button opens Edit dialog with name and price (in dollars 12.34) correctly prefilled",
+    "Update price to 99.99 -> 'Product updated' toast + table shows $99.99 + GET /api/products/{id} returns price 9999 cents",
+    "Trash button opens 'Confirm Deletion' dialog with the product name/description shown",
+    "Click 'Delete Product' -> 'Product deleted' toast, dialog auto-closes, row removed from table",
+    "GET /api/products after delete: product no longer present, count back to 39",
+    "Test data cleanup completed (orphan TEST_ products = 0)"
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "Optional: Add data-testid attributes on admin product table action buttons and form fields to make future automation more robust.",
+    "Optional UX: imageUrl FormDescription still says 'Enter a valid URL' even though relative paths are now allowed. Update copy to 'Enter a full URL (https://...) or a relative path (/api/files/...)' to match the new schema."
+  ],
+  "critical_code_review_comments": [
+    "imageUrlSchema regex allows any string starting with '/' which means '//evil.com/x' or '/<script>' would pass. Tighten to /^\\/[a-zA-Z0-9_\\-./%]+$/ if you want to lock down to internal paths only.",
+    "addProductMutation and editProductMutation duplicate the price-to-cents conversion + apiRequest call. Extract a buildProductPayload(data) helper to DRY it up.",
+    "Both Add and Edit dialogs duplicate ~250 lines of identical FormField markup. Extract a <ProductFormFields /> sub-component to halve the file size (currently 1122 lines, exceeds the 700-line guideline).",
+    "Delete confirmation uses a plain Dialog instead of an AlertDialog (shadcn). AlertDialog is the recommended primitive for destructive confirmations and includes proper a11y semantics (role='alertdialog', focus trap on the destructive action).",
+    "/api/products fetch uses queryKey ['/api/products'] without auth header invalidation logic — if a non-admin somehow lands here the request will still fire. Defense-in-depth: gate the useQuery with `enabled: !!user?.isAdmin`.",
+    "doctorIds field is sent as an empty array even when visibility !== 'doctor'. Backend currently tolerates this but consider stripping doctorIds from the payload unless visibility==='doctor' to keep the document clean."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only run)", "frontend": "100% (23/23)"},
+  "test_credentials": {"admin": {"email": "admin@example.com", "password": "password", "endpoint": "/admin-login"}},
+  "seed_data_creation": "Created and then deleted TEST_AutoProduct_iter8 (verified product count returns to 39). Final orphan-cleanup pass found 0 leftover TEST_ products.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The /admin-login page has BOTH a top-nav 'Sign In' button (which routes to /auth Firebase) and the staff form's submit 'Sign In' button. A naive `button:has-text('Sign In')` selector hits the nav one. Use `#email`/`#password` + `button[type='submit']` scoped to the staff form, or — easier — POST /api/login with {username,password} directly and stash the token in localStorage.auth_token. The string-ID/imageUrl-validation fix in product-management.tsx is fully working.",
+  "rca_of_the_issue": "Original bug: page used numeric category/product IDs (z.coerce.number / parseInt) but backend uses Mongo ObjectId strings — causing form submit to coerce ObjectId hex strings to NaN, which the backend rejected. Additionally the imageUrl Zod schema required a full URL, blocking the seeded relative '/api/files/...' paths from passing edit-form validation. Fix verified: all schema fields are now strings, imageUrlSchema accepts empty / relative / http(s) URLs, and CREATE/EDIT/DELETE mutations correctly pass the string id to /api/products/{id}."
+}

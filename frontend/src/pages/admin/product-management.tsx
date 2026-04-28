@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Product, Category, InsertProduct, User } from "@/types";
+import { Product, Category, User } from "@/types";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -69,21 +69,29 @@ import {
   Filter
 } from "lucide-react";
 
-// Create a schema for the product form based on the InsertProduct type
+// Create a schema for the product form
+const imageUrlSchema = z
+  .string()
+  .optional()
+  .or(z.literal(""))
+  .refine(
+    (v) => !v || v.startsWith("/") || /^https?:\/\//.test(v),
+    "Enter a valid URL or leave blank (relative paths starting with / are allowed)"
+  );
+
 const productFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters long"),
   description: z.string().min(10, "Description must be at least 10 characters long"),
-  price: z.coerce.number().min(1, "Price must be at least 1 cent"),
-  imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  price: z.coerce.number().min(0.01, "Price must be at least $0.01"),
+  imageUrl: imageUrlSchema,
   visibility: z.enum(["public", "member", "doctor"], {
     required_error: "Visibility is required",
   }),
-  categoryId: z.coerce.number({
-    required_error: "Category is required",
-  }),
+  categoryId: z.string().min(1, "Category is required"),
   stockQuantity: z.coerce.number().min(0, "Stock quantity cannot be negative"),
   featured: z.boolean().default(false),
   doctorIds: z.array(z.string()).optional(),
+  brand: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -97,7 +105,7 @@ export default function ProductManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(location === "/admin/products/new");
   const [filterVisibility, setFilterVisibility] = useState<string | undefined>(undefined);
-  const [filterCategory, setFilterCategory] = useState<number | undefined>(undefined);
+  const [filterCategory, setFilterCategory] = useState<string | undefined>(undefined);
   const [filterFeatured, setFilterFeatured] = useState<boolean | undefined>(undefined);
 
   // Fetch products
@@ -117,7 +125,7 @@ export default function ProductManagement() {
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
-    mutationFn: async (productId: number) => {
+    mutationFn: async (productId: string) => {
       await apiRequest("DELETE", `/api/products/${productId}`);
     },
     onSuccess: () => {
@@ -146,10 +154,11 @@ export default function ProductManagement() {
       price: 0,
       imageUrl: "",
       visibility: "public",
-      categoryId: undefined,
+      categoryId: "",
       stockQuantity: 0,
       featured: false,
       doctorIds: [],
+      brand: "",
     },
   });
 
@@ -158,7 +167,7 @@ export default function ProductManagement() {
     mutationFn: async (data: ProductFormValues) => {
       // Convert price to cents
       const priceInCents = Math.round(data.price * 100);
-      const productData: InsertProduct = {
+      const productData = {
         ...data,
         price: priceInCents,
       };
@@ -197,16 +206,17 @@ export default function ProductManagement() {
       price: 0,
       imageUrl: "",
       visibility: "public",
-      categoryId: undefined,
+      categoryId: "",
       stockQuantity: 0,
       featured: false,
       doctorIds: [],
+      brand: "",
     },
   });
 
   // Edit product mutation
   const editProductMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: ProductFormValues }) => {
+    mutationFn: async ({ id, data }: { id: string; data: ProductFormValues }) => {
       // Convert price to cents
       const priceInCents = Math.round(data.price * 100);
       const productData: Partial<Product> = {
@@ -264,7 +274,7 @@ export default function ProductManagement() {
   };
 
   // Find category by ID
-  const getCategoryName = (categoryId: number) => {
+  const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
     return category ? category.name : 'Unknown';
   };
@@ -293,6 +303,7 @@ export default function ProductManagement() {
       stockQuantity: product.stockQuantity,
       featured: product.featured,
       doctorIds: product.doctorIds || [],
+      brand: product.brand || "",
     });
     
     setIsEditDialogOpen(true);
@@ -380,8 +391,8 @@ export default function ProductManagement() {
               <div className="space-y-2 flex-1">
                 <label className="text-sm font-medium">Category</label>
                 <Select
-                  value={filterCategory?.toString() || "all"}
-                  onValueChange={(value) => setFilterCategory(value === "all" ? undefined : parseInt(value))}
+                  value={filterCategory || "all"}
+                  onValueChange={(value) => setFilterCategory(value === "all" ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All categories" />
@@ -389,7 +400,7 @@ export default function ProductManagement() {
                   <SelectContent>
                     <SelectItem value="all">All categories</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
+                      <SelectItem key={category.id} value={category.id}>
                         {category.name}
                       </SelectItem>
                     ))}
@@ -669,8 +680,8 @@ export default function ProductManagement() {
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
+                        onValueChange={field.onChange}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -679,7 +690,7 @@ export default function ProductManagement() {
                         </FormControl>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
+                            <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
                           ))}
@@ -725,17 +736,17 @@ export default function ProductManagement() {
                           <div key={doctor.id} className="flex items-center space-x-2">
                             <Checkbox
                               id={`doctor-${doctor.id}`}
-                              checked={field.value?.includes(doctor.id.toString())}
+                              checked={field.value?.includes(doctor.id)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
                                   field.onChange([
                                     ...(field.value || []),
-                                    doctor.id.toString(),
+                                    doctor.id,
                                   ]);
                                 } else {
                                   field.onChange(
                                     field.value?.filter(
-                                      (id) => id !== doctor.id.toString()
+                                      (id) => id !== doctor.id
                                     ) || []
                                   );
                                 }
@@ -948,8 +959,8 @@ export default function ProductManagement() {
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
+                        onValueChange={field.onChange}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -958,7 +969,7 @@ export default function ProductManagement() {
                         </FormControl>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id.toString()}>
+                            <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
                           ))}
@@ -1004,17 +1015,17 @@ export default function ProductManagement() {
                           <div key={doctor.id} className="flex items-center space-x-2">
                             <Checkbox
                               id={`doctor-edit-${doctor.id}`}
-                              checked={field.value?.includes(doctor.id.toString())}
+                              checked={field.value?.includes(doctor.id)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
                                   field.onChange([
                                     ...(field.value || []),
-                                    doctor.id.toString(),
+                                    doctor.id,
                                   ]);
                                 } else {
                                   field.onChange(
                                     field.value?.filter(
-                                      (id) => id !== doctor.id.toString()
+                                      (id) => id !== doctor.id
                                     ) || []
                                   );
                                 }
