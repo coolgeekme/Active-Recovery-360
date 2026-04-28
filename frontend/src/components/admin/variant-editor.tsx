@@ -161,7 +161,7 @@ export default function VariantEditor({ value, onChange }: VariantEditorProps) {
               placeholder="optional"
             />
           </div>
-          <div className="md:col-span-2">
+          <div className="md:col-span-1">
             <Label className="text-xs">Size</Label>
             <Input
               value={v.size || ""}
@@ -169,7 +169,7 @@ export default function VariantEditor({ value, onChange }: VariantEditorProps) {
               placeholder="optional"
             />
           </div>
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <Label className="text-xs">Price ($)</Label>
             <Input
               type="number"

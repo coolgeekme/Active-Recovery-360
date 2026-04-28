@@ -589,10 +589,15 @@ export default function ProductManagement() {
                           min="0"
                           step="0.01"
                           placeholder="29.99"
+                          disabled={addVariants.length > 0}
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>Enter price in dollars (e.g. 29.99)</FormDescription>
+                      <FormDescription>
+                        {addVariants.length > 0
+                          ? "Auto-derived from variants (lowest price)"
+                          : "Enter price in dollars (e.g. 29.99)"}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -648,9 +653,13 @@ export default function ProductManagement() {
                           type="number"
                           min="0"
                           placeholder="100"
+                          disabled={addVariants.length > 0}
                           {...field}
                         />
                       </FormControl>
+                      {addVariants.length > 0 && (
+                        <FormDescription>Auto-summed from variant stock</FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -870,10 +879,15 @@ export default function ProductManagement() {
                           min="0"
                           step="0.01"
                           placeholder="29.99"
+                          disabled={editVariants.length > 0}
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>Enter price in dollars (e.g. 29.99)</FormDescription>
+                      <FormDescription>
+                        {editVariants.length > 0
+                          ? "Auto-derived from variants (lowest price)"
+                          : "Enter price in dollars (e.g. 29.99)"}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -929,9 +943,13 @@ export default function ProductManagement() {
                           type="number"
                           min="0"
                           placeholder="100"
+                          disabled={editVariants.length > 0}
                           {...field}
                         />
                       </FormControl>
+                      {editVariants.length > 0 && (
+                        <FormDescription>Auto-summed from variant stock</FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
