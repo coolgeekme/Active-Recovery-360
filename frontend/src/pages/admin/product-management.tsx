@@ -8,6 +8,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import VariantEditor, {
+  VariantDraft,
+  variantsToBackend,
+  variantsFromBackend,
+} from "@/components/admin/variant-editor";
 
 import { 
   Card, 
@@ -107,6 +112,10 @@ export default function ProductManagement() {
   const [filterVisibility, setFilterVisibility] = useState<string | undefined>(undefined);
   const [filterCategory, setFilterCategory] = useState<string | undefined>(undefined);
   const [filterFeatured, setFilterFeatured] = useState<boolean | undefined>(undefined);
+  // Variant drafts kept outside react-hook-form because they're a complex
+  // dynamic list. They are merged into the payload at submit time.
+  const [addVariants, setAddVariants] = useState<VariantDraft[]>([]);
+  const [editVariants, setEditVariants] = useState<VariantDraft[]>([]);
 
   // Fetch products
   const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = useQuery<Product[]>({
@@ -222,6 +231,7 @@ export default function ProductManagement() {
       const productData: Partial<Product> = {
         ...data,
         price: priceInCents,
+        variants: variantsToBackend(editVariants),
       };
       const res = await apiRequest("PUT", `/api/products/${id}`, productData);
       return await res.json();
@@ -305,6 +315,9 @@ export default function ProductManagement() {
       doctorIds: product.doctorIds || [],
       brand: product.brand || "",
     });
+
+    // Hydrate variant drafts from the existing product
+    setEditVariants(variantsFromBackend(product.variants));
     
     setIsEditDialogOpen(true);
   };
@@ -460,6 +473,7 @@ export default function ProductManagement() {
                     <TableHead>Visibility</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Stock</TableHead>
+                    <TableHead>Variants</TableHead>
                     <TableHead>Featured</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -472,6 +486,15 @@ export default function ProductManagement() {
                       <TableCell>{renderVisibilityBadge(product.visibility)}</TableCell>
                       <TableCell>{getCategoryName(product.categoryId)}</TableCell>
                       <TableCell>{product.stockQuantity}</TableCell>
+                      <TableCell>
+                        {product.variants && product.variants.length > 0 ? (
+                          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/30">
+                            {product.variants.length} variant{product.variants.length === 1 ? "" : "s"}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {product.featured ? (
                           <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
@@ -522,7 +545,13 @@ export default function ProductManagement() {
       </Card>
 
       {/* Add Product Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+        setIsAddDialogOpen(open);
+        if (!open) {
+          addProductForm.reset();
+          setAddVariants([]);
+        }
+      }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
@@ -722,6 +751,8 @@ export default function ProductManagement() {
                   </FormItem>
                 )}
               />
+
+              <VariantEditor value={addVariants} onChange={setAddVariants} />
 
               {/* Doctor IDs selection - only show if visibility is "doctor" */}
               {addProductForm.watch("visibility") === "doctor" && (
@@ -1001,6 +1032,8 @@ export default function ProductManagement() {
                   </FormItem>
                 )}
               />
+
+              <VariantEditor value={editVariants} onChange={setEditVariants} />
 
               {/* Doctor IDs selection - only show if visibility is "doctor" */}
               {editProductForm.watch("visibility") === "doctor" && (
