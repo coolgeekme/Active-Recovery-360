@@ -602,7 +602,7 @@ export default function ProductManagement() {
                           value={field.value || ""}
                         />
                       </FormControl>
-                      <FormDescription>Enter a valid URL for the product image</FormDescription>
+                      <FormDescription>Full URL (https://...) or relative path (/api/files/...). Leave blank for stock fallback.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -881,7 +881,7 @@ export default function ProductManagement() {
                           value={field.value || ""}
                         />
                       </FormControl>
-                      <FormDescription>Enter a valid URL for the product image</FormDescription>
+                      <FormDescription>Full URL (https://...) or relative path (/api/files/...). Leave blank for stock fallback.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
