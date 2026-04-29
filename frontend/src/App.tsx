@@ -83,6 +83,7 @@ function AppRouter() {
           <ProtectedRoute path="/admin/users" component={UserManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/discounts" component={DiscountManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/hcp" component={HcpManagement} requireAdmin={true} />
+          <ProtectedRoute path="/admin/hcp/:userId/storefront" component={AdminHcpStorefrontEditPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/settings" component={AdminSettings} requireAdmin={true} />
           
           {/* Fallback to 404 */}

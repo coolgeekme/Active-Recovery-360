@@ -42,7 +42,7 @@ EDITABLE_FIELDS = {
 # Fields ONLY admins can change (commission %)
 ADMIN_ONLY_FIELDS = {"commissionPercent"}
 
-SLUG_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])?$")
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$")
 
 
 def normalize_slug(value: str) -> str:
@@ -126,10 +126,9 @@ async def get_storefront_by_slug(slug: str):
     return await _hydrate_storefront(user)
 
 
-@router.get("/hcp/storefronts")
-async def list_public_storefronts():
-    """Lightweight directory used by HCP self-service to validate slug
-    availability. Public exposure is opt-in via storefrontEnabled."""
+@router.get("/admin/hcp/storefronts")
+async def list_published_storefronts(admin: dict = Depends(require_admin)):
+    """Admin-only directory of all published HCP storefronts."""
     users = get_collection("users")
     cursor = users.find(
         {"storefrontEnabled": True, "hcpStatus": "approved"},
