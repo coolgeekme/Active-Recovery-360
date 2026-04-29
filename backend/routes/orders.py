@@ -14,6 +14,9 @@ def transform_order(doc: dict) -> dict:
         "id": str(doc["_id"]),
         "userId": str(doc.get("userId", "")),
         "totalAmount": doc.get("totalAmount", 0),
+        "subtotal": doc.get("subtotal", doc.get("totalAmount", 0)),
+        "discountAmount": doc.get("discountAmount", 0),
+        "discountCode": doc.get("discountCode"),
         "status": doc.get("status", "pending"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
@@ -114,8 +117,43 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         })
 
     # Create order
+    subtotal = total_amount
+    discount_amount = 0
+    discount_code_used: str | None = None
+
+    raw_code = (order_data.get("discountCode") or "").strip().upper()
+    if raw_code:
+        discount_codes = get_collection("discount_codes")
+        d = await discount_codes.find_one({"code": raw_code})
+        if not d:
+            raise HTTPException(status_code=400, detail="Invalid discount code")
+        if not d.get("isActive", True):
+            raise HTTPException(status_code=400, detail="Discount code is no longer active")
+        if d.get("expiresAt") and datetime.utcnow() > d["expiresAt"]:
+            raise HTTPException(status_code=400, detail="Discount code has expired")
+        if d.get("usageLimit") and d.get("usedCount", 0) >= d["usageLimit"]:
+            raise HTTPException(status_code=400, detail="Discount code usage limit reached")
+
+        if d.get("discountType") == "percentage":
+            discount_amount = int(round(subtotal * (d.get("discountValue", 0) / 100)))
+        else:
+            # Fixed-amount discount stored in cents, just like prices
+            discount_amount = int(d.get("discountValue", 0))
+        discount_amount = min(discount_amount, subtotal)
+        total_amount = max(0, subtotal - discount_amount)
+        discount_code_used = d["code"]
+
+        # Increment usage counter atomically
+        await discount_codes.update_one(
+            {"_id": d["_id"]},
+            {"$inc": {"usedCount": 1}},
+        )
+
     new_order = {
         "userId": user["id"],
+        "subtotal": subtotal,
+        "discountAmount": discount_amount,
+        "discountCode": discount_code_used,
         "totalAmount": total_amount,
         "status": "pending",
         "items": order_items,

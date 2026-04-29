@@ -1,0 +1,99 @@
+{
+  "summary": "Iteration 10: validated the customer-facing discount-code apply flow end-to-end. Backend pytest 12/14 passed (the 2 failures are the SAME real backend bug — expired discount codes return 500 instead of 400 because expiresAt is stored as an ISO string and compared against datetime.utcnow()). Frontend Playwright on /checkout passed every UI assertion: subtotal $78.00 → invalid code shows red 'Invalid discount code' under the input WITHOUT corrupting the total → applying WELCOME25 shows the green badge with code+description, a -$19.50 Discount line, total reduces to $58.50, Place Order button label updates to 'Place Order - $58.50' → remove (×) restores $78.00 → lower-case 'welcome25' re-applies (case-insensitive) → order POST returns 200 with subtotal=7800, discountAmount=1950, totalAmount=5850, discountCode='WELCOME25' → discount_codes.usedCount incremented from 0 → 1. Backend math verified for both percentage (25%) AND fixed (500¢) discount types; usage-limit-reached returns 400; invalid-code returns 400 (no silent apply); regression: order without discount works, /api/products returns 39, admin login works, /api/cart still requires auth.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/discount-codes/validate AND POST /api/orders (with discountCode)",
+        "issue": "Expired discount codes return 500 instead of 400 'Discount code has expired'. ROOT CAUSE: routes/discount_codes.py:create_discount_code stores `expiresAt` exactly as received (an ISO string from the admin UI new Date(...).toISOString()). Then routes/discount_codes.py:42 and routes/orders.py:132 do `datetime.utcnow() > doc['expiresAt']` which raises TypeError: '>' not supported between instances of 'datetime.datetime' and 'str'. Verified in backend logs. FIX: in create_discount_code (and update_discount_code) parse expiresAt with `datetime.fromisoformat(...)` before insert; OR coerce in the comparison sites. This breaks every discount code that has a real expiry date set via the admin UI, even before it expires, the moment the date arrives.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "routes/orders.py:132 & routes/discount_codes.py:42",
+        "issue": "Same place: should also handle Mongo-stored datetimes consistently — recommend converting expiresAt to a UTC datetime on write so reads/comparisons are uniform."
+      },
+      {
+        "endpoint": "routes/orders.py:124",
+        "issue": "raw_code = (order_data.get('discountCode') or '').strip().upper() — works, but POST /api/discount-codes/validate uppercases on the way in too. Centralize in a helper to keep behaviour consistent."
+      },
+      {
+        "endpoint": "routes/orders.py:147",
+        "issue": "usedCount $inc happens AFTER the order has been built but BEFORE orders.insert_one — if the order insert fails, the counter is already incremented and over-counts. Move the $inc to after a successful insert, or use a transaction."
+      },
+      {
+        "endpoint": "routes/discount_codes.py:99 / orders.py:44 / 186",
+        "issue": "bare `except:` clauses swallow KeyboardInterrupt/SystemExit — replace with `except (InvalidId, TypeError):` or `except Exception:`."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/checkout — left form ('Place Order' summary block, lines 277-290 of checkout-form.tsx)",
+        "issues": [
+          "The left-hand 'Place Order' summary box still displays Subtotal/Total = subtotal prop value only (the form receives `subtotal` already discounted from the page), but it labels that line 'Subtotal' which is misleading. Either (a) pass the real subtotal + discount + total down and render all three lines like the right-hand Order Summary, or (b) rename the line to 'Total' and drop the duplicated 'Total' row. Currently the box is visually inconsistent with the right column when a discount is applied (right column shows Subtotal $78, Discount -$19.50, Total $58.50 — left column just shows Subtotal $58.50 / Total $58.50 which is confusing).",
+          "checkout-form.tsx prop is named `subtotal` but the parent passes `finalTotal` into it — the variable name no longer reflects its meaning. Rename to `orderTotal` to match what it actually represents."
+        ]
+      }
+    ]
+  },
+  "passed_tests": [
+    "POST /api/discount-codes/validate valid -> 200 {valid:true, discountCode:{id,code,discountType,discountValue,description}}",
+    "POST /api/discount-codes/validate invalid -> 404 'Invalid discount code'",
+    "POST /api/discount-codes/validate inactive -> 400 'Discount code is no longer active'",
+    "POST /api/discount-codes/validate usage-limit reached -> 400 'Discount code usage limit reached'",
+    "POST /api/orders + discountCode (percentage 25%): subtotal preserved, discountAmount = round(subtotal*0.25), totalAmount = subtotal-discount; discountCode persisted",
+    "POST /api/orders + discountCode (fixed 500¢): discountAmount = min(500, subtotal); totalAmount reduced",
+    "POST /api/orders increments discount_codes.usedCount by 1",
+    "POST /api/orders + usage-limit reached -> 400",
+    "POST /api/orders + invalid code -> 400 'Invalid discount code' (no silent apply)",
+    "Regression: order without discount has discountAmount=0, discountCode=null, subtotal==totalAmount",
+    "Regression: /api/products returns 39",
+    "Regression: admin login (POST /api/login) returns token + user.isAdmin=true",
+    "Regression: /api/cart still requires auth (401)",
+    "UI: /checkout loads with [data-testid=discount-section]",
+    "UI: invalid code -> red [data-testid=discount-error] 'Invalid discount code', total NOT corrupted",
+    "UI: WELCOME25 -> green badge with code+description + -$19.50 in [data-testid=discount-amount] + [data-testid=checkout-total] = $58.50",
+    "UI: 'Place Order - $58.50' button label updates to discounted total",
+    "UI: [data-testid=remove-discount-btn] (×) restores total to $78.00",
+    "UI: lower-case 'welcome25' re-applies (case-insensitive — input auto-uppercases)",
+    "UI->Backend: submit order with applied discount -> 200, body matches displayed math (subtotal=7800, discountAmount=1950, totalAmount=5850, discountCode='WELCOME25')",
+    "UI->Backend: /account/orders shows the new order at $58.50 confirming persistence",
+    "UI->Backend: WELCOME25.usedCount went 0 -> 1 after the frontend order"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_ar360_discount_codes.py",
+    "/app/test_reports/pytest/iteration_10_results.xml"
+  ],
+  "action_items": [
+    "BACKEND HIGH: routes/discount_codes.py — parse `expiresAt` as datetime on POST/PUT (use `datetime.fromisoformat(expiresAt.replace('Z','+00:00'))`) so the comparison in validate + orders.py doesn't raise TypeError 500. This bug bites the moment any admin sets a real expiry date.",
+    "BACKEND MEDIUM: routes/orders.py — move the `usedCount` $inc to AFTER `orders.insert_one` succeeds, otherwise a failed insert silently consumes a usage slot.",
+    "FRONTEND LOW: components/cart/checkout-form.tsx — rename `subtotal` prop to `orderTotal` (parent passes the discounted total) and either render full Subtotal/Discount/Total breakdown or drop the duplicated 'Subtotal'/'Total' rows in the bottom summary block (lines 277-290).",
+    "OPTIONAL: replace bare `except:` in routes/orders.py and routes/discount_codes.py with `except (InvalidId, TypeError):`."
+  ],
+  "critical_code_review_comments": [
+    "routes/discount_codes.py:create_discount_code persists raw incoming dict values (expiresAt as ISO string, no Pydantic). Add a Pydantic `DiscountCodeCreate` model with `expiresAt: Optional[datetime]` so FastAPI does the parsing.",
+    "routes/orders.py:create_order is becoming long (~110 lines); consider extracting `_apply_discount(subtotal, code) -> (discount_amount, code_doc)` for testability and to keep the controller thin.",
+    "checkout-page.tsx:23 finalTotal = subtotal - discountAmount but subtotal is in cents and `applied.discountValue` for 'fixed' is also in cents per the test — this matched. Make sure the admin UI for fixed-discount codes also enters cents (or convert dollars->cents on save). Currently the admin form's `discountValue` field is a number with no unit hint; add a 'cents' or '$' helper so admins don't accidentally enter 5 (= 5¢) when they mean 500 (= $5).",
+    "use-discount-code.ts:apply — only sets the applied state on `data?.valid`, but on FastAPI errors apiRequest throws so `.valid===undefined` branch is unreachable; remove dead code or document.",
+    "checkout-form.tsx still passes `subtotal: finalTotal` (misleading name) AND ignores cartItems for total recomputation server-side — backend recomputes totals from product prices, which is correct, but means the frontend `subtotal` prop is now purely cosmetic. Document that or rename."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ar360_discount_codes.py"
+  ],
+  "success_rate": {
+    "backend": "86% (12/14 — 2 failures are the same real backend bug: expiredAt string-vs-datetime)",
+    "frontend": "100% (every UI flow passed: invalid code, apply, remove, re-apply case-insensitive, place order, persistence in /account/orders, usedCount increment)"
+  },
+  "test_credentials": {
+    "admin (also member)": {"endpoint": "POST /api/login", "body": {"username": "admin@example.com", "password": "password"}}
+  },
+  "seed_data_creation": "Test fixtures created+deleted ~6 TEST<timestamp> codes. Manually created WELCOME25 (id 69f25abbef16d573a88575c4) for the Playwright run and DELETED it after — final list at /api/discount-codes is now empty. Three real test orders are left in the orders collection: $58.50 (frontend WELCOME25), $39.00 (no-discount regression), $34.00 (fixed 500¢ regression) and a few others from percentage tests; they belong to admin@example.com and have shippingAddress prefixed with 'TEST' so they can be batch-deleted later if desired.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Reusable backend tests at /app/backend/tests/test_ar360_discount_codes.py (14 tests, all isolated with fixtures that create+delete their own codes). The two failing tests will start passing the moment the expiresAt-as-string bug is fixed. Frontend uses the data-testids: discount-section, discount-code-input, apply-discount-btn, discount-error, remove-discount-btn, discount-amount, checkout-total. Cart is in localStorage key `ar360_cart_v1` (shape: [{id,productId,quantity,variantSku,product}]); auth token in `auth_token`. The /admin-login route is for admin (the same admin@example.com is now isMember=true and can place orders, which is how I tested the customer flow with the same login). Backend admin endpoint is POST /api/login {username,password}. Note: the admin discount-management UI sends `discountValue` as a raw number — for 'fixed' codes the backend treats it as CENTS (verified $5-off uses 500). Communicate this to admins or add a unit hint.",
+  "rca_of_the_issue": "Bug 1 (HIGH): `expiresAt` is sent by the admin UI as an ISO-8601 string and inserted verbatim into MongoDB. routes/discount_codes.py:42 and routes/orders.py:132 then evaluate `datetime.utcnow() > doc['expiresAt']` against that string and raise `TypeError: '>' not supported between instances of 'datetime.datetime' and 'str'` → FastAPI returns a generic 500 instead of the intended 400 'Discount code has expired'. Reproduction: POST /api/discount-codes with body `{code:'EXPIRED1', discountType:'percentage', discountValue:10, expiresAt:'2024-01-01T00:00:00'}` then POST /api/discount-codes/validate `{code:'EXPIRED1'}` → 500. Mitigation: either (a) parse to datetime on write — `if data.get('expiresAt'): new_code['expiresAt'] = datetime.fromisoformat(data['expiresAt'].replace('Z','+00:00'))`, or (b) coerce on read at both comparison sites. Option (a) is preferred so PUT/GET stay consistent."
+}

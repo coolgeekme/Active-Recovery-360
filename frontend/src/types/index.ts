@@ -72,6 +72,9 @@ export interface Order {
   id: string;
   userId: string;
   totalAmount: number;
+  subtotal?: number;
+  discountAmount?: number;
+  discountCode?: string | null;
   status: 'pending' | 'completed' | 'cancelled';
   items: OrderItem[];
   shippingAddress: string;

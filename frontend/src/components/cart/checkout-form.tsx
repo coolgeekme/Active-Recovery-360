@@ -21,6 +21,7 @@ import { useLocation } from "wouter";
 
 interface CheckoutFormProps {
   subtotal: number;
+  discountCode?: string;
 }
 
 const checkoutFormSchema = z.object({
@@ -37,7 +38,7 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
-export default function CheckoutForm({ subtotal }: CheckoutFormProps) {
+export default function CheckoutForm({ subtotal, discountCode }: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
@@ -69,6 +70,7 @@ export default function CheckoutForm({ subtotal }: CheckoutFormProps) {
       await apiRequest("POST", "/api/orders", {
         shippingAddress,
         paymentMethod: "credit", // In a real app, we would handle payment processing
+        discountCode: discountCode || undefined,
         items: cartItems.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
