@@ -71,7 +71,8 @@ import {
   ChevronLeft, 
   Eye, 
   EyeOff, 
-  Filter
+  Filter,
+  RefreshCw
 } from "lucide-react";
 
 // Create a schema for the product form
@@ -116,6 +117,35 @@ export default function ProductManagement() {
   // dynamic list. They are merged into the payload at submit time.
   const [addVariants, setAddVariants] = useState<VariantDraft[]>([]);
   const [editVariants, setEditVariants] = useState<VariantDraft[]>([]);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+
+  // One-shot catalog import (wipes existing products, re-applies the
+  // consolidated 39-product seed). Used after a fresh deploy to align the
+  // production database with the preview snapshot.
+  const importCatalogMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/seed/import-catalog");
+      return await res.json();
+    },
+    onSuccess: (data: { stats?: { products_inserted?: number; products_deleted?: number } }) => {
+      const inserted = data?.stats?.products_inserted ?? 0;
+      const deleted = data?.stats?.products_deleted ?? 0;
+      toast({
+        title: "Catalog imported",
+        description: `Wiped ${deleted} legacy products, inserted ${inserted} from the seed.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      setIsImportDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import failed",
+        description: error?.message || "Could not import the catalog",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Fetch products
   const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = useQuery<Product[]>({
@@ -374,10 +404,21 @@ export default function ProductManagement() {
               Manage your product catalog, visibility, and inventory
             </CardDescription>
           </div>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              data-testid="import-catalog-btn"
+              title="Replace all products with the consolidated official catalog"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Import Catalog
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -1167,6 +1208,47 @@ export default function ProductManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Catalog Import Confirmation Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Official Catalog?</DialogTitle>
+            <DialogDescription>
+              This will <span className="font-semibold text-destructive">delete every existing product</span> in this database and replace it with the consolidated 39-product AR360 catalog (with all variants and official imagery).
+              <br /><br />
+              Categories, users, orders, and HCP applications are <span className="font-semibold">not</span> affected.
+              <br /><br />
+              Use this once after deploying to a fresh environment, or any time you want to reset the catalog to the official snapshot.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(false)}
+              disabled={importCatalogMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => importCatalogMutation.mutate()}
+              disabled={importCatalogMutation.isPending}
+              data-testid="confirm-import-catalog-btn"
+            >
+              {importCatalogMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                "Wipe & Import"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
