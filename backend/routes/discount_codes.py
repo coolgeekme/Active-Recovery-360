@@ -119,14 +119,20 @@ async def create_discount_code(data: dict, admin: dict = Depends(require_admin))
 @router.put("/discount-codes/{code_id}")
 async def update_discount_code(code_id: str, data: dict, admin: dict = Depends(require_admin)):
     discount_codes = get_collection("discount_codes")
-    
+
+    update_data = dict(data)
+    if "expiresAt" in update_data:
+        update_data["expiresAt"] = _parse_expiry(update_data.get("expiresAt"))
+    if "code" in update_data and update_data["code"]:
+        update_data["code"] = update_data["code"].upper()
+
     try:
         result = await discount_codes.find_one_and_update(
             {"_id": ObjectId(code_id)},
-            {"$set": data},
+            {"$set": update_data},
             return_document=True
         )
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Discount code not found")
     
     if not result:
