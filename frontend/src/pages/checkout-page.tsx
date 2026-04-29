@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useCart } from "@/hooks/use-cart";
 import { useDiscountCode, calcDiscount } from "@/hooks/use-discount-code";
-import { Loader2, Tag, X, CheckCircle2 } from "lucide-react";
+import { useHcpReferral } from "@/hooks/use-hcp-referral";
+import { Loader2, Tag, X, CheckCircle2, Stethoscope } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ export default function CheckoutPage() {
   const { cartItems, isLoading } = useCart();
   const [, navigate] = useLocation();
   const { applied, error, isValidating, apply, clear } = useDiscountCode();
+  const { referral, clear: clearReferral } = useHcpReferral();
   const [codeInput, setCodeInput] = useState("");
 
   // Calculate subtotal in cents
@@ -81,6 +83,30 @@ export default function CheckoutPage() {
             </div>
 
             <Separator className="my-4" />
+
+            {/* HCP referral notice */}
+            {referral && (
+              <div className="flex items-start justify-between gap-2 mb-4 p-3 rounded-md bg-blue-50 border border-blue-200">
+                <div className="flex items-start gap-2 text-sm text-blue-800">
+                  <Stethoscope className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Order will be credited to:</p>
+                    <p className="text-xs">{referral.name || referral.slug}</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 flex-shrink-0"
+                  onClick={clearReferral}
+                  title="Remove HCP attribution"
+                  data-testid="remove-hcp-referral-btn"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
 
             {/* Discount code applicator */}
             <div className="mb-4" data-testid="discount-section">

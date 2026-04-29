@@ -23,6 +23,19 @@ export interface User {
   doctorBio?: string | null;
   profileImage?: string | null;
   createdAt?: string;
+  // HCP fields
+  licenseNumber?: string | null;
+  hcpStatus?: 'pending' | 'approved' | 'rejected' | null;
+  specialty?: string | null;
+  // HCP storefront fields
+  storefrontEnabled?: boolean;
+  storefrontSlug?: string | null;
+  storefrontBio?: string | null;
+  storefrontHeadshotUrl?: string | null;
+  storefrontBannerUrl?: string | null;
+  storefrontWelcomeMessage?: string | null;
+  storefrontFeaturedProductIds?: string[];
+  commissionPercent?: number;
 }
 
 type AuthContextType = {

@@ -35,6 +35,9 @@ import UserManagement from "@/pages/admin/user-management";
 import AdminSettings from "@/pages/admin/admin-settings";
 import DiscountManagement from "@/pages/admin/discount-management";
 import HcpManagement from "@/pages/admin/hcp-management";
+import HcpStorefrontPage from "@/pages/hcp-storefront-page";
+import HcpDashboardPage from "@/pages/hcp-dashboard-page";
+import AdminHcpStorefrontEditPage from "@/pages/admin/hcp-storefront-edit-page";
 
 // Components
 import Header from "@/components/layout/header";
@@ -63,6 +66,10 @@ function AppRouter() {
           <Route path="/doctors/:id" component={DoctorStorefrontPage} />
           <Route path="/category/:id" component={CategoryPage} />
           <Route path="/about" component={AboutPage} />
+
+          {/* HCP Storefronts (public) */}
+          <Route path="/hcp/dashboard" component={HcpDashboardPage} />
+          <Route path="/hcp/:slug" component={HcpStorefrontPage} />
           
           {/* Protected routes */}
           <ProtectedRoute path="/checkout" component={CheckoutPage} requireMember={true} />

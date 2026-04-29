@@ -20,7 +20,13 @@ def transform_order(doc: dict) -> dict:
         "status": doc.get("status", "pending"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
-        "createdAt": doc.get("createdAt")
+        "createdAt": doc.get("createdAt"),
+        # HCP referral
+        "hcpReferralId": doc.get("hcpReferralId"),
+        "hcpReferralSlug": doc.get("hcpReferralSlug"),
+        "hcpReferralName": doc.get("hcpReferralName"),
+        "hcpCommissionPercent": doc.get("hcpCommissionPercent"),
+        "hcpCommissionAmount": doc.get("hcpCommissionAmount"),
     }
 
 @router.get("/orders")
@@ -155,6 +161,39 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         "shippingAddress": order_data.get("shippingAddress", ""),
         "createdAt": datetime.utcnow(),
     }
+
+    # HCP referral attribution. Customer's frontend can pass either
+    # `hcpReferralSlug` (storefront URL slug) or `hcpReferralId` (user id).
+    # We resolve to a real approved HCP and snapshot commission % at order
+    # time so future commission rate changes don't retroactively affect
+    # historical orders.
+    raw_slug = (order_data.get("hcpReferralSlug") or "").strip().lower()
+    raw_id = (order_data.get("hcpReferralId") or "").strip()
+    if raw_slug or raw_id:
+        users_coll = get_collection("users")
+        hcp = None
+        if raw_slug:
+            hcp = await users_coll.find_one({
+                "storefrontSlug": raw_slug,
+                "storefrontEnabled": True,
+                "hcpStatus": "approved",
+            })
+        if not hcp and raw_id:
+            try:
+                hcp = await users_coll.find_one({
+                    "_id": ObjectId(raw_id),
+                    "hcpStatus": "approved",
+                })
+            except Exception:
+                hcp = None
+        if hcp:
+            commission_pct = float(hcp.get("commissionPercent", 0) or 0)
+            commission_amount = int(round(total_amount * (commission_pct / 100)))
+            new_order["hcpReferralId"] = str(hcp["_id"])
+            new_order["hcpReferralSlug"] = hcp.get("storefrontSlug")
+            new_order["hcpReferralName"] = hcp.get("fullName")
+            new_order["hcpCommissionPercent"] = commission_pct
+            new_order["hcpCommissionAmount"] = commission_amount
 
     result = await orders.insert_one(new_order)
 

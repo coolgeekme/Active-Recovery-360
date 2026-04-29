@@ -34,7 +34,8 @@ import {
   Loader2,
   UserCheck,
   UserX,
-  Eye
+  Eye,
+  Store
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -166,9 +167,22 @@ export default function HcpManagement() {
                     setSelectedUser(user);
                     setShowDetailsDialog(true);
                   }}
+                  title="View details"
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
+                {user.hcpStatus === "approved" && (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    title="Manage storefront"
+                  >
+                    <Link href={`/admin/hcp/${user.id}/storefront`}>
+                      <Store className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                )}
                 {showActions && (
                   <>
                     <Button

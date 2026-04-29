@@ -19,6 +19,7 @@ from routes.admin import router as admin_router
 from routes.payments import router as payments_router
 from routes.seed import router as seed_router
 from routes.files import router as files_router
+from routes.hcp_storefront import router as hcp_storefront_router
 from services.database import connect_db, close_db
 from services.storage import init_storage
 
@@ -76,6 +77,7 @@ app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(payments_router, prefix="/api", tags=["Payments"])
 app.include_router(seed_router, prefix="/api/seed", tags=["Seed"])
 app.include_router(files_router, prefix="/api", tags=["Files"])
+app.include_router(hcp_storefront_router, prefix="/api", tags=["HCP Storefront"])
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

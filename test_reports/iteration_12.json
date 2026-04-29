@@ -1,0 +1,80 @@
+{
+  "summary": "Iteration 12 — HCP Storefronts. Backend 18/18 pytest PASS (100%). Frontend mostly PASS with 1 HIGH bug: admin override route /admin/hcp/:userId/storefront is missing from App.tsx <Switch> → page renders 404 even though AdminHcpStorefrontEditPage is imported. Public storefront (/hcp/dr-admin-test) renders profile + captures ar360_hcp_referral localStorage. HCP dashboard (/hcp/dashboard) renders all editor fields (enabled-toggle, slug, welcome, bio, upload-headshot/banner, save-storefront-btn) and saves successfully. Checkout shows blue 'Order will be credited to: Admin User' card with remove-hcp-referral-btn. Order attribution verified end-to-end: POST /api/orders with hcpReferralSlug='dr-admin-test' snapshots hcpReferralId/Name/Slug, hcpCommissionPercent=12, hcpCommissionAmount=round(totalAmount*12/100). Order without slug + order with unknown slug both correctly omit commission fields.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "PUT /api/hcp/me/storefront",
+        "issue": "SLUG_RE allows single-char slugs (regex is `^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])?$` — the outer non-capturing group is OPTIONAL, so 'a' matches). The 400 error message claims '3-50 characters' but the validator accepts 1-char. Tighten to `^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$` (min 3) to match the message."
+      },
+      {
+        "endpoint": "GET /api/hcp/storefronts (directory)",
+        "issue": "Review said discoverability is OFF / no directory page, but routes/hcp_storefront.py:129 exposes GET /api/hcp/storefronts listing all approved+enabled HCPs. Either remove this endpoint or gate behind admin auth to match the stated product requirement."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "App.tsx router",
+        "issue": "Route for /admin/hcp/:userId/storefront is MISSING from the <Switch>. AdminHcpStorefrontEditPage is imported (line 40) but no <Route path=\"/admin/hcp/:userId/storefront\" ...> is registered → navigating there returns '404 Page Not Found'. Admin cannot edit HCP storefront or set commissionPercent from the UI.",
+        "selector": "/admin/hcp/{userId}/storefront (route)",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/hcp/storefronts/dr-admin-test → 200 with profile + products",
+    "GET /api/hcp/storefronts/unknown → 404",
+    "GET/PUT /api/hcp/me/storefront (auth as admin-HCP) with welcome/bio/featured products",
+    "PUT /api/hcp/me/storefront commissionPercent is silently ignored (stays at 12)",
+    "PUT /api/hcp/me/storefront with non-list storefrontFeaturedProductIds → 400",
+    "GET /api/hcp/me/storefront without auth → 401/403",
+    "GET/PUT /api/admin/hcp/{id}/storefront (admin) incl. commissionPercent=12",
+    "PUT admin commissionPercent=150 → 400",
+    "Admin endpoint without auth → 401/403",
+    "POST /api/hcp/uploads/image text/plain → 400; no auth → 401/403",
+    "POST /api/orders with hcpReferralSlug='dr-admin-test' snapshots commission (12%)",
+    "POST /api/orders without referral → no commission fields",
+    "POST /api/orders with unknown slug → no attribution",
+    "Regression: GET /api/products len==39, POST /api/login admin OK",
+    "Frontend: public storefront /hcp/dr-admin-test renders + localStorage ar360_hcp_referral captured",
+    "Frontend: /hcp/dashboard editor renders all data-testids (storefront-enabled-toggle, storefront-slug-input, storefront-welcome-input, storefront-bio-input, upload-headshot-btn, upload-banner-btn, save-storefront-btn) and save works",
+    "Frontend: /checkout shows referral card + remove-hcp-referral-btn when ar360_hcp_referral is set"
+  ],
+  "failed_tests": [
+    "Frontend: /admin/hcp/{userId}/storefront → 404 Page Not Found (missing route in App.tsx)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_hcp_storefront.py",
+    "/app/test_reports/pytest/iteration_12_results.xml"
+  ],
+  "action_items": [
+    "FRONTEND HIGH: Register the admin override route in /app/frontend/src/App.tsx — add `<ProtectedRoute path=\"/admin/hcp/:userId/storefront\" component={AdminHcpStorefrontEditPage} requireAdmin={true} />` (AdminHcpStorefrontEditPage is already imported). Without this, admin cannot set commissionPercent via UI.",
+    "BACKEND MINOR: Tighten SLUG_RE in hcp_storefront.py to require min 3 chars to match the 400 error message wording.",
+    "BACKEND MINOR: Decide on GET /api/hcp/storefronts directory — either remove it or admin-gate it; it currently exposes all approved/enabled HCPs publicly which contradicts 'Public discoverability is OFF' in the spec."
+  ],
+  "critical_code_review_comments": [
+    "hcp_storefront.py PUT /hcp/me/storefront silently drops ADMIN_ONLY_FIELDS (commissionPercent) rather than returning a 400/403 — quiet drop is fine but could be clearer.",
+    "routes/orders.py correctly snapshots commission AFTER discount (uses final totalAmount) — good behaviour.",
+    "routes/orders.py uses datetime.utcnow() which is deprecated in Python 3.12+ (already flagged in iteration 11).",
+    "App.tsx: AdminHcpStorefrontEditPage is imported but never routed — either dead import or missing route; evidence from iteration tests: the route is missing and admin gets 404."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_hcp_storefront.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18)",
+    "frontend": "75% (3/4 flows). Public storefront + HCP dashboard + checkout referral all work; admin override page is 404 due to missing route."
+  },
+  "test_credentials": {
+    "admin (approved HCP in this iteration)": "admin@example.com / password — storefrontSlug='dr-admin-test', commissionPercent=12"
+  },
+  "seed_data_creation": "Left admin storefront slug='dr-admin-test' enabled as requested. Reset welcome message to 'Welcome to my storefront!' and bio to 'Experienced in sports medicine and recovery.' at end of run. A handful of TEST orders remain in the orders collection (shippingAddress starts with 'TEST') from the order-attribution tests.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "18 backend tests at /app/backend/tests/test_hcp_storefront.py, all isolated and session-scoped. The single frontend failure (admin override 404) is confirmed by grep: /app/frontend/src/App.tsx imports AdminHcpStorefrontEditPage at line 40 but lacks a <Route> for /admin/hcp/:userId/storefront. Once added, retest by logging in as admin, navigating to /admin/hcp/69a74a0ce5b1b6ab12650618/storefront, and verifying commission-percent-input is present + save persists. Backend PUT /api/admin/hcp/{id}/storefront is already verified working with commissionPercent=12.",
+  "rca_of_the_issue": "Frontend admin override page 404 — ROOT CAUSE: App.tsx has the import but no matching <Route path=\"/admin/hcp/:userId/storefront\">. Reproduction: login as admin at /admin-login, navigate to /admin/hcp/{userId}/storefront → renders wouter's 404 fallback. Mitigation (1-line change): add `<ProtectedRoute path=\"/admin/hcp/:userId/storefront\" component={AdminHcpStorefrontEditPage} requireAdmin={true} />` near the existing /admin/hcp route (App.tsx:85)."
+}

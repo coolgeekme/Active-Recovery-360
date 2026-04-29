@@ -22,6 +22,7 @@ import { useLocation } from "wouter";
 interface CheckoutFormProps {
   subtotal: number;
   discountCode?: string;
+  hcpReferralSlug?: string | null;
 }
 
 const checkoutFormSchema = z.object({
@@ -38,7 +39,7 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
-export default function CheckoutForm({ subtotal, discountCode }: CheckoutFormProps) {
+export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
@@ -71,6 +72,7 @@ export default function CheckoutForm({ subtotal, discountCode }: CheckoutFormPro
         shippingAddress,
         paymentMethod: "credit", // In a real app, we would handle payment processing
         discountCode: discountCode || undefined,
+        hcpReferralSlug: hcpReferralSlug || undefined,
         items: cartItems.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
@@ -78,8 +80,14 @@ export default function CheckoutForm({ subtotal, discountCode }: CheckoutFormPro
         })),
       });
       
-      // After successful order, clear the cart
+      // After successful order, clear the cart and HCP referral
       await clearCart();
+      try {
+        window.localStorage.removeItem("ar360_hcp_referral");
+        window.dispatchEvent(new StorageEvent("storage", { key: "ar360_hcp_referral" }));
+      } catch {
+        /* noop */
+      }
       
       setIsComplete(true);
       

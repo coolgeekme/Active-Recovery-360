@@ -35,7 +35,16 @@ def transform_user(user_doc: dict) -> dict:
         # HCP fields
         "licenseNumber": user_doc.get("licenseNumber"),
         "hcpStatus": user_doc.get("hcpStatus"),  # pending, approved, rejected, null
-        "specialty": user_doc.get("specialty")
+        "specialty": user_doc.get("specialty"),
+        # HCP storefront fields
+        "storefrontEnabled": user_doc.get("storefrontEnabled", False),
+        "storefrontSlug": user_doc.get("storefrontSlug"),
+        "storefrontBio": user_doc.get("storefrontBio"),
+        "storefrontHeadshotUrl": user_doc.get("storefrontHeadshotUrl"),
+        "storefrontBannerUrl": user_doc.get("storefrontBannerUrl"),
+        "storefrontWelcomeMessage": user_doc.get("storefrontWelcomeMessage"),
+        "storefrontFeaturedProductIds": user_doc.get("storefrontFeaturedProductIds", []),
+        "commissionPercent": user_doc.get("commissionPercent", 0),
     }
 
 async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[dict]:
