@@ -1,0 +1,68 @@
+{
+  "summary": "Iteration 11 retest of iteration-10 discount-code bugs. Backend-only pytest: 19/22 passed (86%). All POST-side fixes are confirmed working: (1) expired codes now return HTTP 400 'Discount code has expired' (not 500) for BOTH ISO formats — with trailing Z ('2024-01-01T00:00:00Z') AND without ('2025-01-01T00:00:00'); (2) POST /api/orders with an expired discountCode now returns 400, not 500; (3) usedCount on a successful order goes N -> N+1 (verified by explicit before/after GET); (4) usedCount does NOT increment when the order is rejected due to an expired code. REGRESSION PASS: percentage 25%, fixed 500 cents, usage-limit reached, invalid code, valid code applied to order, order without discount, admin login, /api/cart still 401, /api/products still 39. FAIL: the review request claimed PUT /api/discount-codes/{id} was ALSO fixed to normalize expiresAt and uppercase code if provided — this is NOT true in the shipped code. routes/discount_codes.py:update_discount_code still does a raw `{'$set': data}` with no call to `_parse_expiry` and no `.upper()` on `code`. Three tests reproduce this: PUT an expired ISO-Z -> validate returns 500 (should be 400); PUT an expired ISO no-Z -> same 500; PUT `code='newcode...'` -> lookup by upper-case fails with 404 because the DB still holds the lowercase value. The `_parse_expiry` helper itself is well-written and correctly imported — it's simply never called from the PUT handler.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "PUT /api/discount-codes/{code_id}",
+        "issue": "PUT handler at routes/discount_codes.py:120-135 does `{\"$set\": data}` with no normalization. Two consequences: (a) admin editing expiresAt (the admin UI sends new Date(...).toISOString() -> string with 'Z') leaves an ISO string in the DB, so subsequent validate/order comparisons raise TypeError and return 500 instead of 400 'Discount code has expired'; (b) editing `code` to a lowercase value stores lowercase, but validate upper-cases the incoming code before lookup, so the code becomes un-validatable (404). FIX: apply the same normalization as POST — `if 'expiresAt' in data: data['expiresAt'] = _parse_expiry(data['expiresAt'])` and `if 'code' in data and data['code']: data['code'] = data['code'].upper()` before `find_one_and_update`.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "routes/discount_codes.py:update_discount_code",
+        "issue": "Bare `except:` around `find_one_and_update` (line 129) — replace with `except (InvalidId, TypeError):` so unrelated exceptions aren't masked as 404."
+      },
+      {
+        "endpoint": "routes/discount_codes.py (all handlers)",
+        "issue": "No Pydantic model for the create/update payloads, so invalid keys/types silently round-trip into Mongo. A `DiscountCodeUpdate(BaseModel)` with `expiresAt: Optional[datetime]` and `code: Optional[constr(to_upper=True)]` would make normalization declarative and kill this whole bug class."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "POST /api/discount-codes with expiresAt='2024-01-01T00:00:00Z' -> validate returns 400 'Discount code has expired' (not 500)",
+    "POST /api/discount-codes with expiresAt='2025-01-01T00:00:00' (no Z) -> validate returns 400",
+    "POST /api/discount-codes with expiresAt='not-a-date' -> 400 at create time (clean validation error)",
+    "POST /api/orders with expired discountCode -> 400, not 500",
+    "POST /api/orders with expired code does NOT increment usedCount (baseline == after)",
+    "POST /api/orders successful -> discount_codes.usedCount goes N -> N+1 (verified via GET before + GET after)",
+    "REGRESSION 12/12: percentage 25%, fixed 500c, usage-limit, invalid code, inactive code, no-discount order, products=39, admin login, /api/cart auth-required"
+  ],
+  "failed_tests": [
+    "TestPutNormalization::test_put_normalizes_expires_at_with_Z — PUT {expiresAt:'2024-01-01T00:00:00Z'} then validate -> 500 (expected 400)",
+    "TestPutNormalization::test_put_normalizes_expires_at_without_Z — PUT {expiresAt:'2024-06-01T12:00:00'} then validate -> 500 (expected 400)",
+    "TestPutNormalization::test_put_uppercases_code — PUT {code:'newcodeXXXXXX'} then validate with upper-case -> 404 (expected 200; DB still has lowercase because PUT didn't upper-case)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_ar360_discount_codes.py",
+    "/app/test_reports/pytest/iteration_11_results.xml"
+  ],
+  "action_items": [
+    "BACKEND HIGH: routes/discount_codes.py:update_discount_code — apply _parse_expiry to data['expiresAt'] (if present) and uppercase data['code'] (if present) BEFORE the $set. Matches what the review-request claimed was already done. Without this, admin edits to expiresAt/code silently break the feature the same way iteration-10 did for POST."
+  ],
+  "critical_code_review_comments": [
+    "PUT /api/discount-codes/{code_id} currently accepts arbitrary client keys via raw dict — also allows the admin UI to overwrite `usedCount`, `createdAt`, `_id` fields. Add an allow-list of mutable fields.",
+    "_parse_expiry is well-designed (handles datetime, ISO with/without Z, drops tz to naive UTC to match datetime.utcnow() used elsewhere) — reuse it everywhere expiresAt is written, including any future bulk-import.",
+    "Both routes still use `datetime.utcnow()` which is deprecated in Python 3.12+. Consider `datetime.now(timezone.utc).replace(tzinfo=None)` for forward-compat (the whole codebase uses naive UTC consistently so keep the .replace).",
+    "routes/orders.py:create_order usedCount $inc is now correctly AFTER insert_one — verified by test_order_expired_code_does_not_increment_used_count (stays at baseline) and test_used_count_increments_only_after_successful_insert (N -> N+1). Good fix."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ar360_discount_codes.py"
+  ],
+  "success_rate": {
+    "backend": "86% (19/22). All 4 requested POST/order fixes pass. 3 failures are a single missed fix: PUT endpoint was not updated to match POST's normalization."
+  },
+  "test_credentials": {
+    "admin (also member)": {"endpoint": "POST /api/login", "body": {"username": "admin@example.com", "password": "password"}}
+  },
+  "seed_data_creation": "All TEST* discount codes created by the suite are deleted in finally blocks. A handful of TEST orders remain in the orders collection (shippingAddress starts with 'TEST') — they belong to admin@example.com and can be batch-deleted.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "22 tests at /app/backend/tests/test_ar360_discount_codes.py; all isolated. The failing 3 are in class TestPutNormalization and will pass the moment routes/discount_codes.py:update_discount_code calls _parse_expiry on data['expiresAt'] and uppercases data['code']. To run: `REACT_APP_BACKEND_URL=https://ar360-shop.preview.emergentagent.com pytest backend/tests/test_ar360_discount_codes.py -v`. The POST-side bug from iteration 10 (expiresAt TypeError -> 500) is fully fixed and regression-tested with both 'Z' and non-'Z' ISO formats. The orders.py usedCount ordering fix is verified end-to-end (increments only on success, stays on baseline when the code is expired).",
+  "rca_of_the_issue": "POST bug fix verified: _parse_expiry in routes/discount_codes.py normalizes 'Z' and non-'Z' ISO strings to naive UTC datetimes before insert, so datetime.utcnow() > doc['expiresAt'] now works and returns 400. Orders bug fix verified: `$inc usedCount` moved after orders.insert_one, so a rejected order (e.g. expired code raising 400) no longer consumes a usage slot. Remaining gap: _parse_expiry is only wired into POST /api/discount-codes; the PUT handler still writes the raw client dict via `$set`, reintroducing the exact same string-vs-datetime bug the moment an admin edits expiresAt in the UI, and silently breaks lookup if an admin edits code to lowercase. Reproduction: POST a code, then PUT {expiresAt:'2024-01-01T00:00:00Z'} on it, then POST /api/discount-codes/validate {code}: returns 500 instead of 400. Mitigation (3-line change): in update_discount_code, before find_one_and_update, run `if 'expiresAt' in data: data['expiresAt'] = _parse_expiry(data['expiresAt'])` and `if data.get('code'): data['code'] = data['code'].upper()`."
+}

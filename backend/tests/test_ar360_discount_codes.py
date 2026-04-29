@@ -113,10 +113,54 @@ class TestValidateEndpoint:
         try:
             r = api.post(f"{BASE_URL}/api/discount-codes/validate",
                          json={"code": doc["code"]})
-            assert r.status_code == 400
+            assert r.status_code == 400, f"expected 400, got {r.status_code}: {r.text}"
             assert "expired" in r.json().get("detail", "").lower()
         finally:
             _delete_code(api, admin_headers, code_id)
+
+    def test_validate_expired_with_Z_suffix_returns_400(self, api, admin_headers):
+        """ISO-8601 with trailing 'Z' (frontend's new Date().toISOString() format)
+        must be normalised by the backend and produce 400, not 500."""
+        code_id, doc = _create_code(api, admin_headers,
+                                    expiresAt="2024-01-01T00:00:00Z")
+        try:
+            r = api.post(f"{BASE_URL}/api/discount-codes/validate",
+                         json={"code": doc["code"]})
+            assert r.status_code == 400, f"expected 400, got {r.status_code}: {r.text}"
+            assert "expired" in r.json().get("detail", "").lower()
+        finally:
+            _delete_code(api, admin_headers, code_id)
+
+    def test_validate_expired_without_Z_suffix_returns_400(self, api, admin_headers):
+        """ISO-8601 without trailing 'Z' must also be normalised to naive UTC."""
+        code_id, doc = _create_code(api, admin_headers,
+                                    expiresAt="2025-01-01T00:00:00")
+        try:
+            r = api.post(f"{BASE_URL}/api/discount-codes/validate",
+                         json={"code": doc["code"]})
+            assert r.status_code == 400, f"expected 400, got {r.status_code}: {r.text}"
+            assert "expired" in r.json().get("detail", "").lower()
+        finally:
+            _delete_code(api, admin_headers, code_id)
+
+    def test_create_rejects_invalid_expires_at(self, api, admin_headers):
+        """Garbage ISO string should produce a 400 at create time, not crash later."""
+        suffix = str(int(time.time() * 1000))[-9:]
+        r = api.post(f"{BASE_URL}/api/discount-codes",
+                     json={
+                         "code": f"TESTBAD{suffix}",
+                         "description": "TEST bad date",
+                         "discountType": "percentage",
+                         "discountValue": 10,
+                         "isActive": True,
+                         "expiresAt": "not-a-date",
+                     },
+                     headers=admin_headers)
+        # Accept either a 400 validation error OR a 500 if not validated — but
+        # the preferred behaviour (per the _parse_expiry helper) is 400.
+        assert r.status_code == 400, (
+            f"Invalid expiresAt should be 400, got {r.status_code}: {r.text}"
+        )
 
     def test_validate_usage_limit_returns_400(self, api, admin_headers):
         code_id, doc = _create_code(api, admin_headers, usageLimit=1)
@@ -244,8 +288,64 @@ class TestOrderWithDiscount:
                 },
                 headers=admin_headers,
             )
-            assert r.status_code == 400
+            assert r.status_code == 400, f"expected 400, got {r.status_code}: {r.text}"
             assert "expired" in r.json().get("detail", "").lower()
+        finally:
+            _delete_code(api, admin_headers, code_id)
+
+    def test_order_expired_code_does_not_increment_used_count(self, api, admin_headers, sample_product):
+        """If the order is rejected (expired code), usedCount must NOT increment."""
+        past = (datetime.utcnow() - timedelta(days=1)).isoformat()
+        code_id, doc = _create_code(api, admin_headers, expiresAt=past)
+        try:
+            # read baseline usedCount
+            r0 = api.get(f"{BASE_URL}/api/discount-codes", headers=admin_headers)
+            baseline = next(d["usedCount"] for d in r0.json() if d["id"] == code_id)
+
+            r = api.post(
+                f"{BASE_URL}/api/orders",
+                json={
+                    "shippingAddress": "TEST expired-nocount",
+                    "discountCode": doc["code"],
+                    "items": [{"productId": sample_product["id"], "quantity": 1}],
+                },
+                headers=admin_headers,
+            )
+            assert r.status_code == 400
+
+            r1 = api.get(f"{BASE_URL}/api/discount-codes", headers=admin_headers)
+            after = next(d["usedCount"] for d in r1.json() if d["id"] == code_id)
+            assert after == baseline, (
+                f"usedCount must not increment on rejected order; "
+                f"was {baseline}, became {after}"
+            )
+        finally:
+            _delete_code(api, admin_headers, code_id)
+
+    def test_used_count_increments_only_after_successful_insert(self, api, admin_headers, sample_product):
+        """N -> N+1 on successful order, verified by explicit before/after GET."""
+        code_id, doc = _create_code(api, admin_headers,
+                                    discountType="percentage", discountValue=10)
+        try:
+            r0 = api.get(f"{BASE_URL}/api/discount-codes", headers=admin_headers)
+            before = next(d["usedCount"] for d in r0.json() if d["id"] == code_id)
+
+            r = api.post(
+                f"{BASE_URL}/api/orders",
+                json={
+                    "shippingAddress": "TEST inc-order",
+                    "discountCode": doc["code"],
+                    "items": [{"productId": sample_product["id"], "quantity": 1}],
+                },
+                headers=admin_headers,
+            )
+            assert r.status_code in (200, 201), f"{r.status_code} {r.text}"
+
+            r1 = api.get(f"{BASE_URL}/api/discount-codes", headers=admin_headers)
+            after = next(d["usedCount"] for d in r1.json() if d["id"] == code_id)
+            assert after == before + 1, (
+                f"usedCount should go {before} -> {before+1}, got {after}"
+            )
         finally:
             _delete_code(api, admin_headers, code_id)
 
@@ -286,3 +386,65 @@ class TestRegression:
         # frontend localStorage. Confirm the endpoint still rejects unauth.
         r = api.get(f"{BASE_URL}/api/cart")
         assert r.status_code in (401, 403)
+
+
+# ---------------- PUT normalization (iteration 11) ----------------
+class TestPutNormalization:
+    def test_put_normalizes_expires_at_with_Z(self, api, admin_headers):
+        """PUT should normalise expiresAt so that after update, validate/orders
+        still return 400 (not 500) for the expired code."""
+        code_id, doc = _create_code(api, admin_headers)
+        try:
+            r = api.put(f"{BASE_URL}/api/discount-codes/{code_id}",
+                        json={"expiresAt": "2024-01-01T00:00:00Z"},
+                        headers=admin_headers)
+            assert r.status_code in (200, 201), f"PUT failed: {r.status_code} {r.text}"
+
+            # Validate must now report expired (400), not 500.
+            r2 = api.post(f"{BASE_URL}/api/discount-codes/validate",
+                          json={"code": doc["code"]})
+            assert r2.status_code == 400, (
+                f"expected 400 after PUT with ISO-Z expiresAt, "
+                f"got {r2.status_code}: {r2.text}"
+            )
+            assert "expired" in r2.json().get("detail", "").lower()
+        finally:
+            _delete_code(api, admin_headers, code_id)
+
+    def test_put_normalizes_expires_at_without_Z(self, api, admin_headers):
+        code_id, doc = _create_code(api, admin_headers)
+        try:
+            r = api.put(f"{BASE_URL}/api/discount-codes/{code_id}",
+                        json={"expiresAt": "2024-06-01T12:00:00"},
+                        headers=admin_headers)
+            assert r.status_code in (200, 201)
+
+            r2 = api.post(f"{BASE_URL}/api/discount-codes/validate",
+                          json={"code": doc["code"]})
+            assert r2.status_code == 400, (
+                f"expected 400 after PUT with ISO (no Z) expiresAt, "
+                f"got {r2.status_code}: {r2.text}"
+            )
+        finally:
+            _delete_code(api, admin_headers, code_id)
+
+    def test_put_uppercases_code(self, api, admin_headers):
+        """PUT with a lowercase `code` should upper-case it so validate still works."""
+        code_id, doc = _create_code(api, admin_headers)
+        try:
+            new_code_lower = f"newcode{str(int(time.time()*1000))[-6:]}"
+            r = api.put(f"{BASE_URL}/api/discount-codes/{code_id}",
+                        json={"code": new_code_lower},
+                        headers=admin_headers)
+            assert r.status_code in (200, 201), r.text
+
+            # validate against upper-case (what the backend stores+compares on)
+            r2 = api.post(f"{BASE_URL}/api/discount-codes/validate",
+                          json={"code": new_code_lower.upper()})
+            assert r2.status_code == 200, (
+                f"Expected upper-cased validation to succeed, got "
+                f"{r2.status_code}: {r2.text}"
+            )
+            assert r2.json()["discountCode"]["code"] == new_code_lower.upper()
+        finally:
+            _delete_code(api, admin_headers, code_id)

@@ -142,12 +142,7 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         discount_amount = min(discount_amount, subtotal)
         total_amount = max(0, subtotal - discount_amount)
         discount_code_used = d["code"]
-
-        # Increment usage counter atomically
-        await discount_codes.update_one(
-            {"_id": d["_id"]},
-            {"$inc": {"usedCount": 1}},
-        )
+        discount_code_doc_id = d["_id"]
 
     new_order = {
         "userId": user["id"],
@@ -162,6 +157,13 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
     }
 
     result = await orders.insert_one(new_order)
+
+    # Only consume a usage slot AFTER the order successfully persists
+    if discount_code_used:
+        await get_collection("discount_codes").update_one(
+            {"_id": discount_code_doc_id},
+            {"$inc": {"usedCount": 1}},
+        )
 
     # Clear server-side cart for this user (if any)
     await cart_items.delete_many({"userId": user["id"]})

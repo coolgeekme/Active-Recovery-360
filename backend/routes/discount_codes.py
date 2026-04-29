@@ -1,11 +1,41 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 from services.database import get_collection
 from routes.auth import require_admin
 
 router = APIRouter()
+
+
+def _parse_expiry(value) -> datetime | None:
+    """Coerce admin-supplied expiry into a naive UTC datetime, matching how
+    `datetime.utcnow()` is used elsewhere. Accepts ISO strings (with or
+    without trailing 'Z') and existing datetime objects."""
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        # If timezone-aware, convert to UTC and drop tzinfo for consistency
+        if value.tzinfo is not None:
+            value = value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        # Allow "...Z" by replacing with +00:00 for fromisoformat
+        text = text.replace("Z", "+00:00")
+        try:
+            dt = datetime.fromisoformat(text)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid expiresAt: {value}",
+            )
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt
+    raise HTTPException(status_code=400, detail="Invalid expiresAt type")
 
 def transform_discount_code(doc: dict) -> dict:
     if not doc:
@@ -77,7 +107,7 @@ async def create_discount_code(data: dict, admin: dict = Depends(require_admin))
         "isActive": data.get("isActive", True),
         "usageLimit": data.get("usageLimit"),
         "usedCount": 0,
-        "expiresAt": data.get("expiresAt"),
+        "expiresAt": _parse_expiry(data.get("expiresAt")),
         "createdAt": datetime.utcnow()
     }
     
