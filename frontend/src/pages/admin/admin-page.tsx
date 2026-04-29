@@ -44,6 +44,10 @@ export default function AdminPage() {
     queryKey: ["/api/orders"],
   });
 
+  const { data: categories = [] } = useQuery<any[]>({
+    queryKey: ["/api/categories"],
+  });
+
   const { data: users = [] } = useQuery<any[]>({
     queryKey: ["/api/users"],
     enabled: false, // This endpoint doesn't exist in the API yet
@@ -77,7 +81,7 @@ export default function AdminPage() {
     },
     { 
       title: "Categories", 
-      value: "4", 
+      value: categories.length, 
       icon: Tag,
       href: "/admin/categories"
     },

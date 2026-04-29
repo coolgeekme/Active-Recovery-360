@@ -188,7 +188,8 @@ async def get_admin_stats(admin: dict = Depends(require_admin)):
     users = get_collection("users")
     products = get_collection("products")
     orders = get_collection("orders")
-    
+    categories = get_collection("categories")
+
     total_users = await users.count_documents({})
     total_members = await users.count_documents({"isMember": True})
     total_hcps = await users.count_documents({"isDoctor": True})
@@ -196,7 +197,8 @@ async def get_admin_stats(admin: dict = Depends(require_admin)):
     total_products = await products.count_documents({})
     total_orders = await orders.count_documents({})
     pending_orders = await orders.count_documents({"status": "pending"})
-    
+    total_categories = await categories.count_documents({})
+
     return {
         "users": {
             "total": total_users,
@@ -210,6 +212,9 @@ async def get_admin_stats(admin: dict = Depends(require_admin)):
         "orders": {
             "total": total_orders,
             "pending": pending_orders
+        },
+        "categories": {
+            "total": total_categories
         }
     }
 
