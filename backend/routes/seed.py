@@ -564,3 +564,106 @@ async def consolidate_variants(admin: dict = Depends(require_admin)):
         "message": f"Consolidated {results['consolidated_groups']} product groups",
         "results": results
     }
+
+
+
+# ---------------------------------------------------------------------------
+# One-shot consolidated catalog import (preview snapshot baked into JSON).
+# Use after deploying to a fresh production database to wipe legacy products
+# and apply the official AR360 catalog with variants and image URLs.
+# ---------------------------------------------------------------------------
+import json
+import os
+from pathlib import Path
+
+CATALOG_SEED_PATH = Path(__file__).resolve().parent.parent / "data" / "catalog_seed.json"
+
+
+@router.post("/import-catalog")
+async def import_catalog(admin: dict = Depends(require_admin)):
+    """Wipe legacy products + categories.productCount, then insert the
+    consolidated 39-product AR360 catalog from data/catalog_seed.json.
+
+    This is the same data that exists in the preview environment, baked into
+    a JSON file so it can be replayed against any database (production,
+    staging, fresh test envs). Image URLs reference the shared Emergent
+    Object Storage namespace, so they keep working as long as the deployed
+    app uses the same EMERGENT_LLM_KEY.
+    """
+    if not CATALOG_SEED_PATH.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=f"Seed file missing: {CATALOG_SEED_PATH}",
+        )
+
+    with open(CATALOG_SEED_PATH, "r") as f:
+        seed = json.load(f)
+
+    products_coll = get_collection("products")
+    categories_coll = get_collection("categories")
+
+    # 1. Ensure every required category exists; capture id by name.
+    cat_id_by_name: dict[str, str] = {}
+    created_categories = 0
+    for cat in seed.get("categories", []):
+        name = cat.get("name")
+        if not name:
+            continue
+        existing = await categories_coll.find_one({"name": name})
+        if existing:
+            cat_id_by_name[name] = str(existing["_id"])
+        else:
+            res = await categories_coll.insert_one({
+                "name": name,
+                "description": cat.get("description") or f"{name} products for active recovery",
+                "imageUrl": cat.get("imageUrl"),
+                "productCount": 0,
+            })
+            cat_id_by_name[name] = str(res.inserted_id)
+            created_categories += 1
+
+    # 2. Wipe legacy products and reset counts.
+    deleted = await products_coll.delete_many({})
+    await categories_coll.update_many({}, {"$set": {"productCount": 0}})
+
+    # 3. Insert the consolidated catalog.
+    inserted = 0
+    skipped = 0
+    for p in seed.get("products", []):
+        cat_name = p.get("categoryName")
+        cat_id = cat_id_by_name.get(cat_name) if cat_name else None
+        if not cat_id:
+            skipped += 1
+            continue
+        doc = {
+            "name": p.get("name"),
+            "description": p.get("description"),
+            "price": p.get("price", 0),
+            "imageUrl": p.get("imageUrl"),
+            "visibility": p.get("visibility", "public"),
+            "categoryId": cat_id,
+            "stockQuantity": p.get("stockQuantity", 0),
+            "featured": p.get("featured", False),
+            "doctorIds": p.get("doctorIds", []),
+            "brand": p.get("brand"),
+            "hasVariants": p.get("hasVariants", False),
+            "variants": p.get("variants", []),
+            "createdAt": datetime.utcnow(),
+        }
+        await products_coll.insert_one(doc)
+        await categories_coll.update_one(
+            {"_id": ObjectId(cat_id)},
+            {"$inc": {"productCount": 1}},
+        )
+        inserted += 1
+
+    return {
+        "message": "Catalog imported successfully",
+        "stats": {
+            "categories_created": created_categories,
+            "categories_total": len(cat_id_by_name),
+            "products_deleted": deleted.deleted_count,
+            "products_inserted": inserted,
+            "products_skipped": skipped,
+        },
+    }

@@ -1,0 +1,1852 @@
+{
+  "categories": [
+    {
+      "name": "Hot/Cold Therapy",
+      "description": "Hot and cold therapy products for recovery",
+      "imageUrl": "https://images.unsplash.com/photo-1554344728-77cf90d9ed26?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Topicals",
+      "description": "Topical recovery products and treatments",
+      "imageUrl": "https://images.unsplash.com/photo-1588286840104-8957b019727f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Electro Therapy",
+      "description": "Electro therapy devices and equipment",
+      "imageUrl": "https://images.unsplash.com/photo-1547919307-1ecb10702e6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Self-Care Tools",
+      "description": "Self-care tools for recovery and wellness",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Recovery Garments",
+      "description": "Recovery garments and apparel",
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Compression Therapy",
+      "description": "Compression therapy products for recovery",
+      "imageUrl": "https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Recovery Patches",
+      "description": "Recovery patches for targeted relief",
+      "imageUrl": "https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Kinesiology Tape",
+      "description": "Kinesiology tape for support and recovery",
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Braces",
+      "description": "Braces and supports for injury recovery",
+      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+    },
+    {
+      "name": "Cold Compression",
+      "description": "Cold Compression products for active recovery",
+      "imageUrl": null
+    },
+    {
+      "name": "Exercise Therapy",
+      "description": "Exercise Therapy products for active recovery",
+      "imageUrl": null
+    }
+  ],
+  "products": [
+    {
+      "name": "Hot/Cold Compression Sleeve",
+      "description": "Safely and easily treat various parts of arms and legs with 360\u00b0 of even coverage and compression. Use hot or cold for targeted relief.",
+      "price": 2900,
+      "imageUrl": "/api/files/ar360/products/50b9e911a3b94a5fa2d2b93b701fada4.png",
+      "visibility": "public",
+      "stockQuantity": 40,
+      "featured": true,
+      "doctorIds": [],
+      "brand": "Requine Products",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "CS-01",
+          "name": "Size M",
+          "price": 2900,
+          "stockQuantity": 10,
+          "imageUrl": null,
+          "attributes": {
+            "size": "M"
+          }
+        },
+        {
+          "sku": "CS-02",
+          "name": "Size L",
+          "price": 2900,
+          "stockQuantity": 10,
+          "imageUrl": null,
+          "attributes": {
+            "size": "L"
+          }
+        },
+        {
+          "sku": "CS-03",
+          "name": "Size XL",
+          "price": 2900,
+          "stockQuantity": 10,
+          "imageUrl": null,
+          "attributes": {
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "CS-04",
+          "name": "Size XXL",
+          "price": 2900,
+          "stockQuantity": 10,
+          "imageUrl": null,
+          "attributes": {
+            "size": "XXL"
+          }
+        }
+      ],
+      "categoryName": "Hot/Cold Therapy"
+    },
+    {
+      "name": "Hot/Cold Therapy Flat Mat",
+      "description": "Treat multiple areas of the body and reduce core temperature without compression. 12\" x 18\" flat therapy mat.",
+      "price": 3900,
+      "imageUrl": "/api/files/ar360/products/0cf3ae13efd141048f9c1a90a7e788f7.png",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Requine Products",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "CFM-01",
+          "name": "12\" x 18\"",
+          "price": 3900,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "12x18"
+          }
+        }
+      ],
+      "categoryName": "Hot/Cold Therapy"
+    },
+    {
+      "name": "NanoXtreme Topical Pain Relief Cream",
+      "description": "A cutting-edge topical pain relief cream designed to target pain at its source. NanoXtreme uses advanced nanotechnology to penetrate deep into the skin and deliver natural ingredients efficiently.",
+      "price": 1999,
+      "imageUrl": "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 35,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Nano Extreme",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "NE-01",
+          "name": "1 oz Trial",
+          "price": 1999,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "1 oz"
+          }
+        },
+        {
+          "sku": "NE-3.3T",
+          "name": "3.3 oz Tube",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "3.3 oz tube"
+          }
+        },
+        {
+          "sku": "NE-3.3A",
+          "name": "3.3 oz Pump",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "3.3 oz pump"
+          }
+        },
+        {
+          "sku": "NE-32",
+          "name": "32 oz Bulk",
+          "price": 39900,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "32 oz"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Recovery Extreme Heating Gel",
+      "description": "Formulated to relieve and soothe. Effective after workouts or during massages. Hydrating gel featuring warming essential oils and meadowfoam seed oil.",
+      "price": 3000,
+      "imageUrl": "/api/files/ar360/products/a45b22b12a354ca1976f08cad2b05c25.jpg",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tree Lotion",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "TL-REHG-01",
+          "name": "4 oz",
+          "price": 3000,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "4 oz"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Recovery Extreme Cooling Gel",
+      "description": "Formulated to relieve and soothe. Effective after workouts or during massages. Hydrating gel featuring cooling essential oils and meadowfoam seed oil.",
+      "price": 3000,
+      "imageUrl": "/api/files/ar360/products/6cdd32dc4e0d4f689e12d7fee4d0e129.jpg",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tree Lotion",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "TL-RECG-01",
+          "name": "4 oz",
+          "price": 3000,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "4 oz"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Recovery Extreme Sports Cream",
+      "description": "Formulated to relieve and soothe after workouts. Hydrating cream featuring cooling and warming essential oils and meadowfoam seed oil.",
+      "price": 3000,
+      "imageUrl": "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tree Lotion",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "TL-ESC-0",
+          "name": "4 oz",
+          "price": 3000,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "4 oz"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "CBD Recovery Extreme Sports Cream",
+      "description": "CBD-infused recovery sports cream with 400 mg of premium CBD. Targeted muscle relief for athletes.",
+      "price": 5000,
+      "imageUrl": "/api/files/ar360/products/a3a24d05d0a44dcca237995013d98274.jpg",
+      "visibility": "member",
+      "stockQuantity": 20,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tree Lotion",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "TL-RESC-4",
+          "name": "4 oz / 400 mg",
+          "price": 5000,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "4 oz",
+            "strength": "400 mg"
+          }
+        },
+        {
+          "sku": "TL-RESC-8",
+          "name": "8 oz / 400 mg",
+          "price": 8000,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "8 oz",
+            "strength": "400 mg"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Extract Labs CBD Muscle & Recovery Lotion",
+      "description": "CBD muscle and recovery lotion for targeted relief and muscle soothing.",
+      "price": 9095,
+      "imageUrl": "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=800&q=80",
+      "visibility": "member",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Extract Labs",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "EL-MRL-01",
+          "name": "Standard",
+          "price": 9095,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Extract Labs CBD Muscle & Recovery Roll On",
+      "description": "CBD-infused roll on for fast targeted muscle and joint relief.",
+      "price": 8995,
+      "imageUrl": "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=800&q=80",
+      "visibility": "member",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Extract Labs",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "EL-MRR-01",
+          "name": "Standard",
+          "price": 8995,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Extract Labs CBD Muscle & Recovery Cream",
+      "description": "Premium CBD recovery cream for muscle and joint relief.",
+      "price": 8995,
+      "imageUrl": "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=800&q=80",
+      "visibility": "member",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Extract Labs",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "EL-MRC-01",
+          "name": "Standard",
+          "price": 8995,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Fire & Ice CBD Isolate Roll On",
+      "description": "Fast acting deep-penetrating aching muscle relief and recovery. 500 mg CBD isolate roll on.",
+      "price": 3995,
+      "imageUrl": "/api/files/ar360/products/835a744fb99f4403a004933a7ab821e1.png",
+      "visibility": "member",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Fire & Ice",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "FI-Roll-01",
+          "name": "500 mg / 4 oz",
+          "price": 3995,
+          "stockQuantity": 10,
+          "attributes": {
+            "strength": "500 mg"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Fire & Ice CBD Isolate Relief Cream",
+      "description": "Fast acting deep-penetrating aching muscle relief and recovery. 250 mg CBD isolate relief cream.",
+      "price": 3995,
+      "imageUrl": "/api/files/ar360/products/c4eda0dfc6a542baa528ce03f68e6b7d.png",
+      "visibility": "member",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Fire & Ice",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "FI-PRC-01",
+          "name": "250 mg / 3.5 oz",
+          "price": 3995,
+          "stockQuantity": 10,
+          "attributes": {
+            "strength": "250 mg"
+          }
+        }
+      ],
+      "categoryName": "Topicals"
+    },
+    {
+      "name": "Incrediwear Knee Sleeve",
+      "description": "Bioactive wearable IR sleeve for the knee. Semiconductor-embedded fabric helps provide greater relief than traditional compression by increasing blood flow and lymphatic drainage.",
+      "price": 5499,
+      "imageUrl": "https://images.unsplash.com/photo-1652354989460-ecccd5644412?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 125,
+      "featured": true,
+      "doctorIds": [],
+      "brand": "Incrediwear",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "G702",
+          "name": "Grey M",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G703",
+          "name": "Grey L",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G704",
+          "name": "Grey XL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "G705",
+          "name": "Grey XXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "G705b",
+          "name": "Grey XXXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "XXXL"
+          }
+        },
+        {
+          "sku": "GB702",
+          "name": "Black M",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "GB703",
+          "name": "Black L",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "GB704",
+          "name": "Black XL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "GB705",
+          "name": "Black XXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "GB705b",
+          "name": "Black XXXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "XXXL"
+          }
+        },
+        {
+          "sku": "G702 Navy",
+          "name": "Navy M",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G703 Navy",
+          "name": "Navy L",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G704 Navy",
+          "name": "Navy XL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "G705 Navy",
+          "name": "Navy XXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "G705b Navy",
+          "name": "Navy XXXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "XXXL"
+          }
+        },
+        {
+          "sku": "G702 Red",
+          "name": "Red M",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G703 Red",
+          "name": "Red L",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G704 Red",
+          "name": "Red XL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "G705 Red",
+          "name": "Red XXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "G705b Red",
+          "name": "Red XXXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "XXXL"
+          }
+        },
+        {
+          "sku": "G702 Royal",
+          "name": "Royal M",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G703 Royal",
+          "name": "Royal L",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G704 Royal",
+          "name": "Royal XL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "G705 Royal",
+          "name": "Royal XXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "G705b Royal",
+          "name": "Royal XXXL",
+          "price": 5499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "XXXL"
+          }
+        }
+      ],
+      "categoryName": "Recovery Garments"
+    },
+    {
+      "name": "Incrediwear Ankle Sleeve",
+      "description": "Bioactive wearable IR ankle sleeve. Reduces swelling, relieves pain, and restores mobility through targeted, no-compression infrared technology.",
+      "price": 4499,
+      "imageUrl": "https://images.unsplash.com/photo-1652354989460-ecccd5644412?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 30,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Incrediwear",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "G706",
+          "name": "Grey S/M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "S/M"
+          }
+        },
+        {
+          "sku": "G707",
+          "name": "Grey L",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G707XL",
+          "name": "Grey XL",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "GB706",
+          "name": "Black S/M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "S/M"
+          }
+        },
+        {
+          "sku": "GB707",
+          "name": "Black L",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "GB707XL",
+          "name": "Black XL",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Black",
+            "size": "XL"
+          }
+        }
+      ],
+      "categoryName": "Recovery Garments"
+    },
+    {
+      "name": "Incrediwear Elbow Sleeve",
+      "description": "Bioactive wearable IR elbow sleeve for muscle and joint recovery. No-compression infrared technology.",
+      "price": 4499,
+      "imageUrl": "https://images.unsplash.com/photo-1652354989460-ecccd5644412?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 60,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Incrediwear",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "G701",
+          "name": "Grey S/M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "S/M"
+          }
+        },
+        {
+          "sku": "G701M",
+          "name": "Grey M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G701b",
+          "name": "Grey L",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Grey",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G701 Navy",
+          "name": "Navy S/M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "S/M"
+          }
+        },
+        {
+          "sku": "G701M Navy",
+          "name": "Navy M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G701b Navy",
+          "name": "Navy L",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Navy",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G701 Red",
+          "name": "Red S/M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "S/M"
+          }
+        },
+        {
+          "sku": "G701M Red",
+          "name": "Red M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G701b Red",
+          "name": "Red L",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Red",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "G701 Royal",
+          "name": "Royal S/M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "S/M"
+          }
+        },
+        {
+          "sku": "G701M Royal",
+          "name": "Royal M",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "G701b Royal",
+          "name": "Royal L",
+          "price": 4499,
+          "stockQuantity": 5,
+          "attributes": {
+            "color": "Royal",
+            "size": "L"
+          }
+        }
+      ],
+      "categoryName": "Recovery Garments"
+    },
+    {
+      "name": "Incrediwear Hip Brace",
+      "description": "Bioactive wearable IR hip brace. Supports hip stability and accelerates recovery through infrared semiconductor technology.",
+      "price": 8999,
+      "imageUrl": "https://images.unsplash.com/photo-1640101942798-34d181efc234?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 50,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Incrediwear",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "HIP101R",
+          "name": "Right S",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Right",
+            "size": "S"
+          }
+        },
+        {
+          "sku": "HIP102R",
+          "name": "Right M",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Right",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "HIP103R",
+          "name": "Right L",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Right",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "HIP104R",
+          "name": "Right XL",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Right",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "HIP105R",
+          "name": "Right XXL",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Right",
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "HIP201L",
+          "name": "Left S",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Left",
+            "size": "S"
+          }
+        },
+        {
+          "sku": "HIP202L",
+          "name": "Left M",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Left",
+            "size": "M"
+          }
+        },
+        {
+          "sku": "HIP203L",
+          "name": "Left L",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Left",
+            "size": "L"
+          }
+        },
+        {
+          "sku": "HIP204L",
+          "name": "Left XL",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Left",
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "HIP205L",
+          "name": "Left XXL",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "side": "Left",
+            "size": "XXL"
+          }
+        }
+      ],
+      "categoryName": "Braces"
+    },
+    {
+      "name": "Incrediwear Shoulder Brace",
+      "description": "Bioactive wearable IR shoulder brace for muscle and joint recovery.",
+      "price": 8999,
+      "imageUrl": "https://images.unsplash.com/photo-1640101942798-34d181efc234?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 20,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Incrediwear",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "GR801",
+          "name": "S",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "S"
+          }
+        },
+        {
+          "sku": "GR802",
+          "name": "M",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "M"
+          }
+        },
+        {
+          "sku": "GR803",
+          "name": "L",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "L"
+          }
+        },
+        {
+          "sku": "GR804",
+          "name": "XL",
+          "price": 8999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "XL"
+          }
+        }
+      ],
+      "categoryName": "Braces"
+    },
+    {
+      "name": "Incrediwear Back Brace",
+      "description": "Bioactive wearable IR back brace. Supports lower back recovery with infrared semiconductor technology.",
+      "price": 9999,
+      "imageUrl": "https://images.unsplash.com/photo-1640101942798-34d181efc234?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 30,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Incrediwear",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "GR708",
+          "name": "S",
+          "price": 9999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "S"
+          }
+        },
+        {
+          "sku": "GR709",
+          "name": "M",
+          "price": 9999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "M"
+          }
+        },
+        {
+          "sku": "GR710",
+          "name": "L",
+          "price": 9999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "L"
+          }
+        },
+        {
+          "sku": "GR713",
+          "name": "XL",
+          "price": 9999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "XL"
+          }
+        },
+        {
+          "sku": "GR714",
+          "name": "XXL",
+          "price": 9999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "XXL"
+          }
+        },
+        {
+          "sku": "GR715",
+          "name": "XXXL",
+          "price": 9999,
+          "stockQuantity": 5,
+          "attributes": {
+            "size": "XXXL"
+          }
+        }
+      ],
+      "categoryName": "Braces"
+    },
+    {
+      "name": "Marc Pro Original",
+      "description": "Professional electrotherapy device for muscle recovery. Used by elite athletes and clinicians worldwide.",
+      "price": 69999,
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+      "visibility": "doctor",
+      "stockQuantity": 5,
+      "featured": true,
+      "doctorIds": [],
+      "brand": "MarcPro",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "MPRO-01",
+          "name": "Standard",
+          "price": 69999,
+          "stockQuantity": 5,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Electro Therapy"
+    },
+    {
+      "name": "Marc Pro Reusable Electrodes",
+      "description": "Replacement reusable electrodes for the Marc Pro device.",
+      "price": 899,
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 100,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "MarcPro",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "MPRE-04",
+          "name": "4 Count Pack",
+          "price": 899,
+          "stockQuantity": 50,
+          "attributes": {
+            "packSize": "4"
+          }
+        },
+        {
+          "sku": "MPRE-10",
+          "name": "10 Count Pack",
+          "price": 7199,
+          "stockQuantity": 50,
+          "attributes": {
+            "packSize": "10"
+          }
+        }
+      ],
+      "categoryName": "Electro Therapy"
+    },
+    {
+      "name": "Tiger Tail Original Muscle Roller",
+      "description": "The classic Tiger Tail muscle roller stick. Used by athletes for self-massage, warm-up, and recovery.",
+      "price": 3499,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 30,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tiger Tail",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "11TTRC",
+          "name": "11 inch",
+          "price": 3499,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "11 inch"
+          }
+        },
+        {
+          "sku": "18TTRC",
+          "name": "18 inch",
+          "price": 3999,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "18 inch"
+          }
+        },
+        {
+          "sku": "22TTRC",
+          "name": "22 inch",
+          "price": 4499,
+          "stockQuantity": 10,
+          "attributes": {
+            "size": "22 inch"
+          }
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Tiger Cane Acupressure Hook",
+      "description": "Acupressure massage hook for trigger point therapy on hard-to-reach areas.",
+      "price": 2999,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 20,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tiger Tail",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "TCBLU",
+          "name": "Blue",
+          "price": 2999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Blue"
+          }
+        },
+        {
+          "sku": "TCORG",
+          "name": "Orange",
+          "price": 2999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Orange"
+          }
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Tiger Tail Spiky Roller",
+      "description": "Spiky roller for acupressure and myofascial release.",
+      "price": 1999,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Tiger Tail",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "ACUROL",
+          "name": "Standard",
+          "price": 1999,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Sidekick Curve Muscle Scraper",
+      "description": "Curve muscle scraper tool for myofascial release and recovery.",
+      "price": 6900,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Sidekick",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "SK-CURVE",
+          "name": "Standard",
+          "price": 6900,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Sidekick Swerve Muscle Scraper",
+      "description": "Swerve muscle scraper for deep tissue work.",
+      "price": 9500,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Sidekick",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "SK-SWERVE",
+          "name": "Standard",
+          "price": 9500,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Sidekick Echo Muscle Scraper Set",
+      "description": "Echo muscle scraper set for comprehensive therapy.",
+      "price": 13500,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Sidekick",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "SK-ECHO",
+          "name": "Standard",
+          "price": 13500,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Sidekick Eclipse Muscle Scraper",
+      "description": "Eclipse muscle scraper for professional and at-home use.",
+      "price": 11900,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 10,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Sidekick",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "SK-ECLIPSE",
+          "name": "Standard",
+          "price": 11900,
+          "stockQuantity": 10,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Sidekick Bow Muscle Scraper",
+      "description": "Bow muscle scraper for targeted myofascial therapy.",
+      "price": 17000,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "doctor",
+      "stockQuantity": 5,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Sidekick",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "SK-BOW",
+          "name": "Standard",
+          "price": 17000,
+          "stockQuantity": 5,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Squid Go Control Unit",
+      "description": "Squid Go control unit for the cold compression therapy system. Required base for all Squid Go body part attachments.",
+      "price": 39999,
+      "imageUrl": "https://images.unsplash.com/photo-1640101942798-34d181efc234?w=800&q=80",
+      "visibility": "doctor",
+      "stockQuantity": 5,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Squid Go",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "SG01-CU",
+          "name": "Standard",
+          "price": 39999,
+          "stockQuantity": 5,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Cold Compression"
+    },
+    {
+      "name": "Squid Go Body Part Systems",
+      "description": "Cold compression therapy attachments for the Squid Go system. Choose the body part attachment best suited to your recovery.",
+      "price": 12999,
+      "imageUrl": "https://images.unsplash.com/photo-1640101942798-34d181efc234?w=800&q=80",
+      "visibility": "doctor",
+      "stockQuantity": 30,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Squid Go",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "SG02-Ankle",
+          "name": "Ankle",
+          "price": 12999,
+          "stockQuantity": 5,
+          "attributes": {
+            "area": "ankle"
+          }
+        },
+        {
+          "sku": "SG03-LKS",
+          "name": "Leg/Knee",
+          "price": 14999,
+          "stockQuantity": 5,
+          "attributes": {
+            "area": "leg-knee"
+          }
+        },
+        {
+          "sku": "SG04-Shldr",
+          "name": "Shoulder",
+          "price": 14999,
+          "stockQuantity": 5,
+          "attributes": {
+            "area": "shoulder"
+          }
+        },
+        {
+          "sku": "SG05-Elbow",
+          "name": "Elbow",
+          "price": 12999,
+          "stockQuantity": 5,
+          "attributes": {
+            "area": "elbow"
+          }
+        },
+        {
+          "sku": "SG06-Wrist",
+          "name": "Wrist",
+          "price": 12999,
+          "stockQuantity": 5,
+          "attributes": {
+            "area": "wrist"
+          }
+        },
+        {
+          "sku": "SG07-Back",
+          "name": "Back",
+          "price": 15999,
+          "stockQuantity": 5,
+          "attributes": {
+            "area": "back"
+          }
+        }
+      ],
+      "categoryName": "Cold Compression"
+    },
+    {
+      "name": "Fire & Ice CBD Transdermal Patch",
+      "description": "Transdermal CBD patch for sustained pain relief.",
+      "price": 1995,
+      "imageUrl": "https://images.unsplash.com/photo-1624459309337-c796a6834aad?w=800&q=80",
+      "visibility": "member",
+      "stockQuantity": 20,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Fire & Ice",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "FI-TP-01",
+          "name": "Single",
+          "price": 1995,
+          "stockQuantity": 20,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Recovery Patches"
+    },
+    {
+      "name": "CBD Lion Transdermal Patch 4-Pack",
+      "description": "CBD transdermal patch 4-pack with 40 mg CBD per patch.",
+      "price": 2499,
+      "imageUrl": "https://images.unsplash.com/photo-1624459309337-c796a6834aad?w=800&q=80",
+      "visibility": "member",
+      "stockQuantity": 40,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "CBD Lion",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "CBDL-01B",
+          "name": "Black",
+          "price": 2499,
+          "stockQuantity": 20,
+          "attributes": {
+            "color": "Black"
+          }
+        },
+        {
+          "sku": "CBDL-01T",
+          "name": "Tan",
+          "price": 2499,
+          "stockQuantity": 20,
+          "attributes": {
+            "color": "Tan"
+          }
+        }
+      ],
+      "categoryName": "Recovery Patches"
+    },
+    {
+      "name": "Thera-Band Resistance Bands",
+      "description": "Professional resistance bands for rehabilitation and strength training.",
+      "price": 1795,
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 60,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Thera-band",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "NC7610",
+          "name": "Beginner Pack",
+          "price": 1795,
+          "stockQuantity": 30,
+          "attributes": {
+            "level": "beginner"
+          }
+        },
+        {
+          "sku": "NC7611",
+          "name": "Advanced Pack",
+          "price": 1795,
+          "stockQuantity": 30,
+          "attributes": {
+            "level": "advanced"
+          }
+        }
+      ],
+      "categoryName": "Exercise Therapy"
+    },
+    {
+      "name": "Norco Exercise Ball",
+      "description": "Professional anti-burst exercise/stability ball used in clinical and home rehab.",
+      "price": 1795,
+      "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 100,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "North Coast Medical",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "NC50100",
+          "name": "45 cm",
+          "price": 1795,
+          "stockQuantity": 20,
+          "attributes": {
+            "size": "45 cm"
+          }
+        },
+        {
+          "sku": "NC50101",
+          "name": "55 cm",
+          "price": 1895,
+          "stockQuantity": 20,
+          "attributes": {
+            "size": "55 cm"
+          }
+        },
+        {
+          "sku": "NC50102",
+          "name": "65 cm",
+          "price": 2095,
+          "stockQuantity": 20,
+          "attributes": {
+            "size": "65 cm"
+          }
+        },
+        {
+          "sku": "NC50103",
+          "name": "75 cm",
+          "price": 2495,
+          "stockQuantity": 20,
+          "attributes": {
+            "size": "75 cm"
+          }
+        },
+        {
+          "sku": "NC50104",
+          "name": "85 cm",
+          "price": 2795,
+          "stockQuantity": 20,
+          "attributes": {
+            "size": "85 cm"
+          }
+        }
+      ],
+      "categoryName": "Exercise Therapy"
+    },
+    {
+      "name": "Norco Foam Roller",
+      "description": "Clinical-grade foam roller for self-myofascial release.",
+      "price": 1095,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 80,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "North Coast Medical",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "NC64641-612",
+          "name": "Round 12\"",
+          "price": 1895,
+          "stockQuantity": 20,
+          "attributes": {
+            "shape": "round",
+            "length": "12 inch"
+          }
+        },
+        {
+          "sku": "NC64641-636",
+          "name": "Round 36\"",
+          "price": 3195,
+          "stockQuantity": 20,
+          "attributes": {
+            "shape": "round",
+            "length": "36 inch"
+          }
+        },
+        {
+          "sku": "NC64640-312",
+          "name": "Half Round 12\"",
+          "price": 1095,
+          "stockQuantity": 20,
+          "attributes": {
+            "shape": "half",
+            "length": "12 inch"
+          }
+        },
+        {
+          "sku": "NC64640-336",
+          "name": "Half Round 36\"",
+          "price": 2195,
+          "stockQuantity": 20,
+          "attributes": {
+            "shape": "half",
+            "length": "36 inch"
+          }
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Norco Shoulder Pulley",
+      "description": "Door-frame mounted shoulder pulley for range-of-motion exercises.",
+      "price": 1795,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "public",
+      "stockQuantity": 20,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "North Coast Medical",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "NC52069",
+          "name": "Standard",
+          "price": 1795,
+          "stockQuantity": 20,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Bio Blade",
+      "description": "Bio Blade IASTM tool for instrument-assisted soft tissue mobilization.",
+      "price": 12900,
+      "imageUrl": "https://images.unsplash.com/photo-1677252660464-cf6bed852c7c?w=800&q=80",
+      "visibility": "doctor",
+      "stockQuantity": 5,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Bio Blade",
+      "hasVariants": false,
+      "variants": [
+        {
+          "sku": "BB-01",
+          "name": "Standard",
+          "price": 12900,
+          "stockQuantity": 5,
+          "attributes": {}
+        }
+      ],
+      "categoryName": "Self-Care Tools"
+    },
+    {
+      "name": "Hampton Adams Kinesiology Tape \u2014 2 Pack",
+      "description": "Premium kinesiology tape, 2-pack of 2\"x16ft rolls. Choose your color.",
+      "price": 1499,
+      "imageUrl": "/api/files/ar360/products/559dee11199f4c6aa19bc592200f1b45.jpg",
+      "visibility": "public",
+      "stockQuantity": 50,
+      "featured": true,
+      "doctorIds": [],
+      "brand": "Hampton Adams",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "HAKT-2RL-BLK",
+          "name": "Black",
+          "price": 1499,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Black"
+          },
+          "imageUrl": "/api/files/ar360/products/559dee11199f4c6aa19bc592200f1b45.jpg"
+        },
+        {
+          "sku": "HAKT-2RL-TAN",
+          "name": "Beige",
+          "price": 1499,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Beige"
+          },
+          "imageUrl": "/api/files/ar360/products/506927ce4c1e4166b3e38aa5ac6cdc58.jpg"
+        },
+        {
+          "sku": "HAKT-2RL-BLU",
+          "name": "Blue",
+          "price": 1499,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Blue"
+          },
+          "imageUrl": "/api/files/ar360/products/b94fb64f574b4da3ad3cc92429634c16.jpg"
+        },
+        {
+          "sku": "HAKT-2RL-PNK",
+          "name": "Pink",
+          "price": 1499,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Pink"
+          },
+          "imageUrl": "/api/files/ar360/products/0890066620ab42bc9be83089a978eeba.jpg"
+        },
+        {
+          "sku": "HAKT-2RL-RED",
+          "name": "Red",
+          "price": 1499,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Red"
+          },
+          "imageUrl": "/api/files/ar360/products/ad330b13489d4d01a97c06e3aa3463be.jpg"
+        }
+      ],
+      "categoryName": "Kinesiology Tape"
+    },
+    {
+      "name": "Hampton Adams Kinesiology Tape \u2014 Clinic Roll 2\" x 45 yd",
+      "description": "Bulk 2-inch by 45-yard kinesiology tape clinic roll for therapists and trainers.",
+      "price": 4999,
+      "imageUrl": "/api/files/ar360/products/6f44273d1305487d8daea203f3c1fd1e.jpg",
+      "visibility": "doctor",
+      "stockQuantity": 50,
+      "featured": false,
+      "doctorIds": [],
+      "brand": "Hampton Adams",
+      "hasVariants": true,
+      "variants": [
+        {
+          "sku": "HAKT-2RL45-BLK",
+          "name": "Black",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Black"
+          },
+          "imageUrl": "/api/files/ar360/products/6f44273d1305487d8daea203f3c1fd1e.jpg"
+        },
+        {
+          "sku": "HAKT-2RL45-TAN",
+          "name": "Beige",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Beige"
+          },
+          "imageUrl": "/api/files/ar360/products/3d2a5746b385465c89c587df1a9f3ad3.jpg"
+        },
+        {
+          "sku": "HAKT-2RL45-BLU",
+          "name": "Blue",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Blue"
+          },
+          "imageUrl": "/api/files/ar360/products/164642c4d8e74765ac81d358a7cd073a.jpg"
+        },
+        {
+          "sku": "HAKT-2RL45-PNK",
+          "name": "Pink",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Pink"
+          },
+          "imageUrl": "/api/files/ar360/products/713384be8a074f7daf1095e8618ed102.jpg"
+        },
+        {
+          "sku": "HAKT-2RL45-RED",
+          "name": "Red",
+          "price": 4999,
+          "stockQuantity": 10,
+          "attributes": {
+            "color": "Red"
+          },
+          "imageUrl": "/api/files/ar360/products/f3284bfd210542539b82c329d241bbc2.jpg"
+        }
+      ],
+      "categoryName": "Kinesiology Tape"
+    }
+  ]
+}
