@@ -13,9 +13,9 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 interface ProductGridProps {
-  category?: number;
+  category?: string;
   featured?: boolean;
-  doctorId?: number;
+  doctorId?: string;
   limit?: number;
   title?: string;
   showFilters?: boolean;
@@ -36,9 +36,9 @@ export default function ProductGrid({
   const buildQueryParams = () => {
     const params = new URLSearchParams();
     
-    if (category) params.append("categoryId", category.toString());
+    if (category) params.append("categoryId", category);
     if (featured) params.append("featured", "true");
-    if (doctorId) params.append("doctorId", doctorId.toString());
+    if (doctorId) params.append("doctorId", doctorId);
     if (visibility && visibility !== "all") params.append("visibility", visibility);
     
     return params.toString();

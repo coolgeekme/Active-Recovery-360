@@ -6,11 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductGrid from "@/components/product/product-grid";
 
 export default function DoctorStorefrontPage() {
-  const { id } = useParams();
-  const doctorId = parseInt(id);
-  
+  const { id: doctorId } = useParams<{ id: string }>();
+
   const { data: doctor, isLoading: isLoadingDoctor, error: doctorError } = useQuery<Omit<User, "password">>({
     queryKey: [`/api/doctors/${doctorId}`],
+    enabled: !!doctorId,
   });
 
   // Create tags from doctor's specialty

@@ -5,11 +5,11 @@ import { Loader2 } from "lucide-react";
 import ProductGrid from "@/components/product/product-grid";
 
 export default function CategoryPage() {
-  const { id } = useParams();
-  const categoryId = parseInt(id);
-  
+  const { id: categoryId } = useParams<{ id: string }>();
+
   const { data: category, isLoading, error } = useQuery<Category>({
     queryKey: [`/api/categories/${categoryId}`],
+    enabled: !!categoryId,
   });
 
   if (isLoading) {
