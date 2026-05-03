@@ -27,10 +27,12 @@ import {
   Lock
 } from "lucide-react";
 import ProductGrid from "@/components/product/product-grid";
+import Breadcrumbs from "@/components/layout/breadcrumbs";
+import { Category } from "@/types";
 
 export default function ProductPage() {
-  const { id } = useParams();
-  const productId = id; // Keep as string for MongoDB ObjectId
+  const { id } = useParams<{ id: string }>();
+  const productId = id ?? ""; // Keep as string for MongoDB ObjectId
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
@@ -41,6 +43,12 @@ export default function ProductPage() {
   
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: [`/api/products/${productId}`],
+  });
+
+  // Fetch the parent category for the breadcrumb (only after product loads)
+  const { data: category } = useQuery<Category>({
+    queryKey: [`/api/categories/${product?.categoryId}`],
+    enabled: !!product?.categoryId,
   });
 
   // Extract unique attribute options from variants
@@ -200,6 +208,13 @@ export default function ProductPage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
+      <Breadcrumbs
+        items={[
+          { label: "Shop", href: "/shop" },
+          ...(category ? [{ label: category.name, href: `/category/${category.id}` }] : []),
+          { label: product.name },
+        ]}
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
         {/* Product Image */}
         <div>

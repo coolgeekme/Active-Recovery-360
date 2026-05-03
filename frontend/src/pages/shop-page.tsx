@@ -20,6 +20,7 @@ import { CheckIcon } from "lucide-react";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
+import Breadcrumbs from "@/components/layout/breadcrumbs";
 
 export default function ShopPage() {
   const [activeTab, setActiveTab] = useState("all");
@@ -31,6 +32,7 @@ export default function ShopPage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
+      <Breadcrumbs items={[{ label: "Shop" }]} />
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
         <div className="lg:w-3/4">

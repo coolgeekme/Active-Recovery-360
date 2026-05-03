@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Category } from "@/types";
 import { Loader2 } from "lucide-react";
 import ProductGrid from "@/components/product/product-grid";
+import Breadcrumbs from "@/components/layout/breadcrumbs";
 
 export default function CategoryPage() {
   const { id: categoryId } = useParams<{ id: string }>();
@@ -32,6 +33,12 @@ export default function CategoryPage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
+      <Breadcrumbs
+        items={[
+          { label: "Shop", href: "/shop" },
+          { label: category.name },
+        ]}
+      />
       <div className="mb-10">
         <div className="flex flex-col md:flex-row items-center mb-6">
           {category.imageUrl && (
