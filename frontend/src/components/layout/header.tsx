@@ -87,7 +87,7 @@ export default function Header() {
           {/* Contact Phone and User Actions */}
           <div className="flex items-center space-x-4">
             <Button asChild className="hidden md:flex btn-dsr-phone" data-testid="button-call">
-              <a href="tel:303-718-3435">CALL US: (303) 718-3435</a>
+              <a href="tel:602-726-0789">CALL US: (602) 726-0789</a>
             </Button>
             {user ? (
               <div className="hidden md:block">
