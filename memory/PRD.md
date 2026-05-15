@@ -26,6 +26,12 @@ Build a full-stack e-commerce platform, "AR360," for professional-grade exercise
 
 ## What's Been Completed
 
+### May 15, 2026 — Recovery Services Directory + Stripe init fix
+- ✅ **Recovery Services directory** (admin-managed): Admin can submit clinical recovery businesses with multiple locations, member-only visibility for discount details. Backend CRUD endpoints at `/api/recovery-services` and `/api/admin/recovery-services/*` (17/17 pytest pass).
+- ✅ **Leaflet map view**: Public `/recovery-services` page with List/Map toggle. Nominatim geocoding helper in admin location editor. Detail page `/recovery-services/:id` shows discount, locations, mini map.
+- ✅ **Fix**: Downgraded `react-leaflet` from v5.0.0 (requires React 19) to v4.2.1 (compatible with React 18). The page was blank/crashing before this fix.
+- ✅ **Fix**: Stripe init crash on every route (`Cannot read properties of undefined (reading 'match')`) — `loadStripe()` was called with `undefined` because `VITE_STRIPE_PUBLIC_KEY` is not set in this preview env. Added null guard in `membership-checkout-page.tsx`.
+
 ### April 27, 2026 — Catalog Import & Object Storage
 - ✅ **Object Storage**: Wired Emergent Object Storage (`backend/services/storage.py`)
 - ✅ **Public file proxy**: `GET /api/files/{path:path}` streams images from object storage
@@ -104,9 +110,10 @@ OBJ_STORAGE_APP_NAME=ar360
 - HCP: `drsmith` / `test123` (approved)
 
 ## Remaining Tasks (P1/P2)
-- [ ] **(P1)** Stripe checkout flow E2E with new variant products
-- [ ] **(P1)** Admin dashboard: include category count in `/api/admin/stats` (currently hard-coded "Categories: 4")
+- [ ] **(P1)** Stripe checkout flow E2E with new variant products (guest → register → pay)
+- [ ] **(P1)** Set `VITE_STRIPE_PUBLIC_KEY` in preview `.env` to actually exercise Stripe Elements
+- [ ] **(P2)** Order management UX (admins mark shipped/cancelled; customers see status)
+- [ ] **(P2)** Server-side validation: enforce `category` value matches `RECOVERY_CATEGORIES` enum in recovery_services endpoints
 - [ ] **(P2)** Doctor storefronts with personalized recommendations
-- [ ] **(P2)** Discount code application at checkout
 - [ ] **(P2)** UI alignment with `activerecovery360.com` reference
 - [ ] **(Tech debt)** Add `.limit()` to unbounded DB queries in services/database.py

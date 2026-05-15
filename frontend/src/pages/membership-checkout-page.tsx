@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle, Tag, X } from "lucide-react";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 
 interface CheckoutFormProps {
   appliedDiscount: any;
