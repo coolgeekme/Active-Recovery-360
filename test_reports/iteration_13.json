@@ -1,0 +1,72 @@
+{
+  "summary": "Iteration 13 - Recovery Services directory. Backend 17/17 pytest PASS (100%). Frontend all critical flows PASS: public unauth sign-in gate renders correct h1, authenticated admin sees Local Recovery Services list with 1 service (Recovery Lab Denver), List/Map toggle works, Leaflet map renders with 1 marker (react-leaflet v4 downgrade is working), detail page shows discount + location + map, admin list table shows status badge (Published), eye toggle, edit pencil, delete trash icons, admin new form has all required fields (name, category select, description, discount, Add Location btn), admin edit page pre-populates with existing service data. Regression: home, shop, admin dashboard all load OK; admin sub-pages (products/hcp/discounts) were not verified due to Cloudflare verification challenge appearing mid-test (testing artifact, not a bug).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "console_errors": [
+      {
+        "issue": "Recurring page-level error 'Cannot read properties of undefined (reading \\'match\\')' fires on EVERY route navigation (home, /recovery-services, /admin, /admin/recovery-services, /admin/recovery-services/new, etc.). Pages still render correctly so it is non-blocking, but this is an unhandled exception in the app and should be investigated. Most likely candidate: a wouter route param or a regex .match() call where the input value is undefined on first render. Search the codebase for `.match(` calls and verify all inputs are guarded.",
+        "priority": "MEDIUM",
+        "scope": "all pages"
+      }
+    ]
+  },
+  "passed_tests": [
+    "Backend: POST /api/admin/recovery-services creates service with status 200 and returns id + locations",
+    "Backend: POST /api/admin/recovery-services with missing name/category/locations returns 400",
+    "Backend: GET /api/admin/recovery-services lists all (admin) and includes created service",
+    "Backend: PUT /api/admin/recovery-services/:id updates fields and persists",
+    "Backend: POST .../publish toggles status to published, .../unpublish toggles to draft",
+    "Backend: DELETE /api/admin/recovery-services/:id removes service (test fixture teardown)",
+    "Backend: DELETE with invalid ObjectId returns 404",
+    "Backend: GET /api/admin/recovery-services without auth returns 401/403",
+    "Backend: GET /api/recovery-services (public) requires auth (401/403)",
+    "Backend: GET /api/recovery-services as admin returns only published; admin sees full memberDiscount.text",
+    "Backend: GET /api/recovery-services/:id returns 200 when published; 404 when unpublished or invalid id",
+    "Backend regression: GET /api/products, POST /api/login, /api/admin/hcp, /api/admin/discount-codes all 200",
+    "Frontend: unauth /recovery-services shows h1 'Sign in to browse local Recovery Services'",
+    "Frontend: authed admin /recovery-services shows 'Local Recovery Services' h1 + List/Map toggle + 1 service card",
+    "Frontend: Map view renders .leaflet-container with 1 marker (react-leaflet v4 working)",
+    "Frontend: detail page /recovery-services/:id shows name, category, description, discount block, Location card, Leaflet detail map",
+    "Frontend: admin /admin/recovery-services renders table (Business/Category/Locations/Discount/Status/Actions), Published badge, eye/pencil/trash action icons, Add Service button",
+    "Frontend: admin /admin/recovery-services/new renders Business Info section, Member Discount section, Add Location button (9 inputs + category select)",
+    "Frontend: admin /admin/recovery-services/:id/edit pre-populates first input with 'Recovery Lab Denver'",
+    "Frontend regression: home (/), /shop, /admin all load with expected content"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_recovery_services.py",
+    "/app/test_reports/pytest/iteration_13_results.xml"
+  ],
+  "action_items": [
+    "MEDIUM: Investigate the recurring 'Cannot read properties of undefined (reading match)' page error. It fires on every route. Likely a wouter route-matching call or a regex `.match()` on an undefined value. Add a guard or default value. Currently non-blocking but pollutes Sentry/console.",
+    "INFO: Previous iteration 12 action items (admin HCP override route /admin/hcp/:userId/storefront, HCP slug regex, HCP storefront directory gating) appear unchanged - not in scope for this iteration but still pending."
+  ],
+  "critical_code_review_comments": [
+    "recovery_services.py:33 - memberDiscount returned as {locked: true, hasDiscount: bool} for non-members is a clean approach.",
+    "recovery_services.py:119,165,189,210,225 - InvalidId is caught and converted to 404, consistent across endpoints. Good.",
+    "recovery_services.py:171-176 - On UPDATE the approvedAt is only stamped on draft->published transition; if a published service is updated again, approvedAt is preserved (not overwritten because the new `update` dict omits it but $set will keep DB values). VERIFY: actually, $set with the `update` dict will not modify keys not in the dict, so approvedAt stays. OK.",
+    "recovery_services.py:55-68 - _build_doc does not validate category against RECOVERY_CATEGORIES enum (the spec mentions 'one of RECOVERY_CATEGORIES'). Any string is accepted. Consider server-side validation.",
+    "Frontend: the recurring `.match()` undefined error needs root-cause; could be tied to a useLocation or useRoute call without a fallback."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_recovery_services.py (NEW - 17 tests)"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17)",
+    "frontend": "100% on Recovery Services flows (public gate, list, map, detail, admin list, admin new, admin edit). Regression home/shop/admin dashboard OK; admin sub-pages not retested due to Cloudflare challenge mid-run (testing artifact)."
+  },
+  "test_credentials": {
+    "admin": "admin@example.com / password (via /admin-login)"
+  },
+  "seed_data_creation": "Created TEST_Recovery_Lab_Pytest service via fixture and deleted at module teardown. The original 'Recovery Lab Denver' service is preserved and in 'published' state.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Recovery Services feature is fully working end-to-end. 17 backend tests at /app/backend/tests/test_recovery_services.py with module-scoped fixture that creates and tears down a test service. The only outstanding observation is a non-blocking recurring page-error (`Cannot read properties of undefined (reading 'match')`) on every route - investigate when convenient. Existing 'Recovery Lab Denver' published service at id 6a075b695da6f95801ecabdd remains in DB for manual testing.",
+  "rca_of_the_issue": "No critical issue to RCA. Backend create/update/publish/unpublish/delete and public auth-gating all behave as specified. Leaflet map renders with markers in both list-map view and detail view, confirming the react-leaflet@4.2.1 downgrade is effective for React 18."
+}
