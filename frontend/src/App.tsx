@@ -38,6 +38,10 @@ import HcpManagement from "@/pages/admin/hcp-management";
 import HcpStorefrontPage from "@/pages/hcp-storefront-page";
 import HcpDashboardPage from "@/pages/hcp-dashboard-page";
 import AdminHcpStorefrontEditPage from "@/pages/admin/hcp-storefront-edit-page";
+import RecoveryServicesPage from "@/pages/recovery-services-page";
+import RecoveryServiceDetailPage from "@/pages/recovery-service-detail-page";
+import AdminRecoveryServicesPage from "@/pages/admin/recovery-services-page";
+import AdminRecoveryServiceFormPage from "@/pages/admin/recovery-service-form-page";
 
 // Components
 import Header from "@/components/layout/header";
@@ -70,6 +74,10 @@ function AppRouter() {
           {/* HCP Storefronts (public) */}
           <Route path="/hcp/dashboard" component={HcpDashboardPage} />
           <Route path="/hcp/:slug" component={HcpStorefrontPage} />
+
+          {/* Recovery Services directory */}
+          <Route path="/recovery-services" component={RecoveryServicesPage} />
+          <Route path="/recovery-services/:id" component={RecoveryServiceDetailPage} />
           
           {/* Protected routes */}
           <ProtectedRoute path="/checkout" component={CheckoutPage} requireMember={true} />
@@ -84,6 +92,9 @@ function AppRouter() {
           <ProtectedRoute path="/admin/discounts" component={DiscountManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/hcp" component={HcpManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/hcp/:userId/storefront" component={AdminHcpStorefrontEditPage} requireAdmin={true} />
+          <ProtectedRoute path="/admin/recovery-services" component={AdminRecoveryServicesPage} requireAdmin={true} />
+          <ProtectedRoute path="/admin/recovery-services/new" component={AdminRecoveryServiceFormPage} requireAdmin={true} />
+          <ProtectedRoute path="/admin/recovery-services/:id/edit" component={AdminRecoveryServiceFormPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/settings" component={AdminSettings} requireAdmin={true} />
           
           {/* Fallback to 404 */}

@@ -224,6 +224,12 @@ export default function AdminPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/admin/recovery-services">
+                    <Tag className="h-4 w-4 mr-2" />
+                    Recovery Services
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/discounts">
                     <Tag className="h-4 w-4 mr-2" />
                     Discount Codes
