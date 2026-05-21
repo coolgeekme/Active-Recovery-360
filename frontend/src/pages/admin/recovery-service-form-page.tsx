@@ -240,7 +240,7 @@ export default function AdminRecoveryServiceFormPage() {
           <CardTitle>Member Discount</CardTitle>
         </CardHeader>
         <CardContent>
-          <Label htmlFor="discount">Discount offered to AR360 members *</Label>
+          <Label htmlFor="discount">Discount offered to Active Recovery 360 members *</Label>
           <Input
             id="discount"
             value={draft.memberDiscount.text}

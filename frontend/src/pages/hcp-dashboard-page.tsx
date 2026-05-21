@@ -61,7 +61,7 @@ export default function HcpDashboardPage() {
           My Storefront
         </h1>
         <p className="text-secondary mt-1">
-          Hi {user.fullName?.split(" ")[0]} — customize the page customers see when they visit your AR360 storefront.
+          Hi {user.fullName?.split(" ")[0]} — customize the page customers see when they visit your Active Recovery 360 storefront.
         </p>
       </div>
 

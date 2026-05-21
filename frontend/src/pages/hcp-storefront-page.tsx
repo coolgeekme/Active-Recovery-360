@@ -148,7 +148,7 @@ export default function HcpStorefrontPage() {
             Purchases made through {profile.fullName.split(" ")[0]}'s storefront
             help support their practice.{" "}
             <Link href="/shop" className="text-primary underline">
-              Or browse the full AR360 catalog
+              Or browse the full Active Recovery 360 catalog
             </Link>
             .
           </p>

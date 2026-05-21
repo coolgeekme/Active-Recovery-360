@@ -1215,7 +1215,7 @@ export default function ProductManagement() {
           <DialogHeader>
             <DialogTitle>Import Official Catalog?</DialogTitle>
             <DialogDescription>
-              This will <span className="font-semibold text-destructive">delete every existing product</span> in this database and replace it with the consolidated 39-product AR360 catalog (with all variants and official imagery).
+              This will <span className="font-semibold text-destructive">delete every existing product</span> in this database and replace it with the consolidated 39-product Active Recovery 360 catalog (with all variants and official imagery).
               <br /><br />
               Categories, users, orders, and HCP applications are <span className="font-semibold">not</span> affected.
               <br /><br />

@@ -123,7 +123,7 @@ function CheckoutForm({
         });
         
         toast({
-          title: "Welcome to AR360!",
+          title: "Welcome to Active Recovery 360!",
           description: "Your membership has been activated successfully.",
         });
         
@@ -153,7 +153,7 @@ function CheckoutForm({
           <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="flex justify-between items-center">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900">AR360 Membership</h3>
+                <h3 className="font-semibold text-lg text-gray-900">Active Recovery 360 Membership</h3>
                 <p className="text-sm text-gray-600 mt-1">Lifetime access to exclusive products</p>
               </div>
               <div className="text-right">

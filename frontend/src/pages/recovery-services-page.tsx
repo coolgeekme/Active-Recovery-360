@@ -97,7 +97,7 @@ export default function RecoveryServicesPage() {
           Sign in to browse local Recovery Services
         </h1>
         <p className="text-secondary mb-6">
-          Our directory of clinical recovery businesses is available to AR360 members.
+          Our directory of clinical recovery businesses is available to Active Recovery 360 members.
         </p>
         <Button asChild size="lg">
           <Link href="/auth">Sign in or Register</Link>
@@ -115,7 +115,7 @@ export default function RecoveryServicesPage() {
           Local Recovery Services
         </h1>
         <p className="text-secondary">
-          Clinical recovery providers offering exclusive discounts to AR360 members.
+          Clinical recovery providers offering exclusive discounts to Active Recovery 360 members.
         </p>
       </header>
 
@@ -269,7 +269,7 @@ export default function RecoveryServicesPage() {
                   {s.memberDiscount?.locked ? (
                     <span className="inline-flex items-center gap-1 text-primary font-medium">
                       <Lock className="h-3 w-3" />
-                      Member discount available — join AR360 to unlock
+                      Member discount available — join Active Recovery 360 to unlock
                     </span>
                   ) : s.memberDiscount?.text ? (
                     <span className="text-primary font-semibold">

@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
     print("[SHUTDOWN] Database disconnected")
 
 app = FastAPI(
-    title="AR360 API",
+    title="Active Recovery 360 API",
     description="Active Recovery 360 E-Commerce Platform",
     version="1.0.0",
     lifespan=lifespan

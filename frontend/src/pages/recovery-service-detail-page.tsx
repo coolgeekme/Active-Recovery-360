@@ -98,7 +98,7 @@ export default function RecoveryServiceDetailPage() {
                   <Lock className="h-5 w-5 text-primary mt-0.5" />
                   <div>
                     <p className="font-semibold text-primary">
-                      AR360 Member Discount Available
+                      Active Recovery 360 Member Discount Available
                     </p>
                     <p className="text-sm text-secondary mb-3">
                       Members receive exclusive savings at this provider.
@@ -117,7 +117,7 @@ export default function RecoveryServiceDetailPage() {
                     🎁 {service.memberDiscount.text}
                   </p>
                   <p className="text-xs text-secondary mt-2">
-                    Show your AR360 member status to redeem.
+                    Show your Active Recovery 360 member status to redeem.
                   </p>
                 </div>
               ) : (
