@@ -26,6 +26,15 @@ Build a full-stack e-commerce platform, "AR360," for professional-grade exercise
 
 ## What's Been Completed
 
+### May 27, 2026 — Website edits 5/7 + Admin contact inbox
+- ✅ **Home page**: Removed "Featured / NAD+ Patches / DSR Wellness" buttons; enlarged Shop / Members / Healthcare Providers CTAs; "RECOVER LIKE THE PROS DO" tagline bumped to `text-3xl md:text-5xl`.
+- ✅ **About page**: Removed Leadership Team and "What Our Community Says" sections.
+- ✅ **Membership page**: Updated intro copy to include "...special offers on local clinical recovery services"; blue box bullet updated to "Discounts on **Local** Clinical Recovery Services"; FAQ rewritten — added new HCP Q&A, removed "Are member-only products more expensive?".
+- ✅ **Shop page**: Added "Discounts on Local Clinical Recovery Services" to the Membership Benefits sidebar.
+- ✅ **Contact page (new)**: `/contact` route with Name/Email/Subject/Message form. Header "CONTACT" link now points to `/contact` (was `/about`). Sidebar shows kevin@activerecovery360.com, reggie@coolgeek.me, (602) 726-0789.
+- ✅ **Backend contact API**: `POST /api/contact` persists every submission to `contact_messages` collection. Also attempts to email reggie@ and kevin@ via Resend (gracefully skips when `RESEND_API_KEY` not set — currently the case in preview).
+- ✅ **Admin Contact Inbox** (`/admin/contact-messages`): List of all submissions with unread highlighting, click-to-open dialog with full message, mark read/unread, reply via mailto, delete. Admin dashboard shows an unread-count badge next to the Contact Messages quick link.
+
 ### May 15, 2026 — Recovery Services Directory + Stripe init fix
 - ✅ **Recovery Services directory** (admin-managed): Admin can submit clinical recovery businesses with multiple locations, member-only visibility for discount details. Backend CRUD endpoints at `/api/recovery-services` and `/api/admin/recovery-services/*` (17/17 pytest pass).
 - ✅ **Leaflet map view**: Public `/recovery-services` page with List/Map toggle. Nominatim geocoding helper in admin location editor. Detail page `/recovery-services/:id` shows discount, locations, mini map.

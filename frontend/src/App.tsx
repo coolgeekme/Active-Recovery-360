@@ -43,6 +43,7 @@ import RecoveryServicesPage from "@/pages/recovery-services-page";
 import RecoveryServiceDetailPage from "@/pages/recovery-service-detail-page";
 import AdminRecoveryServicesPage from "@/pages/admin/recovery-services-page";
 import AdminRecoveryServiceFormPage from "@/pages/admin/recovery-service-form-page";
+import AdminContactMessagesPage from "@/pages/admin/contact-messages-page";
 
 // Components
 import Header from "@/components/layout/header";
@@ -97,6 +98,7 @@ function AppRouter() {
           <ProtectedRoute path="/admin/recovery-services" component={AdminRecoveryServicesPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/recovery-services/new" component={AdminRecoveryServiceFormPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/recovery-services/:id/edit" component={AdminRecoveryServiceFormPage} requireAdmin={true} />
+          <ProtectedRoute path="/admin/contact-messages" component={AdminContactMessagesPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/settings" component={AdminSettings} requireAdmin={true} />
           
           {/* Fallback to 404 */}

@@ -2,11 +2,14 @@
 team inboxes via Resend. Form data is also persisted to the `contact_messages`
 collection so messages aren't lost if email delivery fails."""
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
+from bson import ObjectId
+from bson.errors import InvalidId
 
 from services.database import get_collection
 from services.email import send_email
+from routes.auth import require_admin
 
 router = APIRouter()
 
@@ -31,6 +34,18 @@ def _escape(text: str) -> str:
     )
 
 
+def _transform(doc: dict) -> dict:
+    return {
+        "id": str(doc["_id"]),
+        "name": doc.get("name", ""),
+        "email": doc.get("email", ""),
+        "subject": doc.get("subject", ""),
+        "message": doc.get("message", ""),
+        "isRead": bool(doc.get("isRead", False)),
+        "createdAt": doc.get("createdAt"),
+    }
+
+
 @router.post("/contact")
 async def submit_contact_form(payload: ContactSubmission):
     record = {
@@ -38,6 +53,7 @@ async def submit_contact_form(payload: ContactSubmission):
         "email": payload.email,
         "subject": payload.subject.strip(),
         "message": payload.message.strip(),
+        "isRead": False,
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }
     # Persist first so nothing is lost even if email send fails
@@ -78,3 +94,62 @@ async def submit_contact_form(payload: ContactSubmission):
         "status": "success",
         "message": "Thanks! Your message has been sent. We'll get back to you soon.",
     }
+
+
+# ---------- Admin ----------
+
+@router.get("/admin/contact-messages")
+async def admin_list_messages(admin: dict = Depends(require_admin)):
+    coll = get_collection("contact_messages")
+    cursor = coll.find({}).sort("createdAt", -1)
+    docs = await cursor.to_list(length=500)
+    return [_transform(d) for d in docs]
+
+
+@router.get("/admin/contact-messages/unread-count")
+async def admin_unread_count(admin: dict = Depends(require_admin)):
+    coll = get_collection("contact_messages")
+    count = await coll.count_documents({"isRead": {"$ne": True}})
+    return {"unread": count}
+
+
+def _oid_or_404(value: str) -> ObjectId:
+    try:
+        return ObjectId(value)
+    except InvalidId:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+
+@router.post("/admin/contact-messages/{message_id}/mark-read")
+async def admin_mark_read(message_id: str, admin: dict = Depends(require_admin)):
+    coll = get_collection("contact_messages")
+    result = await coll.find_one_and_update(
+        {"_id": _oid_or_404(message_id)},
+        {"$set": {"isRead": True}},
+        return_document=True,
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return _transform(result)
+
+
+@router.post("/admin/contact-messages/{message_id}/mark-unread")
+async def admin_mark_unread(message_id: str, admin: dict = Depends(require_admin)):
+    coll = get_collection("contact_messages")
+    result = await coll.find_one_and_update(
+        {"_id": _oid_or_404(message_id)},
+        {"$set": {"isRead": False}},
+        return_document=True,
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return _transform(result)
+
+
+@router.delete("/admin/contact-messages/{message_id}")
+async def admin_delete_message(message_id: str, admin: dict = Depends(require_admin)):
+    coll = get_collection("contact_messages")
+    result = await coll.delete_one({"_id": _oid_or_404(message_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return {"message": "Deleted"}

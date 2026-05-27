@@ -27,7 +27,8 @@ import {
   Tag, 
   Settings, 
   BarChart,
-  PlusCircle
+  PlusCircle,
+  Inbox
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -51,6 +52,10 @@ export default function AdminPage() {
   const { data: users = [] } = useQuery<any[]>({
     queryKey: ["/api/users"],
     enabled: false, // This endpoint doesn't exist in the API yet
+  });
+
+  const { data: unreadInbox } = useQuery<{ unread: number }>({
+    queryKey: ["/api/admin/contact-messages/unread-count"],
   });
 
   if (!user?.isAdmin) {
@@ -233,6 +238,17 @@ export default function AdminPage() {
                   <Link href="/admin/discounts">
                     <Tag className="h-4 w-4 mr-2" />
                     Discount Codes
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild data-testid="contact-messages-link">
+                  <Link href="/admin/contact-messages">
+                    <Inbox className="h-4 w-4 mr-2" />
+                    Contact Messages
+                    {unreadInbox && unreadInbox.unread > 0 && (
+                      <Badge className="ml-auto bg-primary hover:bg-primary">
+                        {unreadInbox.unread}
+                      </Badge>
+                    )}
                   </Link>
                 </Button>
                 <Separator className="my-2" />
