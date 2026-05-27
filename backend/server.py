@@ -21,6 +21,7 @@ from routes.seed import router as seed_router
 from routes.files import router as files_router
 from routes.hcp_storefront import router as hcp_storefront_router
 from routes.recovery_services import router as recovery_services_router
+from routes.contact import router as contact_router
 from services.database import connect_db, close_db
 from services.storage import init_storage
 
@@ -80,6 +81,7 @@ app.include_router(seed_router, prefix="/api/seed", tags=["Seed"])
 app.include_router(files_router, prefix="/api", tags=["Files"])
 app.include_router(hcp_storefront_router, prefix="/api", tags=["HCP Storefront"])
 app.include_router(recovery_services_router, prefix="/api", tags=["Recovery Services"])
+app.include_router(contact_router, prefix="/api", tags=["Contact"])
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

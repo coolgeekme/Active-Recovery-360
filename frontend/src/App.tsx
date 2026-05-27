@@ -26,6 +26,7 @@ import CheckoutPage from "@/pages/checkout-page";
 import AccountPage from "@/pages/account-page";
 import OrdersPage from "@/pages/account/orders-page";
 import AboutPage from "@/pages/about-page";
+import ContactPage from "@/pages/contact-page";
 import CategoryPage from "@/pages/category-page";
 import AdminPage from "@/pages/admin/admin-page";
 import ProductManagement from "@/pages/admin/product-management";
@@ -70,6 +71,7 @@ function AppRouter() {
           <Route path="/doctors/:id" component={DoctorStorefrontPage} />
           <Route path="/category/:id" component={CategoryPage} />
           <Route path="/about" component={AboutPage} />
+          <Route path="/contact" component={ContactPage} />
 
           {/* HCP Storefronts (public) */}
           <Route path="/hcp/dashboard" component={HcpDashboardPage} />

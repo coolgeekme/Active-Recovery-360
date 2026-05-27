@@ -34,12 +34,8 @@ export default function MembershipPage() {
       answer: "Since the membership is a one-time fee with lifetime access, there's no need to cancel. You'll maintain access to all member benefits permanently."
     },
     {
-      question: "What if I'm already a healthcare professional?",
-      answer: "Healthcare professionals can both purchase a membership for member benefits and also create a professional account to set up a storefront. Contact us for more information on professional accounts."
-    },
-    {
-      question: "Are member-only products more expensive?",
-      answer: "No, our member-only products are priced competitively. The membership fee gives you access to professional-grade products that aren't available to the general public, often at better values than retail alternatives."
+      question: "What if I'm a healthcare professional?",
+      answer: "Healthcare professionals can purchase a membership and receive member benefits. You also create a professional account to set up an e-commerce storefront customizable to your practice. Contact us for more information on professional accounts."
     }
   ];
 
@@ -48,7 +44,7 @@ export default function MembershipPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-montserrat font-bold text-primary mb-4">Active Recovery 360 Membership</h1>
         <p className="text-xl text-secondary max-w-3xl mx-auto">
-          Join our recovery community for a one-time fee of $29 and unlock exclusive access to premium recovery products, member-only pricing, and exclusive recovery resources.
+          Join our recovery community for a one-time fee of $29 and unlock exclusive access to premium recovery products, member-only pricing, and special offers on local clinical recovery services.
         </p>
       </div>
 
@@ -79,7 +75,7 @@ export default function MembershipPage() {
               </li>
               <li className="flex items-center">
                 <span className="mr-2">•</span>
-                Discounts on Clinical Recovery Services
+                Discounts on Local Clinical Recovery Services
               </li>
             </ul>
             <div className="mb-6">
