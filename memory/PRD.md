@@ -26,6 +26,10 @@ Build a full-stack e-commerce platform, "AR360," for professional-grade exercise
 
 ## What's Been Completed
 
+### May 28, 2026 — Admin Product Reorder
+- ✅ **Backend**: `GET /api/products` now sorts via aggregation pipeline by `displayOrder` (ascending, missing values treated as 999999) then `name`. Added `POST /api/admin/products/{id}/move?direction=up|down` (admin only) that normalizes sequential displayOrder values (10/20/30...) on first call then swaps neighbours. Returns `{moved:false}` at list edges; 404 on unknown id; 422 on invalid direction. 12/12 pytest pass.
+- ✅ **Frontend admin UI**: In Product Management, when filtered by a specific category, up/down arrow buttons appear next to each row. First-row up and last-row down are disabled. Hint copy above the table explains the feature. Reorder is reflected immediately via TanStack Query invalidation and affects customer-facing shop/category/HCP pages.
+
 ### May 27, 2026 — Website edits 5/7 + Admin contact inbox
 - ✅ **Home page**: Removed "Featured / NAD+ Patches / DSR Wellness" buttons; enlarged Shop / Members / Healthcare Providers CTAs; "RECOVER LIKE THE PROS DO" tagline bumped to `text-3xl md:text-5xl`.
 - ✅ **About page**: Removed Leadership Team and "What Our Community Says" sections.
