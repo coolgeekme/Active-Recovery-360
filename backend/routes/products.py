@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from typing import Optional, List
 from bson import ObjectId
+from bson.errors import InvalidId
 import uuid
 
 from services.database import get_collection
@@ -42,7 +43,8 @@ def transform_product(doc: dict) -> dict:
         "createdAt": doc.get("createdAt"),
         "brand": doc.get("brand"),
         "hasVariants": doc.get("hasVariants", False),
-        "variants": doc.get("variants", [])
+        "variants": doc.get("variants", []),
+        "displayOrder": doc.get("displayOrder"),
     }
 
 @router.get("/products")
@@ -63,10 +65,20 @@ async def get_products(
         query["featured"] = featured
     if doctorId:
         query["doctorIds"] = doctorId
-    
-    cursor = products.find(query)
-    docs = await cursor.to_list(length=100)
-    
+
+    # Sort by displayOrder (ascending) so admins can control product order
+    # within a category. Products without a displayOrder fall to the end,
+    # tie-broken by name for stable, predictable output.
+    pipeline = [
+        {"$match": query},
+        {"$addFields": {
+            "_effectiveOrder": {"$ifNull": ["$displayOrder", 999999]}
+        }},
+        {"$sort": {"_effectiveOrder": 1, "name": 1}},
+        {"$limit": 200},
+    ]
+    docs = await products.aggregate(pipeline).to_list(length=200)
+
     return [transform_product(doc) for doc in docs]
 
 @router.get("/products/{product_id}")
@@ -181,6 +193,76 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
         raise HTTPException(status_code=404, detail="Product not found")
     
     return {"message": "Product deleted"}
+
+
+async def _normalize_category_order(category_id: str) -> list[dict]:
+    """Assign sequential displayOrder (10, 20, 30, ...) to every product in
+    the given category based on its current effective order. Returns the
+    normalized list of documents in their new order. Idempotent."""
+    products = get_collection("products")
+    pipeline = [
+        {"$match": {"categoryId": category_id}},
+        {"$addFields": {"_effectiveOrder": {"$ifNull": ["$displayOrder", 999999]}}},
+        {"$sort": {"_effectiveOrder": 1, "name": 1}},
+    ]
+    docs = await products.aggregate(pipeline).to_list(length=500)
+    for index, doc in enumerate(docs):
+        new_order = (index + 1) * 10
+        if doc.get("displayOrder") != new_order:
+            await products.update_one(
+                {"_id": doc["_id"]}, {"$set": {"displayOrder": new_order}}
+            )
+            doc["displayOrder"] = new_order
+    return docs
+
+
+@router.post("/admin/products/{product_id}/move")
+async def move_product(
+    product_id: str,
+    direction: str = Query(..., pattern="^(up|down)$"),
+    admin: dict = Depends(require_admin),
+):
+    """Swap a product's displayOrder with its neighbour inside the same
+    category. direction=up moves it earlier in the list, direction=down
+    moves it later."""
+    products = get_collection("products")
+    try:
+        target = await products.find_one({"_id": ObjectId(product_id)})
+    except InvalidId:
+        raise HTTPException(status_code=404, detail="Product not found")
+    if not target:
+        raise HTTPException(status_code=404, detail="Product not found")
+    category_id = target.get("categoryId")
+    if not category_id:
+        raise HTTPException(status_code=400, detail="Product has no category to reorder within")
+
+    # Ensure every product in the category has a deterministic displayOrder.
+    ordered = await _normalize_category_order(category_id)
+    ids = [str(d["_id"]) for d in ordered]
+    try:
+        current_index = ids.index(product_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    if direction == "up":
+        if current_index == 0:
+            return {"message": "Already at top", "moved": False}
+        neighbor_index = current_index - 1
+    else:  # down
+        if current_index == len(ordered) - 1:
+            return {"message": "Already at bottom", "moved": False}
+        neighbor_index = current_index + 1
+
+    current_doc = ordered[current_index]
+    neighbor_doc = ordered[neighbor_index]
+    # Swap displayOrder values
+    await products.update_one(
+        {"_id": current_doc["_id"]}, {"$set": {"displayOrder": neighbor_doc["displayOrder"]}}
+    )
+    await products.update_one(
+        {"_id": neighbor_doc["_id"]}, {"$set": {"displayOrder": current_doc["displayOrder"]}}
+    )
+    return {"message": "Moved", "moved": True, "direction": direction}
 
 
 @router.post("/uploads/image")

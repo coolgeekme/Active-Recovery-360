@@ -1,0 +1,72 @@
+{
+  "summary": "Iteration 14 - Admin product reorder feature (up/down arrows in Product Management filtered by category). Backend 12/12 pytest PASS (100%). Frontend reorder flow fully verified end-to-end: hidden when 'All categories' selected, visible+functional when a specific category (Topicals) selected, first-row up disabled, last-row down disabled, swap works, undo restores order. The Topicals category order was restored to its original alphabetical state after testing.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "auth_observation": [
+      {
+        "page": "/admin-login (Staff Login)",
+        "issue": "Filling the visible Email/Password fields and clicking Sign In appears to silently redirect to /auth (the public Firebase login) instead of authenticating. POST /api/login works perfectly via curl/fetch (returns valid JWT + isAdmin=true). Workaround used in tests: call /api/login from page.evaluate and seed localStorage('token','auth_token','authToken','access_token','user'), then navigate to /admin/products. Once seeded, the admin UI loads correctly and shows 'Product Management'. Recommend the main agent verify which exact key the React auth provider reads (use-auth.ts) and ensure the /admin-login form persists it correctly. Iteration 13 also relied on a bypass — this is not a new regression but is still worth fixing for true e2e UI auth coverage.",
+        "priority": "MEDIUM"
+      }
+    ]
+  },
+  "passed_tests": [
+    "Backend: GET /api/products sorts by displayOrder asc (verified Topicals list ascending)",
+    "Backend: Products without displayOrder fall to end of list",
+    "Backend: POST /api/admin/products/{id}/move requires auth (returns 401/403 unauthenticated)",
+    "Backend: move with valid-format-but-missing ObjectId returns 404",
+    "Backend: move with malformed (non-ObjectId) product id returns 404",
+    "Backend: move with invalid direction 'sideways' returns 422 (FastAPI Query pattern validation)",
+    "Backend: direction=up on first product returns {moved:false, message contains 'top'}",
+    "Backend: direction=down on last product returns {moved:false, message contains 'bottom'}",
+    "Backend: First move call normalizes all Topicals products to sequential displayOrder 10,20,30,...,100",
+    "Backend: Move down then move up restores the original ID ordering exactly (clean swap)",
+    "Backend regression: GET /api/categories returns list (200)",
+    "Backend regression: GET /api/recovery-services responds (auth-gated as expected)",
+    "Frontend: /admin/products loads with 'Product Management' header",
+    "Frontend: With 'All categories' selected, ZERO move-up/move-down buttons rendered, hint text NOT present",
+    "Frontend: After selecting Topicals, 10 move-up + 10 move-down buttons render, hint text appears above table",
+    "Frontend: First-row up button is disabled; last-row down button is disabled",
+    "Frontend: Middle-row up/down buttons are enabled",
+    "Frontend: Clicking move-down on row[1] swaps row[1] and row[2] visually (Extract Labs CBD Cream <-> Lotion)",
+    "Frontend: Clicking move-up on the moved item restores original order (query invalidation refetch works)",
+    "Frontend: data-testid 'move-up-{id}' and 'move-down-{id}' are correctly applied to each row's icon button"
+  ],
+  "failed_tests": [],
+  "test_report_links": [
+    "/app/backend/tests/test_product_reorder.py",
+    "/app/test_reports/pytest/iteration_14_results.xml"
+  ],
+  "action_items": [
+    "MEDIUM: Investigate why the /admin-login form submission doesn't persist auth state — UI redirects to /auth after clicking Sign In. POST /api/login works fine; the issue is in the frontend (likely use-auth.ts or admin-login.tsx not storing the returned token under the key the rest of the app reads). Once fixed, end-to-end UI auth tests can run without a localStorage bypass.",
+    "INFO: Iteration 13's recurring 'Cannot read properties of undefined (reading match)' console error is still present on every route navigation. Non-blocking."
+  ],
+  "critical_code_review_comments": [
+    "routes/products.py:198 _normalize_category_order runs N sequential awaits for each product update — for large categories this is O(N) round-trips. Consider bulk_write with UpdateOne operations if categories grow beyond ~50 products. Currently fine for Topicals(10).",
+    "routes/products.py:219 move_product does up to 4 awaits (find_one + normalize + 2 updates) without a transaction. Race-condition window: two admins clicking simultaneously could interleave swaps. For an admin-only single-user feature this is acceptable; flag for future when multi-admin orgs land.",
+    "routes/products.py:222 direction Query uses pattern='^(up|down)$' which is the FastAPI v2-friendly form. Good. Returns 422 as expected.",
+    "product-management.tsx:603 disabled relies on filteredProducts[0]?.id === product.id and filteredProducts[length-1]?.id === product.id — this only works because the filtered list and the backend's sorted list happen to match. If client-side filtering ever diverges from server sort order (e.g., user adds visibility filter on top), the 'first/last' detection could become wrong. Acceptable today.",
+    "product-management.tsx:200 moveProductMutation only invalidates ['/api/products'] — does NOT invalidate any category-page or storefront product caches. If admin reorders while a customer has /shop open in another tab, customer won't see the new order until refetch. Minor."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_product_reorder.py (NEW - 12 tests)"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12)",
+    "frontend": "100% on the reorder feature (visibility gating, button enable/disable states, swap, restore). Admin UI auth required localStorage bypass — see auth_observation."
+  },
+  "test_credentials": {
+    "admin": "admin@example.com / password via POST /api/login (UI form on /admin-login does not currently persist session — see action_items)"
+  },
+  "seed_data_creation": "No new data created. The 10 Topicals products were temporarily reordered during the swap test and FULLY RESTORED to original alphabetical order. Final Topicals displayOrder = 10,20,30,...,100 with products in alphabetical sequence (CBD Recovery Extreme Sports Cream first, ...).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "The product reorder feature is fully working backend+frontend. Tests live in /app/backend/tests/test_product_reorder.py and are safe to re-run (the down-then-up sequence is order-preserving). For UI tests against /admin/* pages, currently the most reliable path is: navigate to /, call /api/login via page.evaluate, seed localStorage keys (token, auth_token, authToken, access_token, user), then navigate to the target admin page. The /admin-login form-based UI login still does not persist session as of iter 14.",
+  "rca_of_the_issue": "No critical issues. The reorder endpoint correctly normalizes displayOrder to 10/20/30 spacing on first interaction, swaps neighbour values for clean reorder, returns moved:false at list edges, and uses FastAPI Query(pattern=...) for direction validation (yields 422). The TanStack Query invalidation on the frontend correctly refetches and re-renders the table after each move."
+}

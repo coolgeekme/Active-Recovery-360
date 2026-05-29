@@ -72,7 +72,9 @@ import {
   Eye, 
   EyeOff, 
   Filter,
-  RefreshCw
+  RefreshCw,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 // Create a schema for the product form
@@ -179,6 +181,33 @@ export default function ProductManagement() {
       toast({
         title: "Error",
         description: `Failed to delete product: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reorder product (up/down within its category)
+  const moveProductMutation = useMutation({
+    mutationFn: async ({ id, direction }: { id: string; direction: "up" | "down" }) => {
+      const res = await apiRequest(
+        "POST",
+        `/api/admin/products/${id}/move?direction=${direction}`
+      );
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      if (data && data.moved === false) {
+        toast({
+          title: "Cannot move further",
+          description: data.message || "Already at the edge of the list",
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Reorder failed",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -505,7 +534,18 @@ export default function ProductManagement() {
               </Button>
             </div>
           ) : (
-            <div className="border rounded-md overflow-hidden">
+            <>
+              {filterCategory && (
+                <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                  <ArrowUp className="h-3 w-3" />
+                  <ArrowDown className="h-3 w-3" />
+                  <span>
+                    Use the up/down arrows to reorder products within this category.
+                    This affects shop and category-page ordering for customers.
+                  </span>
+                </p>
+              )}
+              <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -548,7 +588,47 @@ export default function ProductManagement() {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
+                          {filterCategory && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  moveProductMutation.mutate({
+                                    id: product.id,
+                                    direction: "up",
+                                  })
+                                }
+                                disabled={
+                                  moveProductMutation.isPending ||
+                                  filteredProducts[0]?.id === product.id
+                                }
+                                title="Move up"
+                                data-testid={`move-up-${product.id}`}
+                              >
+                                <ArrowUp className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  moveProductMutation.mutate({
+                                    id: product.id,
+                                    direction: "down",
+                                  })
+                                }
+                                disabled={
+                                  moveProductMutation.isPending ||
+                                  filteredProducts[filteredProducts.length - 1]?.id === product.id
+                                }
+                                title="Move down"
+                                data-testid={`move-down-${product.id}`}
+                              >
+                                <ArrowDown className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                           <Button 
                             variant="ghost" 
                             size="icon"
@@ -572,7 +652,8 @@ export default function ProductManagement() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
