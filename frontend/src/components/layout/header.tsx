@@ -45,7 +45,7 @@ export default function Header() {
     { name: "MEMBERSHIP", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
     { name: "HCP", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
     { name: "RECOVERY SERVICES", href: "/recovery-services", icon: <MapPin className="h-5 w-5 mr-2" /> },
-    { name: "AFFILIATES", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
+    { name: "AFFILIATES", href: "/affiliates", icon: <Users className="h-5 w-5 mr-2" /> },
     { name: "CONTACT", href: "/contact", icon: <Info className="h-5 w-5 mr-2" /> },
   ];
 
