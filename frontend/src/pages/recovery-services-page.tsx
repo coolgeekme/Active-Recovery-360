@@ -26,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Breadcrumbs from "@/components/layout/breadcrumbs";
 import ServicesMap from "@/components/recovery/services-map";
+import FeaturedProvidersGrid from "@/components/recovery/featured-providers-grid";
 import { useAuth } from "@/hooks/use-auth";
 import { RecoveryService, RECOVERY_CATEGORIES } from "@/types/recovery-service";
 
@@ -92,9 +93,9 @@ export default function RecoveryServicesPage() {
   if (!user) {
     return (
       <div className="container mx-auto py-16 max-w-2xl text-center">
-        <Breadcrumbs items={[{ label: "Recovery Services" }]} />
+        <Breadcrumbs items={[{ label: "Exercise, Injury & Performance Recovery Services" }]} />
         <h1 className="text-3xl font-montserrat font-bold text-primary mb-3">
-          Sign in to browse local Recovery Services
+          Sign in to browse local Exercise, Injury & Performance Recovery Services
         </h1>
         <p className="text-secondary mb-6">
           Our directory of clinical recovery businesses is available to Active Recovery 360 members.
@@ -108,16 +109,19 @@ export default function RecoveryServicesPage() {
 
   return (
     <div className="container mx-auto py-10 px-4" data-testid="recovery-services-page">
-      <Breadcrumbs items={[{ label: "Recovery Services" }]} />
+      <Breadcrumbs items={[{ label: "Exercise, Injury & Performance Recovery Services" }]} />
 
       <header className="mb-6">
         <h1 className="text-3xl sm:text-4xl font-montserrat font-bold text-primary mb-2">
-          Local Recovery Services
+          Local Exercise, Injury & Performance Recovery Services
         </h1>
         <p className="text-secondary">
           Clinical recovery providers offering exclusive discounts to Active Recovery 360 members.
         </p>
       </header>
+
+      {/* Demo provider showcase grid */}
+      <FeaturedProvidersGrid />
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-6">

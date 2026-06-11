@@ -52,7 +52,7 @@ export default function RecoveryServiceDetailPage() {
     <div className="container mx-auto py-10 px-4 max-w-5xl">
       <Breadcrumbs
         items={[
-          { label: "Recovery Services", href: "/recovery-services" },
+          { label: "Exercise, Injury & Performance Recovery Services", href: "/recovery-services" },
           { label: service.name },
         ]}
       />
