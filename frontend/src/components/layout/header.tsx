@@ -12,7 +12,6 @@ import {
   LogOut,
   UserPlus,
   ShoppingBag,
-  Info,
   Home,
   Heart,
   Users,
@@ -43,10 +42,9 @@ export default function Header() {
     { name: "HOME", href: "/", icon: <Home className="h-5 w-5 mr-2" /> },
     { name: "SHOP", href: "/shop", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
     { name: "MEMBERSHIP", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
-    { name: "HCP", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
+    { name: "PROVIDER SIGN UP", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
+    { name: "WHOLESALE", href: "/affiliates", icon: <Users className="h-5 w-5 mr-2" /> },
     { name: "RECOVERY SERVICES", href: "/recovery-services", icon: <MapPin className="h-5 w-5 mr-2" /> },
-    { name: "AFFILIATES", href: "/affiliates", icon: <Users className="h-5 w-5 mr-2" /> },
-    { name: "CONTACT", href: "/contact", icon: <Info className="h-5 w-5 mr-2" /> },
   ];
 
   const isActive = (href: string) => {
@@ -86,11 +84,8 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Contact Phone and User Actions */}
+          {/* User Actions */}
           <div className="flex items-center space-x-4">
-            <Button asChild className="hidden md:flex btn-dsr-phone" data-testid="button-call">
-              <a href="tel:602-726-0789">CALL US: (602) 726-0789</a>
-            </Button>
             {user ? (
               <div className="hidden md:block">
                 <DropdownMenu>

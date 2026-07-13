@@ -42,6 +42,11 @@ export default function Footer() {
             <h3 className="font-montserrat font-semibold text-white mb-4">Support</h3>
             <ul className="space-y-2">
               <li><Link href="/contact" className="text-gray-300 hover:text-white">Contact Us</Link></li>
+              <li>
+                <a href="tel:602-726-0789" className="text-gray-300 hover:text-white">
+                  Call Us: (602) 726-0789
+                </a>
+              </li>
               <li><Link href="/faq" className="text-gray-300 hover:text-white">FAQ</Link></li>
               <li><Link href="/shipping" className="text-gray-300 hover:text-white">Shipping Info</Link></li>
               <li><Link href="/returns" className="text-gray-300 hover:text-white">Returns</Link></li>

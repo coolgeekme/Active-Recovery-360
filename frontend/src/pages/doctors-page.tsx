@@ -111,7 +111,7 @@ const SUPPORTED_PROVIDERS = [
 const PARTNER_BENEFITS = [
   "Provider-exclusive pricing",
   "Wholesale purchasing options",
-  "Clinic retail opportunities — no clinic inventory commitment",
+  "Clinic Online Storefront",
   "Premium recovery brands",
   "Dedicated support",
   "Easy online ordering",
@@ -153,7 +153,7 @@ export default function DoctorsPage() {
           Advanced Recovery Products for Healthcare Providers
         </h2>
         <p className="text-base sm:text-lg text-secondary leading-relaxed text-center">
-          At Active Recovery 360, we help healthcare professionals deliver better outcomes with
+          At Active Recovery 360, we help healthcare professionals enhance patient outcomes with
           clinically focused recovery, rehabilitation, and performance products designed for modern
           patient care. Whether you operate a chiropractic clinic, physical therapy practice, sports
           medicine facility, orthopedic group, wellness center, or recovery studio, our customizable

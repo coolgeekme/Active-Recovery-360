@@ -17,6 +17,11 @@ export default function MembershipPage() {
       icon: Calendar,
       title: "Lifetime Access",
       description: "One-time payment for permanent access to all member benefits and future product releases."
+    },
+    {
+      icon: Users,
+      title: "Member Pricing on Clinical Recovery Services",
+      description: "Access special member pricing on local clinical recovery services."
     }
   ];
 
@@ -55,7 +60,7 @@ export default function MembershipPage() {
               className="inline-block bg-white px-3 py-1 rounded text-sm font-montserrat font-semibold mb-3"
               style={{ color: '#2563eb !important', fontWeight: 'bold', backgroundColor: 'white !important' }}
             >
-              LIMITED TIME OFFER
+              $29
             </span>
             <h2 className="text-2xl font-montserrat font-bold text-primary mb-3">
               Why Join Active Recovery 360
