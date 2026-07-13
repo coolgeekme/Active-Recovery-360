@@ -28,6 +28,7 @@ import OrdersPage from "@/pages/account/orders-page";
 import AboutPage from "@/pages/about-page";
 import ContactPage from "@/pages/contact-page";
 import AffiliatesPage from "@/pages/affiliates-page";
+import WholesalePage from "@/pages/wholesale-page";
 import CategoryPage from "@/pages/category-page";
 import AdminPage from "@/pages/admin/admin-page";
 import ProductManagement from "@/pages/admin/product-management";
@@ -75,6 +76,7 @@ function AppRouter() {
           <Route path="/about" component={AboutPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/affiliates" component={AffiliatesPage} />
+          <Route path="/wholesale" component={WholesalePage} />
 
           {/* HCP Storefronts (public) */}
           <Route path="/hcp/dashboard" component={HcpDashboardPage} />
