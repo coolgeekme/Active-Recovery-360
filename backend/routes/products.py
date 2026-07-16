@@ -6,7 +6,7 @@ import uuid
 
 from services.database import get_collection
 from services.storage import put_object
-from routes.auth import require_admin
+from routes.auth import require_admin, get_current_user
 
 router = APIRouter()
 
@@ -52,11 +52,12 @@ async def get_products(
     visibility: Optional[str] = None,
     categoryId: Optional[str] = None,
     featured: Optional[bool] = None,
-    doctorId: Optional[str] = None
+    doctorId: Optional[str] = None,
+    current_user: Optional[dict] = Depends(get_current_user),
 ):
     products = get_collection("products")
-    
-    query = {}
+
+    query: dict = {}
     if visibility:
         query["visibility"] = visibility
     if categoryId:
@@ -65,6 +66,21 @@ async def get_products(
         query["featured"] = featured
     if doctorId:
         query["doctorIds"] = doctorId
+
+    # Hide `doctor`-visibility products from non-HCP / non-admin viewers, even
+    # if they explicitly ask for that tier via ?visibility=doctor. HCPs and
+    # admins can see every product in listings. Regular customers only ever
+    # reach doctor-only items via an HCP storefront's curated list or a direct
+    # product-detail link.
+    is_privileged = bool(
+        current_user and (current_user.get("isAdmin") or current_user.get("isDoctor"))
+    )
+    if not is_privileged:
+        if visibility == "doctor":
+            # Silently return no doctor products to non-privileged callers
+            return []
+        if not visibility:
+            query["visibility"] = {"$ne": "doctor"}
 
     # Sort by displayOrder (ascending) so admins can control product order
     # within a category. Products without a displayOrder fall to the end,
