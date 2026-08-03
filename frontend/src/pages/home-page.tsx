@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
-import activeRecovery360Logo from "@/assets/Logo_6_v2_Final.png";
+import activeRecovery360Logo from "@/assets/Logo_6_v2_Final@3x.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -70,8 +70,9 @@ export default function HomePage() {
               className="h-36 md:h-48 w-auto mx-auto"
               style={{ 
                 filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-                mixBlendMode: 'screen'
+                imageRendering: '-webkit-optimize-contrast' as any
               }}
+              decoding="async"
             />
           </h1>
           <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">Exercise, Performance & Injury Recovery</h2>

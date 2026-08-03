@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only verification of hero logo sharpness fix. All DOM/style-level fix criteria PASS: img src contains '@3x' (Logo_6_v2_Final@3x.png), naturalWidth=990, naturalHeight=354, computed mix-blend-mode='normal' (was 'screen'), imageRendering='-webkit-optimize-contrast', decoding='async'. Display sizes correct: h-48 (192px) at 1280px viewport and h-36 (144px) at 375px viewport. No console errors related to the logo. Home page hero, header, CTAs (SHOP / MEMBERS / HEALTHCARE PROVIDERS), and 'RECOVER LIKE THE PROS DO' all render.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_15.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Regression note (not a new bug): Rapid consecutive navigations during route sweep triggered HTTP 429 responses on /wholesale, /recovery-services, /contact from the preview infra rate limiter. Individually the routes load fine (also confirmed by /membership, /shop, /doctors, /affiliates returning 200 earlier in the same sweep). Not related to the logo fix.",
+    "Fonts: repeated 'OTS parsing error: invalid sfntVersion' warnings from Google Fonts (Open Sans) on every page. Pre-existing and unrelated to this bug, but worth self-hosting or verifying the <link> URL formatting."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100% (all fix-verification checks passed)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Hero logo fix verified in DOM. If perceptual sharpness feedback is still received, consider serving an SVG version of the logo instead of a rasterized 3x PNG for true edge crispness at all DPRs. Also consider self-hosting Open Sans to remove noisy font decode warnings.",
+  "verified_metrics": {
+    "src_contains_@3x": true,
+    "naturalWidth": 990,
+    "naturalHeight": 354,
+    "computed_mix_blend_mode": "normal",
+    "image_rendering": "-webkit-optimize-contrast",
+    "decoding": "async",
+    "desktop_client_height_px": 192,
+    "mobile_client_height_px": 144
+  }
+}
