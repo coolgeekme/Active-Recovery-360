@@ -42,6 +42,11 @@ export default function HomePage() {
       title: "Lifetime Access",
       description: "One-time payment for permanent access to all member benefits and future product releases.",
       icon: benefitIcons.lifetimeAccess
+    },
+    {
+      title: "Member Pricing on Clinical Recovery Service",
+      description: "Access special member pricing on clinical recovery services",
+      icon: benefitIcons.clinicalServices
     }
   ];
 
