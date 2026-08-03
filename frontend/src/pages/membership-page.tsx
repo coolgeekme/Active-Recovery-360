@@ -132,7 +132,7 @@ export default function MembershipPage() {
           <div className="sticky top-20">
             {!user ? (
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8 text-center">
-                <h2 className="text-xl font-montserrat font-bold text-primary mb-4">Sign In to Purchase Membership</h2>
+                <h2 className="text-xl font-montserrat font-bold text-primary mb-4">Join Active Recovery 360</h2>
                 <p className="text-secondary mb-6">
                   Please create an account or sign in to purchase your alliance membership.
                 </p>

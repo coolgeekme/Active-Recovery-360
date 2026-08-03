@@ -49,5 +49,6 @@ export const icons = {
 export const benefitIcons = {
   exclusiveProducts: ShieldCheck,
   doctorResources: Users,
-  lifetimeAccess: Calendar
+  lifetimeAccess: Calendar,
+  clinicalServices: Users
 };
