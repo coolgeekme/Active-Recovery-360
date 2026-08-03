@@ -1,0 +1,44 @@
+{
+  "summary": "Verified the hero logo swap from Logo_6_v2_Final@3x.png to active-recovery-360-logo.png. All 7 fix-in-place acceptance criteria pass. New image loads with correct src, natural dimensions 1071x384, mix-blend-mode normal, correct display heights (192px desktop / 144px mobile), proper alpha transparency (73.8% transparent pixels, opaque pixels are pure white forming letterforms), and no console errors on home. Regression pages load successfully.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_evidence": {
+    "logo_src": "https://ar360-shop.preview.emergentagent.com/src/assets/active-recovery-360-logo.png?t=... (contains 'active-recovery-360-logo.png' ✓, NOT the old Logo_6_v2_Final@3x.png)",
+    "naturalWidth": 1071,
+    "naturalHeight": 384,
+    "mixBlendMode": "normal (blend removed ✓)",
+    "filter": "drop-shadow(rgba(0,0,0,0.3) 0px 2px 6px)",
+    "clientHeight_desktop_1280vw": 192,
+    "clientHeight_mobile_375vw": 144,
+    "transparency_check": "Corner pixel samples (top-left, top-right, bottom-left) all return RGBA [0,0,0,0] confirming true alpha transparency. Whole-image scan: 73.8% fully transparent, 21.3% opaque, and 100% of opaque pixels are white (>200,>200,>200) — meaning white letterforms on transparent background exactly as expected. No inverted-alpha white rectangle.",
+    "visual_screenshot": "Cropped logo screenshot shows crisp 'ACTIVE RECOVERY 360' letterforms with the blue hero background AND the athlete image visible around/behind the letterforms — confirming proper transparency and no residual white bleed.",
+    "edge_quality": "Edges appear crisp at both desktop (536x192 rendered from 1071x384 source = 2x retina) and mobile — no residual blur observed.",
+    "console_errors_home": "None"
+  },
+  "regression_pages": {
+    "/shop": "loads, no console errors",
+    "/membership": "loads, no console errors",
+    "/doctors": "loads, no console errors",
+    "/affiliates": "loads, no console errors",
+    "/wholesale": "loads; multiple 429 responses from rapid API calls (test artifact from consecutive navigations, NOT related to logo change)",
+    "/recovery-services": "loads; same 429 rate-limit artifacts",
+    "/contact": "loads; same 429 rate-limit artifacts"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "home-page.tsx cleanly imports the new asset; drop-shadow filter is retained (subtle 2px shadow with 0.3 alpha) which is appropriate. No mixBlendMode, no imageRendering hint — matches spec.",
+    "The 429 rate-limit responses seen during rapid regression navigation suggest the backend has aggressive rate limiting on some API endpoints. Not a blocker for this iteration but worth checking rate-limit thresholds are user-appropriate."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend-only test)", "frontend": "100% (7/7 acceptance criteria met)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 16 verified the final logo swap. active-recovery-360-logo.png (1071x384 RGBA) is loading with proper transparency, correct display sizes, and no blur. Bug is fully resolved. If further iterations touch the hero, re-run pixel-alpha canvas sampling to catch inverted-alpha regressions.",
+  "rca of the issue": "N/A — this iteration verified a fix, not a bug. Previous iteration 15 had upsampled the wrong-resolution PNG; iteration 16 replaces it with a properly extracted high-res 1071x384 RGBA PNG with correct alpha (source luminance -> alpha channel), yielding crisp, transparent-background logo rendering at retina density on both desktop and mobile."
+}

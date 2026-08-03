@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
-import activeRecovery360Logo from "@/assets/Logo_6_v2_Final@3x.png";
+import activeRecovery360Logo from "@/assets/active-recovery-360-logo.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -69,8 +69,7 @@ export default function HomePage() {
               alt="Active Recovery 360"
               className="h-36 md:h-48 w-auto mx-auto"
               style={{ 
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-                imageRendering: '-webkit-optimize-contrast' as any
+                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
               }}
               decoding="async"
             />
