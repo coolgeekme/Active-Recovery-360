@@ -65,14 +65,15 @@ export default function HomePage() {
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="sr-only">Active Recovery 360</h1>
           <div className="mb-6 flex justify-center">
-            <div className="inline-block bg-white/95 backdrop-blur-sm rounded-2xl px-8 py-4 md:px-12 md:py-6 shadow-2xl">
-              <img 
-                src={activeRecovery360Logo}
-                alt="Active Recovery 360"
-                className="h-28 md:h-40 w-auto block"
-                decoding="async"
-              />
-            </div>
+            <img 
+              src={activeRecovery360Logo}
+              alt="Active Recovery 360"
+              className="h-40 md:h-64 lg:h-72 w-auto block"
+              style={{
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.55)) drop-shadow(0 0 2px rgba(0,0,0,0.4))'
+              }}
+              decoding="async"
+            />
           </div>
           <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">Exercise, Performance & Injury Recovery</h2>
           

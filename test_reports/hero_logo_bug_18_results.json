@@ -1,0 +1,78 @@
+{
+  "test_name": "hero_logo_transparent_and_larger_bug_18",
+  "skill_lookup": "No relevant testing skill found.",
+  "base_url": "https://ar360-shop.preview.emergentagent.com",
+  "code_review": {
+    "home_page_lines_66_77": "Hero h1 remains sr-only; wrapper is div.mb-6.flex.justify-center; img has h-40 md:h-64 lg:h-72 w-auto block and inline drop-shadow filter; removed bg-white/95 backdrop-blur rounded card."
+  },
+  "hero_logo_ui_evidence": {
+    "375px": {
+      "clientHeight": 160,
+      "parentClassName": "mb-6 flex justify-center",
+      "parentBgColor": "rgba(0, 0, 0, 0)",
+      "src_contains": "active-recovery-360-logo.png",
+      "naturalWidth": 1071,
+      "filter_contains_drop_shadow": true
+    },
+    "800px": {
+      "clientHeight": 256,
+      "parentClassName": "mb-6 flex justify-center",
+      "parentBgColor": "rgba(0, 0, 0, 0)",
+      "src_contains": "active-recovery-360-logo.png",
+      "naturalWidth": 1071,
+      "filter_contains_drop_shadow": true
+    },
+    "1280px": {
+      "clientHeight": 288,
+      "parentClassName": "mb-6 flex justify-center",
+      "parentBgColor": "rgba(0, 0, 0, 0)",
+      "src_contains": "active-recovery-360-logo.png",
+      "naturalWidth": 1071,
+      "filter_contains_drop_shadow": true
+    }
+  },
+  "palette_sample": {
+    "nonTransparent": 87420,
+    "white": 0,
+    "darkNavy": 66177,
+    "mediumBlue": 21260,
+    "conclusion": "two-tone blue logo preserved; not reverted to white"
+  },
+  "home_console_errors": [],
+  "route_regression": {
+    "/shop": {
+      "status": 200,
+      "loaded": true
+    },
+    "/membership": {
+      "status": 200,
+      "loaded": true
+    },
+    "/doctors": {
+      "status": 200,
+      "loaded": true,
+      "heading": "Support Every Patient's Recovery Journey"
+    },
+    "/affiliates": {
+      "status": 200,
+      "loaded": true,
+      "heading": "Active Recovery 360 Affiliate Program"
+    },
+    "/wholesale": {
+      "status": 200,
+      "loaded": true,
+      "heading": "Active Recovery 360 Wholesale"
+    },
+    "/recovery-services": {
+      "status": 200,
+      "loaded": true,
+      "heading": "Sign in to browse local Exercise, Injury & Performance Recovery Services"
+    },
+    "/contact": {
+      "status": 200,
+      "loaded": true,
+      "heading": "Contact Us"
+    }
+  },
+  "notes": "Initial rapid multi-page automation hit preview security/rate limiting for some routes, so those routes were re-tested more slowly and loaded successfully."
+}
