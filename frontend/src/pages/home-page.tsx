@@ -63,17 +63,17 @@ export default function HomePage() {
         ></div>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-montserrat font-bold text-white mb-6 tracking-wide">
-            <img 
-              src={activeRecovery360Logo}
-              alt="Active Recovery 360"
-              className="h-36 md:h-48 w-auto mx-auto"
-              style={{ 
-                filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))'
-              }}
-              decoding="async"
-            />
-          </h1>
+          <h1 className="sr-only">Active Recovery 360</h1>
+          <div className="mb-6 flex justify-center">
+            <div className="inline-block bg-white/95 backdrop-blur-sm rounded-2xl px-8 py-4 md:px-12 md:py-6 shadow-2xl">
+              <img 
+                src={activeRecovery360Logo}
+                alt="Active Recovery 360"
+                className="h-28 md:h-40 w-auto block"
+                decoding="async"
+              />
+            </div>
+          </div>
           <h2 className="text-2xl md:text-4xl font-montserrat font-bold text-white mb-12 tracking-widest">Exercise, Performance & Injury Recovery</h2>
           
           {/* Main CTA Buttons */}
