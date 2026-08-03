@@ -61,7 +61,7 @@ export default function HomePage() {
             backgroundImage: `url(${heroAthleteImg})`
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/45 via-primary/35 to-primary/30"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="sr-only">Active Recovery 360</h1>
           <div className="mb-6 flex justify-center">
