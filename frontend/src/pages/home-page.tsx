@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
-import activeRecovery360Logo from "@/assets/active-recovery-360-logo.png";
+import activeRecovery360Logo from "@/assets/active-recovery-360-logo-white.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -61,7 +61,7 @@ export default function HomePage() {
             backgroundImage: `url(${heroAthleteImg})`
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/45 via-primary/35 to-primary/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/80 to-primary/75"></div>
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="sr-only">Active Recovery 360</h1>
           <div className="mb-6 flex justify-center">
