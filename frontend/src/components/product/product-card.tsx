@@ -95,8 +95,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
         </Link>
-        <p className="text-secondary text-sm mb-3 flex-grow">{product.description}</p>
-        <div className="flex justify-between items-center mt-2">
+        <p className="text-secondary text-sm mb-3 line-clamp-3">{product.description}</p>
+        <div className="flex justify-between items-center mt-auto pt-2">
           <span className="text-primary font-bold">{formatPrice(product.price)}</span>
           {canPurchase() && !product.hasVariants ? (
             <Button
