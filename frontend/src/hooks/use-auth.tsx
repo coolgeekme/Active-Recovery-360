@@ -27,6 +27,7 @@ export interface User {
   licenseNumber?: string | null;
   hcpStatus?: 'pending' | 'approved' | 'rejected' | null;
   specialty?: string | null;
+  hcpRejectionReason?: string | null;
   // HCP storefront fields
   storefrontEnabled?: boolean;
   storefrontSlug?: string | null;
@@ -66,10 +67,9 @@ type FirebaseLoginData = {
   email: string;
   fullName: string;
   profileImage?: string;
-  isDoctor?: boolean;
-  doctorTitle?: string;
-  doctorSpecialty?: string;
-  doctorBio?: string;
+  isHcpApplication?: boolean;
+  licenseNumber?: string;
+  specialty?: string;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

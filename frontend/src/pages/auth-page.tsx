@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { insertUserSchema } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +28,6 @@ const registerSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string(),
-  isDoctor: z.boolean().optional(),
-  doctorTitle: z.string().optional(),
-  doctorSpecialty: z.string().optional(),
-  doctorBio: z.string().optional(),
-  profileImage: z.string().optional(),
   isMember: z.boolean().optional(),
   // HCP application fields
   isHcpApplication: z.boolean().optional(),
@@ -97,11 +91,6 @@ export default function AuthPage() {
       email: "",
       password: "",
       confirmPassword: "",
-      isDoctor: false,
-      doctorTitle: "",
-      doctorSpecialty: "",
-      doctorBio: "",
-      profileImage: "",
       isMember: false,
       isHcpApplication: false,
       licenseNumber: "",
@@ -208,11 +197,9 @@ export default function AuthPage() {
         idToken,
         email: data.email,
         fullName: data.fullName,
-        profileImage: data.profileImage || "",
-        isDoctor: data.isDoctor,
-        doctorTitle: data.doctorTitle,
-        doctorSpecialty: data.doctorSpecialty,
-        doctorBio: data.doctorBio,
+        isHcpApplication: data.isHcpApplication,
+        licenseNumber: data.licenseNumber,
+        specialty: data.specialty,
       }, {
         onSuccess: () => {
           // If user wants membership, redirect to checkout
@@ -239,8 +226,6 @@ export default function AuthPage() {
       setIsEmailLoading(false);
     }
   };
-
-  const isDoctor = registerForm.watch("isDoctor");
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -492,91 +477,6 @@ export default function AuthPage() {
                                     data-testid="specialty-input"
                                     {...field} 
                                   />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      )}
-                      
-                      <FormField
-                        control={registerForm.control}
-                        name="isDoctor"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                              <input
-                                type="checkbox"
-                                checked={field.value}
-                                onChange={field.onChange}
-                                className="mt-1"
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Create a Doctor Storefront</FormLabel>
-                              <p className="text-sm text-muted-foreground">
-                                Set up a personalized storefront to recommend products to your patients
-                              </p>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {isDoctor && (
-                        <div className="space-y-4 border-t pt-4 mt-4">
-                          <h3 className="font-semibold">Professional Information</h3>
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="doctorTitle"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Professional Title</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Dr., PT, DC, etc." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="doctorSpecialty"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Specialty</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Physical Therapy, Sports Medicine, etc." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="doctorBio"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Professional Bio</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Brief description of your practice and expertise" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="profileImage"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Profile Image URL</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="https://example.com/image.jpg" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Upload, Image as ImageIcon, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon, ExternalLink, CheckCircle2, Circle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,8 @@ interface StorefrontEditorProps {
   showCommission?: boolean;
   /** Endpoint that uploads images and returns {url} */
   uploadEndpoint?: string;
+  /** Show a "finish setting up" checklist when the storefront isn't live yet */
+  showOnboarding?: boolean;
 }
 
 export default function StorefrontEditor({
@@ -41,6 +43,7 @@ export default function StorefrontEditor({
   saveEndpoint,
   showCommission = false,
   uploadEndpoint = "/api/hcp/uploads/image",
+  showOnboarding = false,
 }: StorefrontEditorProps) {
   const { toast } = useToast();
   const headshotInput = useRef<HTMLInputElement>(null);
@@ -157,8 +160,36 @@ export default function StorefrontEditor({
 
   const slugSafe = (draft.storefrontSlug || "").trim().toLowerCase();
 
+  const onboardingSteps = [
+    { label: "Add a bio", done: !!(draft.storefrontBio && draft.storefrontBio.trim()) },
+    { label: "Add a headshot", done: !!draft.storefrontHeadshotUrl },
+    { label: "Pick products to feature", done: (draft.storefrontFeaturedProductIds || []).length > 0 },
+    { label: "Publish your storefront", done: !!draft.storefrontEnabled },
+  ];
+  const onboardingComplete = onboardingSteps.every((s) => s.done);
+
   return (
     <div className="space-y-6">
+      {showOnboarding && !onboardingComplete && (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+          <h3 className="font-semibold text-blue-900 mb-2">Finish setting up your storefront</h3>
+          <ul className="space-y-1.5">
+            {onboardingSteps.map((step) => (
+              <li key={step.label} className="flex items-center gap-2 text-sm">
+                {step.done ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <Circle className="h-4 w-4 text-blue-300" />
+                )}
+                <span className={step.done ? "text-muted-foreground line-through" : "text-foreground"}>
+                  {step.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Publish toggle + slug */}
       <div className="bg-muted/30 rounded-md p-4 space-y-4">
         <div className="flex items-center justify-between">

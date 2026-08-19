@@ -36,6 +36,7 @@ def transform_user(user_doc: dict) -> dict:
         "licenseNumber": user_doc.get("licenseNumber"),
         "hcpStatus": user_doc.get("hcpStatus"),  # pending, approved, rejected, null
         "specialty": user_doc.get("specialty"),
+        "hcpRejectionReason": user_doc.get("hcpRejectionReason"),
         # HCP storefront fields
         "storefrontEnabled": user_doc.get("storefrontEnabled", False),
         "storefrontSlug": user_doc.get("storefrontSlug"),
@@ -182,13 +183,24 @@ async def firebase_auth(auth_data: FirebaseAuth):
             "fullName": auth_data.full_name or "User",
             "isMember": False,
             "isAdmin": False,
-            "isDoctor": auth_data.is_doctor,
-            "doctorTitle": auth_data.doctor_title,
-            "doctorSpecialty": auth_data.doctor_specialty,
-            "doctorBio": auth_data.doctor_bio,
+            # Providers are granted isDoctor only after admin approval — never
+            # on trust from a client-supplied flag.
+            "isDoctor": False,
             "profileImage": auth_data.profile_image,
             "createdAt": datetime.utcnow()
         }
+
+        # HCP application: capture license + queue for admin review.
+        if auth_data.is_hcp_application:
+            if not auth_data.license_number:
+                raise HTTPException(
+                    status_code=400,
+                    detail="License number is required for HCP registration",
+                )
+            new_user["licenseNumber"] = auth_data.license_number
+            new_user["specialty"] = auth_data.specialty
+            new_user["hcpStatus"] = "pending"
+            new_user["hcpAppliedAt"] = datetime.utcnow()
         
         result = await users.insert_one(new_user)
         new_user["_id"] = result.inserted_id
@@ -350,12 +362,15 @@ async def hcp_reapply(license_data: dict, user: dict = Depends(require_auth)):
     # Update user with new application
     await users.update_one(
         {"_id": ObjectId(user["id"])},
-        {"$set": {
-            "licenseNumber": license_number,
-            "specialty": specialty,
-            "hcpStatus": "pending",
-            "hcpAppliedAt": datetime.utcnow()
-        }}
+        {
+            "$set": {
+                "licenseNumber": license_number,
+                "specialty": specialty,
+                "hcpStatus": "pending",
+                "hcpAppliedAt": datetime.utcnow()
+            },
+            "$unset": {"hcpRejectionReason": ""}
+        }
     )
     
     updated_user = await users.find_one({"_id": ObjectId(user["id"])})

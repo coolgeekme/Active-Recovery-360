@@ -226,10 +226,16 @@ class FirebaseAuth(BaseModel):
     email: EmailStr
     full_name: Optional[str] = Field(default=None, alias="fullName")
     profile_image: Optional[str] = Field(default=None, alias="profileImage")
+    # Deprecated legacy doctor flags — no longer trusted to grant provider
+    # status. Kept for backward compatibility with older clients.
     is_doctor: bool = Field(default=False, alias="isDoctor")
     doctor_title: Optional[str] = Field(default=None, alias="doctorTitle")
     doctor_specialty: Optional[str] = Field(default=None, alias="doctorSpecialty")
     doctor_bio: Optional[str] = Field(default=None, alias="doctorBio")
+    # HCP application fields (preferred flow — queues admin approval)
+    is_hcp_application: bool = Field(default=False, alias="isHcpApplication")
+    license_number: Optional[str] = Field(default=None, alias="licenseNumber")
+    specialty: Optional[str] = Field(default=None)
 
     class Config:
         populate_by_name = True

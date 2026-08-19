@@ -85,35 +85,46 @@ async def send_password_reset_email(to_email: str, reset_token: str, user_name: 
     
     return await send_email(to_email, "Reset Your Password - Active Recovery 360", html_content)
 
-async def send_hcp_approval_email(to_email: str, user_name: str, approved: bool) -> dict:
+async def send_hcp_approval_email(
+    to_email: str,
+    user_name: str,
+    approved: bool,
+    storefront_slug: str | None = None,
+    reason: str | None = None,
+) -> dict:
     """Send HCP application status email"""
     if approved:
         subject = "Your Healthcare Professional Account Has Been Approved!"
-        status_message = """
+        storefront_url = f"{FRONTEND_URL}/hcp/{storefront_slug}" if storefront_slug else None
+        storefront_line = (
+            f'<p>Your storefront will be live at <a href="{storefront_url}" style="color: #0f4c81;">{storefront_url}</a>.</p>'
+            if storefront_url else ""
+        )
+        status_message = f"""
             <h2 style="color: #28a745;">Congratulations!</h2>
-            <p>Your Healthcare Professional account has been approved. You now have full access to:</p>
+            <p>Your Healthcare Professional account has been approved. You now have access to:</p>
             <ul>
                 <li>Professional-grade products</li>
                 <li>Exclusive healthcare provider pricing</li>
                 <li>Your personalized storefront</li>
             </ul>
             <p style="text-align: center;">
-                <a href="{FRONTEND_URL}/shop" class="button">Start Shopping</a>
+                <a href="{FRONTEND_URL}/hcp/dashboard" class="button">Set Up Your Storefront</a>
             </p>
+            {storefront_line}
         """
     else:
         subject = "Update on Your Healthcare Professional Application"
-        status_message = """
+        reason_block = (
+            f'<p style="color: #b32d2d;"><strong>Reason:</strong> {reason}</p>'
+            if reason else ""
+        )
+        status_message = f"""
             <h2>Application Update</h2>
             <p>Thank you for your interest in becoming a Healthcare Professional member.</p>
-            <p>After reviewing your application, we were unable to verify your credentials at this time. 
-            This could be due to:</p>
-            <ul>
-                <li>Invalid or expired license number</li>
-                <li>Incomplete information</li>
-                <li>Unable to verify professional status</li>
-            </ul>
-            <p>You're welcome to reapply with updated information. If you believe this is an error, 
+            <p>After reviewing your application, we were unable to verify your credentials at this time.</p>
+            {reason_block}
+            <p>You're welcome to reapply with updated information. If you believe this is an error,
             please contact our support team.</p>
         """
     

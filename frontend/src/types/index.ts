@@ -17,6 +17,7 @@ export interface User {
   licenseNumber?: string | null;
   hcpStatus?: 'pending' | 'approved' | 'rejected' | null;
   specialty?: string | null;
+  hcpRejectionReason?: string | null;
 }
 
 export type SelectUser = User;

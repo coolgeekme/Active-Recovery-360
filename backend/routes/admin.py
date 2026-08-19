@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from datetime import datetime
+import re
 
 from services.database import get_collection
 from routes.auth import require_admin
@@ -106,6 +107,21 @@ async def get_all_hcp_applications(admin: dict = Depends(require_admin)):
     
     return [transform_user(doc) for doc in docs]
 
+async def _generate_default_slug(users_coll, user_doc: dict) -> str:
+    """Build a unique default storefront slug from the provider's name."""
+    base = re.sub(
+        r"[^a-z0-9]+", "-",
+        (user_doc.get("fullName") or "provider").strip().lower(),
+    ).strip("-")
+    base = base or "provider"
+    slug = base
+    counter = 2
+    while await users_coll.find_one({"storefrontSlug": slug, "_id": {"$ne": user_doc["_id"]}}):
+        slug = f"{base}-{counter}"
+        counter += 1
+    return slug
+
+
 @router.post("/hcp/{user_id}/approve")
 async def approve_hcp(user_id: str, admin: dict = Depends(require_admin)):
     """Approve an HCP application"""
@@ -121,6 +137,12 @@ async def approve_hcp(user_id: str, admin: dict = Depends(require_admin)):
     
     if user.get("hcpStatus") != "pending":
         raise HTTPException(status_code=400, detail="User does not have a pending HCP application")
+
+    # Pre-generate a default storefront slug so the approval email can point the
+    # provider at their future storefront URL without requiring them to pick one.
+    storefront_slug = user.get("storefrontSlug")
+    if not storefront_slug:
+        storefront_slug = await _generate_default_slug(users, user)
     
     # Approve the user - set isDoctor to True and update status
     result = await users.find_one_and_update(
@@ -129,7 +151,8 @@ async def approve_hcp(user_id: str, admin: dict = Depends(require_admin)):
             "hcpStatus": "approved",
             "isDoctor": True,
             "hcpApprovedAt": datetime.utcnow(),
-            "hcpApprovedBy": admin["id"]
+            "hcpApprovedBy": admin["id"],
+            "storefrontSlug": storefront_slug,
         }},
         return_document=True
     )
@@ -138,7 +161,8 @@ async def approve_hcp(user_id: str, admin: dict = Depends(require_admin)):
     await send_hcp_approval_email(
         to_email=result["email"],
         user_name=result.get("fullName", "Healthcare Professional"),
-        approved=True
+        approved=True,
+        storefront_slug=storefront_slug,
     )
     
     return transform_user(result)
@@ -177,7 +201,8 @@ async def reject_hcp(user_id: str, rejection_data: dict = None, admin: dict = De
     await send_hcp_approval_email(
         to_email=result["email"],
         user_name=result.get("fullName", "User"),
-        approved=False
+        approved=False,
+        reason=reason,
     )
     
     return transform_user(result)
