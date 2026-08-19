@@ -632,7 +632,7 @@ async def main():
             "price": min(prices) if prices else 0,
             "imageUrl": image_url,
             "visibility": prod.get("visibility", "public"),
-            "categoryId": cat_id,
+            "categoryIds": [cat_id],
             "stockQuantity": total_stock,
             "featured": prod.get("featured", False),
             "doctorIds": [],

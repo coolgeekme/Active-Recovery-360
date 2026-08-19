@@ -49,7 +49,7 @@ class TestProductsAPI:
         data = response.json()
         product = data[0]
         
-        required_fields = ['id', 'name', 'description', 'price', 'visibility', 'categoryId']
+        required_fields = ['id', 'name', 'description', 'price', 'visibility', 'categoryIds']
         for field in required_fields:
             assert field in product, f"Product missing field: {field}"
     

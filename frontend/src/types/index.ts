@@ -50,7 +50,7 @@ export interface Product {
   price: number;
   imageUrl?: string | null;
   visibility: 'public' | 'member' | 'doctor';
-  categoryId: string;
+  categoryIds: string[];
   stockQuantity: number;
   featured: boolean;
   doctorIds?: string[];
@@ -58,6 +58,7 @@ export interface Product {
   brand?: string;
   hasVariants?: boolean;
   variants?: ProductVariant[];
+  hidePrice?: boolean;
 }
 
 export interface Category {

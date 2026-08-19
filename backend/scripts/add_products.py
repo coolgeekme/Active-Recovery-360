@@ -141,7 +141,7 @@ async def add_products():
             "price": int(product["price"] * 100),  # Convert to cents
             "imageUrl": product.get("imageUrl"),
             "visibility": product.get("visibility", "public"),
-            "categoryId": category_id,
+            "categoryIds": [category_id],
             "stockQuantity": product.get("stockQuantity", 5),
             "featured": product.get("featured", False),
             "doctorIds": [],

@@ -153,7 +153,7 @@ async def seed_database(admin: dict = Depends(require_admin)):
             "price": product["price"],
             "imageUrl": product.get("imageUrl"),
             "visibility": product.get("visibility", "public"),
-            "categoryId": category_id,
+            "categoryIds": [category_id],
             "stockQuantity": product.get("stockQuantity", 5),
             "featured": False,
             "doctorIds": [],
@@ -535,7 +535,7 @@ async def consolidate_variants(admin: dict = Depends(require_admin)):
             "price": min_price if min_price != float('inf') else 0,  # Base price is lowest variant
             "imageUrl": image_url,
             "visibility": group["visibility"],
-            "categoryId": category_id,
+            "categoryIds": [category_id] if category_id else [],
             "stockQuantity": total_stock,
             "featured": False,
             "doctorIds": [],
@@ -630,9 +630,12 @@ async def import_catalog(admin: dict = Depends(require_admin)):
     inserted = 0
     skipped = 0
     for p in seed.get("products", []):
-        cat_name = p.get("categoryName")
-        cat_id = cat_id_by_name.get(cat_name) if cat_name else None
-        if not cat_id:
+        cat_names = p.get("categoryNames")
+        if cat_names is None:
+            single = p.get("categoryName")
+            cat_names = [single] if single else []
+        cat_ids = [cat_id_by_name[n] for n in cat_names if cat_id_by_name.get(n)]
+        if not cat_ids:
             skipped += 1
             continue
         doc = {
@@ -641,7 +644,7 @@ async def import_catalog(admin: dict = Depends(require_admin)):
             "price": p.get("price", 0),
             "imageUrl": p.get("imageUrl"),
             "visibility": p.get("visibility", "public"),
-            "categoryId": cat_id,
+            "categoryIds": cat_ids,
             "stockQuantity": p.get("stockQuantity", 0),
             "featured": p.get("featured", False),
             "doctorIds": p.get("doctorIds", []),
@@ -651,10 +654,11 @@ async def import_catalog(admin: dict = Depends(require_admin)):
             "createdAt": datetime.utcnow(),
         }
         await products_coll.insert_one(doc)
-        await categories_coll.update_one(
-            {"_id": ObjectId(cat_id)},
-            {"$inc": {"productCount": 1}},
-        )
+        for cid in cat_ids:
+            await categories_coll.update_one(
+                {"_id": ObjectId(cid)},
+                {"$inc": {"productCount": 1}},
+            )
         inserted += 1
 
     return {
@@ -666,4 +670,40 @@ async def import_catalog(admin: dict = Depends(require_admin)):
             "products_inserted": inserted,
             "products_skipped": skipped,
         },
+    }
+
+
+@router.post("/migrate-multi-category")
+async def migrate_multi_category(admin: dict = Depends(require_admin)):
+    """Idempotent migration to the multi-category data model.
+
+    1. Backfills `categoryIds` on any legacy product still carrying the scalar
+       `categoryId` field.
+    2. Rebuilds every category's `productCount` from the live product docs so
+       counts are correct regardless of how products were previously mutated.
+
+    Safe to run repeatedly — it is a no-op once all products use `categoryIds`.
+    """
+    products_coll = get_collection("products")
+    categories_coll = get_collection("categories")
+
+    backfilled = 0
+    async for p in products_coll.find({"categoryIds": {"$exists": False}}):
+        legacy = p.get("categoryId")
+        ids = [str(legacy)] if legacy else []
+        await products_coll.update_one({"_id": p["_id"]}, {"$set": {"categoryIds": ids}})
+        backfilled += 1
+
+    categories = await categories_coll.find().to_list(length=500)
+    recounted = 0
+    for cat in categories:
+        cid = str(cat["_id"])
+        count = await products_coll.count_documents({"categoryIds": cid})
+        await categories_coll.update_one({"_id": cat["_id"]}, {"$set": {"productCount": count}})
+        recounted += 1
+
+    return {
+        "message": "Multi-category migration complete",
+        "products_backfilled": backfilled,
+        "categories_recounted": recounted,
     }

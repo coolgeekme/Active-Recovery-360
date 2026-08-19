@@ -24,8 +24,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   // Anyone (including guests) can add to cart. Doctor-only products still
   // require a verified HCP account because they're regulated/restricted.
+  // Provider-only pricing (hidePrice) products can be viewed but only purchased
+  // by verified HCPs.
   const canPurchase = () => {
     if (product.visibility === "doctor" && !user?.isDoctor) return false;
+    if (product.hidePrice && !user?.isDoctor) return false;
     return true;
   };
 
@@ -97,7 +100,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
         <p className="text-secondary text-sm mb-3 line-clamp-3">{product.description}</p>
         <div className="flex justify-between items-center mt-auto pt-2">
-          <span className="text-primary font-bold">{formatPrice(product.price)}</span>
+          {product.hidePrice && !user?.isDoctor ? (
+            <span className="text-secondary text-sm font-montserrat font-semibold">
+              Provider pricing only
+            </span>
+          ) : (
+            <span className="text-primary font-bold">{formatPrice(product.price)}</span>
+          )}
           {canPurchase() && !product.hasVariants ? (
             <Button
               onClick={handleAddToCart}

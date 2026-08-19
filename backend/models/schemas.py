@@ -86,13 +86,14 @@ class ProductBase(BaseModel):
     price: int  # Base price (or price of first variant)
     image_url: Optional[str] = Field(default=None, alias="imageUrl")
     visibility: str = "public"
-    category_id: str = Field(alias="categoryId")
+    category_ids: List[str] = Field(default=[], alias="categoryIds")
     stock_quantity: int = Field(default=0, alias="stockQuantity")
     featured: bool = False
     doctor_ids: List[str] = Field(default=[], alias="doctorIds")
     brand: Optional[str] = None
     variants: List[ProductVariant] = []  # Empty for simple products
     has_variants: bool = Field(default=False, alias="hasVariants")
+    hide_price: bool = Field(default=False, alias="hidePrice")  # Provider-only pricing: product visible, price hidden from non-HCP
 
     class Config:
         populate_by_name = True

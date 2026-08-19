@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckIcon, Shield, Users, Calendar } from "lucide-react";
 import MembershipForm from "@/components/membership/membership-form";
 import { Link } from "wouter";
+import recoveryGearBrandImg from "@/assets/recovery-athlete-brand.png";
 
 export default function MembershipPage() {
   const { user } = useAuth();
@@ -85,7 +86,7 @@ export default function MembershipPage() {
             </ul>
             <div className="mb-6">
               <img 
-                src="https://images.unsplash.com/photo-1596516109370-29001ec8ec36?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                src={recoveryGearBrandImg} 
                 alt="Recovery starter kit" 
                 className="rounded-lg shadow w-full h-auto object-cover"
               />

@@ -57,6 +57,12 @@ async def add_to_cart(item_data: dict, user: dict = Depends(require_member)):
         raise HTTPException(status_code=403, detail="Membership required")
     if visibility == "doctor" and not user.get("isDoctor"):
         raise HTTPException(status_code=403, detail="Doctor access required")
+    # Provider-only pricing: public can view but cannot purchase without HCP status
+    if product_doc.get("hidePrice") and not user.get("isDoctor"):
+        raise HTTPException(
+            status_code=403,
+            detail="This product is available exclusively through provider storefronts",
+        )
     
     # Check if item already in cart
     existing = await cart_items.find_one({

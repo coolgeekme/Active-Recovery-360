@@ -43,7 +43,7 @@ export default function Header() {
     { name: "SHOP", href: "/shop", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
     { name: "MEMBERSHIP", href: "/membership", icon: <Heart className="h-5 w-5 mr-2" /> },
     { name: "PROVIDER SIGN UP", href: "/doctors", icon: <Users className="h-5 w-5 mr-2" /> },
-    { name: "WHOLESALE", href: "/wholesale", icon: <ShoppingBag className="h-5 w-5 mr-2" /> },
+    { name: "TEAMS & TRAINERS", href: "/teams-trainers", icon: <Users className="h-5 w-5 mr-2" /> },
     { name: "AFFILIATES", href: "/affiliates", icon: <Users className="h-5 w-5 mr-2" /> },
     { name: "RECOVERY SERVICES", href: "/recovery-services", icon: <MapPin className="h-5 w-5 mr-2" /> },
   ];

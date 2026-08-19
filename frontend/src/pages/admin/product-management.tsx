@@ -95,9 +95,10 @@ const productFormSchema = z.object({
   visibility: z.enum(["public", "member", "doctor"], {
     required_error: "Visibility is required",
   }),
-  categoryId: z.string().min(1, "Category is required"),
+  categoryIds: z.array(z.string()).min(1, "At least one category is required"),
   stockQuantity: z.coerce.number().min(0, "Stock quantity cannot be negative"),
   featured: z.boolean().default(false),
+  hidePrice: z.boolean().default(false),
   doctorIds: z.array(z.string()).optional(),
   brand: z.string().optional(),
 });
@@ -188,10 +189,12 @@ export default function ProductManagement() {
 
   // Reorder product (up/down within its category)
   const moveProductMutation = useMutation({
-    mutationFn: async ({ id, direction }: { id: string; direction: "up" | "down" }) => {
+    mutationFn: async ({ id, direction, categoryId }: { id: string; direction: "up" | "down"; categoryId?: string }) => {
+      const qs = new URLSearchParams({ direction });
+      if (categoryId) qs.set("categoryId", categoryId);
       const res = await apiRequest(
         "POST",
-        `/api/admin/products/${id}/move?direction=${direction}`
+        `/api/admin/products/${id}/move?${qs.toString()}`
       );
       return await res.json();
     },
@@ -222,9 +225,10 @@ export default function ProductManagement() {
       price: 0,
       imageUrl: "",
       visibility: "public",
-      categoryId: "",
+      categoryIds: [],
       stockQuantity: 0,
       featured: false,
+      hidePrice: false,
       doctorIds: [],
       brand: "",
     },
@@ -274,9 +278,10 @@ export default function ProductManagement() {
       price: 0,
       imageUrl: "",
       visibility: "public",
-      categoryId: "",
+      categoryIds: [],
       stockQuantity: 0,
       featured: false,
+      hidePrice: false,
       doctorIds: [],
       brand: "",
     },
@@ -315,7 +320,7 @@ export default function ProductManagement() {
   // Filter products
   const filteredProducts = products.filter(product => {
     if (filterVisibility && product.visibility !== filterVisibility) return false;
-    if (filterCategory && product.categoryId !== filterCategory) return false;
+    if (filterCategory && !(product.categoryIds || []).includes(filterCategory)) return false;
     if (filterFeatured !== undefined && product.featured !== filterFeatured) return false;
     return true;
   });
@@ -342,10 +347,12 @@ export default function ProductManagement() {
     }
   };
 
-  // Find category by ID
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.name : 'Unknown';
+  // Resolve one or more category ids to display names
+  const getCategoryNames = (categoryIds: string[]) => {
+    return (categoryIds || []).map((id) => {
+      const category = categories.find(c => c.id === id);
+      return category ? category.name : 'Unknown';
+    });
   };
 
   // Handle delete button click
@@ -368,9 +375,10 @@ export default function ProductManagement() {
       price: priceInDollars,
       imageUrl: product.imageUrl || "",
       visibility: product.visibility as "public" | "member" | "doctor",
-      categoryId: product.categoryId,
+      categoryIds: product.categoryIds || [],
       stockQuantity: product.stockQuantity,
       featured: product.featured,
+      hidePrice: product.hidePrice || false,
       doctorIds: product.doctorIds || [],
       brand: product.brand || "",
     });
@@ -565,7 +573,15 @@ export default function ProductManagement() {
                       <TableCell className="font-medium">{product.name}</TableCell>
                       <TableCell>{formatPrice(product.price)}</TableCell>
                       <TableCell>{renderVisibilityBadge(product.visibility)}</TableCell>
-                      <TableCell>{getCategoryName(product.categoryId)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {getCategoryNames(product.categoryIds).map((name) => (
+                            <Badge key={name} variant="outline" className="bg-primary/5 text-primary border-primary/30">
+                              {name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
                       <TableCell>{product.stockQuantity}</TableCell>
                       <TableCell>
                         {product.variants && product.variants.length > 0 ? (
@@ -598,6 +614,7 @@ export default function ProductManagement() {
                                   moveProductMutation.mutate({
                                     id: product.id,
                                     direction: "up",
+                                    categoryId: filterCategory,
                                   })
                                 }
                                 disabled={
@@ -616,6 +633,7 @@ export default function ProductManagement() {
                                   moveProductMutation.mutate({
                                     id: product.id,
                                     direction: "down",
+                                    categoryId: filterCategory,
                                   })
                                 }
                                 disabled={
@@ -835,27 +853,38 @@ export default function ProductManagement() {
 
                 <FormField
                   control={addProductForm.control}
-                  name="categoryId"
+                  name="categoryIds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
+                      <FormLabel>Categories</FormLabel>
+                      <div className="space-y-2 border rounded-md p-4 max-h-56 overflow-y-auto">
+                        {categories.map((category) => (
+                          <div key={category.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`add-cat-${category.id}`}
+                              checked={field.value?.includes(category.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...(field.value || []), category.id]);
+                                } else {
+                                  field.onChange(
+                                    field.value?.filter((id) => id !== category.id) || []
+                                  );
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`add-cat-${category.id}`}
+                              className="text-sm leading-none"
+                            >
                               {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormDescription>
+                        A product can appear in multiple categories
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -877,6 +906,29 @@ export default function ProductManagement() {
                       <FormLabel>Featured Product</FormLabel>
                       <FormDescription>
                         This product will be displayed prominently on the homepage
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={addProductForm.control}
+                name="hidePrice"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Provider-Only Pricing</FormLabel>
+                      <FormDescription>
+                        Product is visible to everyone, but the price is hidden from the
+                        general public. Only verified providers (HCPs) see pricing and can
+                        purchase.
                       </FormDescription>
                     </div>
                   </FormItem>
@@ -1125,27 +1177,38 @@ export default function ProductManagement() {
 
                 <FormField
                   control={editProductForm.control}
-                  name="categoryId"
+                  name="categoryIds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
+                      <FormLabel>Categories</FormLabel>
+                      <div className="space-y-2 border rounded-md p-4 max-h-56 overflow-y-auto">
+                        {categories.map((category) => (
+                          <div key={category.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`edit-cat-${category.id}`}
+                              checked={field.value?.includes(category.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...(field.value || []), category.id]);
+                                } else {
+                                  field.onChange(
+                                    field.value?.filter((id) => id !== category.id) || []
+                                  );
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`edit-cat-${category.id}`}
+                              className="text-sm leading-none"
+                            >
                               {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormDescription>
+                        A product can appear in multiple categories
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1167,6 +1230,29 @@ export default function ProductManagement() {
                       <FormLabel>Featured Product</FormLabel>
                       <FormDescription>
                         This product will be displayed prominently on the homepage
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editProductForm.control}
+                name="hidePrice"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Provider-Only Pricing</FormLabel>
+                      <FormDescription>
+                        Product is visible to everyone, but the price is hidden from the
+                        general public. Only verified providers (HCPs) see pricing and can
+                        purchase.
                       </FormDescription>
                     </div>
                   </FormItem>

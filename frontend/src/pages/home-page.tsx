@@ -7,6 +7,7 @@ import { CheckIcon } from "lucide-react";
 import { benefitIcons } from "@/lib/icons";
 import heroAthleteImg from "@/assets/hero-image.png";
 import activeRecovery360Logo from "@/assets/active-recovery-360-logo-white.png";
+import recoveryGearBrandImg from "@/assets/recovery-athlete-brand.png";
 
 import ProductGrid from "@/components/product/product-grid";
 import CategoryCard from "@/components/category/category-card";
@@ -141,8 +142,8 @@ export default function HomePage() {
               </div>
               <div className="md:w-1/3">
                 <img 
-                  src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
-                  alt="Professional rehabilitation equipment" 
+                  src={recoveryGearBrandImg} 
+                  alt="Premium recovery gear" 
                   className="rounded-lg shadow w-full h-auto object-cover"
                 />
               </div>

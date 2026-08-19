@@ -45,10 +45,10 @@ export default function ProductPage() {
     queryKey: [`/api/products/${productId}`],
   });
 
-  // Fetch the parent category for the breadcrumb (only after product loads)
+  // Fetch the primary category for the breadcrumb (only after product loads)
   const { data: category } = useQuery<Category>({
-    queryKey: [`/api/categories/${product?.categoryId}`],
-    enabled: !!product?.categoryId,
+    queryKey: [`/api/categories/${product?.categoryIds?.[0]}`],
+    enabled: !!product?.categoryIds?.[0],
   });
 
   // Extract unique attribute options from variants
@@ -104,9 +104,12 @@ export default function ProductPage() {
 
   // Anyone (including guests) can add to cart. Doctor-only products still
   // require a verified HCP account because they're regulated/restricted.
+  // Provider-only pricing (hidePrice) products can be viewed but only purchased
+  // by verified HCPs.
   const canPurchase = () => {
     if (!product) return false;
     if (product.visibility === "doctor" && !user?.isDoctor) return false;
+    if (product.hidePrice && !user?.isDoctor) return false;
     return true;
   };
 
@@ -239,9 +242,15 @@ export default function ProductPage() {
           
           <h1 className="text-3xl font-montserrat font-bold text-primary mb-2">{product.name}</h1>
           
-          <div className="text-2xl font-bold text-primary mb-4">
-            {formatPrice(currentPrice)}
-          </div>
+          {product.hidePrice && !user?.isDoctor ? (
+            <div className="text-lg font-montserrat font-semibold text-secondary mb-4">
+              Provider pricing — available through listed provider storefronts
+            </div>
+          ) : (
+            <div className="text-2xl font-bold text-primary mb-4">
+              {formatPrice(currentPrice)}
+            </div>
+          )}
           
           <p className="text-secondary mb-6">{product.description}</p>
           
@@ -329,15 +338,34 @@ export default function ProductPage() {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-secondary mb-4">This product is restricted to verified Healthcare Professionals.</p>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
-                    <Button asChild>
-                      <a href="/auth">Sign In as HCP</a>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <a href="/auth">Apply for HCP Access</a>
-                    </Button>
-                  </div>
+                  {product.hidePrice ? (
+                    <>
+                      <p className="text-secondary mb-4">
+                        This product is only available through listed provider storefronts.
+                        Pricing is not shown to the general public.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
+                        <Button asChild>
+                          <a href="/doctors">Find a Provider</a>
+                        </Button>
+                        <Button asChild variant="outline">
+                          <a href="/auth">Sign In as Provider</a>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-secondary mb-4">This product is restricted to verified Healthcare Professionals.</p>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
+                        <Button asChild>
+                          <a href="/auth">Sign In as HCP</a>
+                        </Button>
+                        <Button asChild variant="outline">
+                          <a href="/auth">Apply for HCP Access</a>
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -367,7 +395,7 @@ export default function ProductPage() {
           </TabsList>
           
           <TabsContent value="related">
-            <ProductGrid category={product.categoryId} limit={4} />
+            <ProductGrid category={product.categoryIds?.[0]} limit={4} />
           </TabsContent>
           
           <TabsContent value="featured">
