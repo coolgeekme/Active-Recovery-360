@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, Shield, Users, Calendar } from "lucide-react";
+import { Shield, Users, Calendar } from "lucide-react";
 import MembershipForm from "@/components/membership/membership-form";
 import { Link } from "wouter";
 import recoveryGearBrandImg from "@/assets/recovery-athlete-brand.png";
@@ -22,7 +22,7 @@ export default function MembershipPage() {
     {
       icon: Users,
       title: "Member Pricing on Clinical Recovery Services",
-      description: "Access special member pricing on local clinical recovery services."
+      description: "Access special member pricing — 5% off on local clinical recovery services."
     }
   ];
 
@@ -90,24 +90,6 @@ export default function MembershipPage() {
                 alt="Recovery starter kit" 
                 className="rounded-lg shadow w-full h-auto object-cover"
               />
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-start">
-                <CheckIcon className="h-5 w-5 text-primary mr-2 mt-0.5" />
-                <p className="text-secondary">Premium compression bands for targeted recovery</p>
-              </div>
-              <div className="flex items-start">
-                <CheckIcon className="h-5 w-5 text-primary mr-2 mt-0.5" />
-                <p className="text-secondary">Comprehensive recovery exercise guide</p>
-              </div>
-              <div className="flex items-start">
-                <CheckIcon className="h-5 w-5 text-primary mr-2 mt-0.5" />
-                <p className="text-secondary">Cold/hot therapy gel pack for pain relief</p>
-              </div>
-              <div className="flex items-start">
-                <CheckIcon className="h-5 w-5 text-primary mr-2 mt-0.5" />
-                <p className="text-secondary">Exclusive member discount code for first purchase</p>
-              </div>
             </div>
           </div>
 
