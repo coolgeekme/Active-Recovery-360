@@ -30,6 +30,8 @@ import ContactPage from "@/pages/contact-page";
 import AffiliatesPage from "@/pages/affiliates-page";
 import WholesalePage from "@/pages/wholesale-page";
 import TeamsTrainersPage from "@/pages/teams-trainers-page";
+import ReturnsPage from "@/pages/returns-page";
+import ShippingPage from "@/pages/shipping-page";
 import CategoryPage from "@/pages/category-page";
 import AdminPage from "@/pages/admin/admin-page";
 import ProductManagement from "@/pages/admin/product-management";
@@ -79,6 +81,8 @@ function AppRouter() {
           <Route path="/affiliates" component={AffiliatesPage} />
           <Route path="/wholesale" component={WholesalePage} />
           <Route path="/teams-trainers" component={TeamsTrainersPage} />
+          <Route path="/returns" component={ReturnsPage} />
+          <Route path="/shipping" component={ShippingPage} />
 
           {/* HCP Storefronts (public) */}
           <Route path="/hcp/dashboard" component={HcpDashboardPage} />

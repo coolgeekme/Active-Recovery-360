@@ -63,25 +63,42 @@ export default function TeamsTrainersPage() {
     }
   };
 
-  const perks = [
+  const whyChoose = [
     {
-      icon: Trophy,
-      title: "Team fundraising codes",
+      icon: HeartPulse,
+      title: "Accelerate Recovery",
       description:
-        "Give your team a share of every sale. Fundraise for uniforms, travel, or equipment with a custom team code.",
+        "Help athletes recover more efficiently after practices, games, and off-season training sessions with proven recovery tools that help reduce soreness and promote recovery.",
     },
     {
       icon: ClipboardList,
-      title: "Bulk & team ordering",
+      title: "Support Injury Prevention",
       description:
-        "Order recovery products in bulk for your whole roster at team pricing.",
+        "Consistent recovery can help decrease muscle fatigue, improve mobility, and reduce the risk of overuse injuries.",
     },
     {
-      icon: HeartPulse,
-      title: "Trainer resources",
+      icon: Trophy,
+      title: "Trusted by Athletic Professionals",
       description:
-        "Curated recovery protocols and products you can recommend to athletes with confidence.",
+        "Our products are designed for the demanding environments of athletic training facilities, sports medicine clinics, and team performance centers.",
     },
+    {
+      icon: Users,
+      title: "Built for Teams",
+      description:
+        "From individual athletes to entire rosters, Active Recovery 360 offers scalable recovery solutions that make it easy to care for every athlete.",
+    },
+  ];
+
+  const designedFor = [
+    "High School Athletic Programs",
+    "College & University Athletics",
+    "Professional Sports Teams",
+    "Club & Academy Programs",
+    "Certified Athletic Trainers (ATCs)",
+    "Strength & Conditioning Coaches",
+    "Sports Medicine Clinics",
+    "Performance Centers",
   ];
 
   return (
@@ -94,12 +111,23 @@ export default function TeamsTrainersPage() {
               <Users className="h-4 w-4" />
               Teams &amp; Trainers
             </span>
-            <h1 className="text-4xl md:text-6xl font-montserrat font-bold mb-4 tracking-wide">
-              Recovery for Your Whole Team
+            <h1 className="text-4xl md:text-5xl font-montserrat font-bold mb-4 tracking-wide">
+              Recovery Solutions Designed for Athletic Teams &amp; Certified Athletic Trainers
             </h1>
+            <p className="text-xl font-montserrat font-semibold text-white mb-4">
+              Keep Athletes Healthy. Recover Faster. Perform Better.
+            </p>
             <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-              Athletic teams and athletic trainers get a team code to earn money back
-              and order recovery products in bulk. Sign up and we&apos;ll set you up.
+              Winning teams know that recovery is just as important as training.
+              Active Recovery 360 provides professional-grade recovery solutions
+              designed to help athletic trainers reduce downtime, support
+              recovery, and keep athletes performing at their best.
+            </p>
+            <p className="text-base text-white/80 max-w-2xl mx-auto mt-4">
+              Whether you're managing a professional team, collegiate &amp; high
+              school athletes or a club program, our recovery products are built
+              to fit seamlessly into your athletic training room and daily
+              recovery protocols.
             </p>
           </div>
         </div>
@@ -109,12 +137,15 @@ export default function TeamsTrainersPage() {
         />
       </section>
 
-      {/* Breadcrumbs + perks */}
+      {/* Breadcrumbs + content */}
       <section className="container mx-auto px-4 py-12">
         <Breadcrumbs items={[{ label: "Teams & Trainers" }]} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {perks.map((p, i) => (
+        <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-primary text-center mb-8">
+          Why Athletic Trainers Choose Active Recovery 360
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+          {whyChoose.map((p, i) => (
             <Card key={i} className="border-primary/10 hover:border-primary/30 transition-colors">
               <CardContent className="pt-6">
                 <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
@@ -127,6 +158,37 @@ export default function TeamsTrainersPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-primary text-center mb-8">
+          Designed For
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+          {designedFor.map((item) => (
+            <div
+              key={item}
+              className="bg-white rounded-lg border border-primary/10 p-4 text-center text-sm text-secondary font-montserrat font-semibold"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-primary mb-4">
+            Partner With Active Recovery 360
+          </h2>
+          <p className="text-secondary mb-4">
+            Whether you're equipping a single athletic training room or
+            purchasing for an entire organization, Active Recovery 360 provides
+            the recovery solutions your athletes need to perform at their
+            highest level.
+          </p>
+          <p className="text-secondary">
+            Our team can help you choose the right products for your program and
+            create a recovery strategy that fits your athletes, your schedule,
+            and your budget.
+          </p>
         </div>
 
         {/* Signup form */}

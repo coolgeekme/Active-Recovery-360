@@ -183,12 +183,12 @@ export default function ContactPage() {
 
               <div className="space-y-3 text-sm">
                 <a
-                  href="mailto:kevin@activerecovery360.com"
+                  href="mailto:info@activerecovery360.com"
                   className="flex items-center gap-3 text-secondary hover:text-primary"
-                  data-testid="contact-email-kevin"
+                  data-testid="contact-email-info"
                 >
                   <Mail className="h-4 w-4 text-primary flex-shrink-0" />
-                  kevin@activerecovery360.com
+                  info@activerecovery360.com
                 </a>
                 <a
                   href="tel:6027260789"

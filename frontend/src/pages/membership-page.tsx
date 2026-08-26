@@ -22,14 +22,14 @@ export default function MembershipPage() {
     {
       icon: Users,
       title: "Member Pricing on Clinical Recovery Services",
-      description: "Access special member pricing — 5% off on local clinical recovery services."
+      description: "Access special member pricing on local clinical recovery services."
     }
   ];
 
   const faqItems = [
     {
       question: "What is included in the membership?",
-      answer: "Your $29 membership includes lifetime access to all member-only products, a free recovery starter kit ($35 value), and access to doctor-curated storefronts. There are no recurring fees - just a one-time payment."
+      answer: "Your $29 membership includes lifetime access to member-only pricing, a free recovery starter kit ($39 value), and early bird access to new product offerings. There are no recurring fees - just a one-time payment."
     },
     {
       question: "How do I receive my free recovery kit?",
@@ -154,11 +154,13 @@ export default function MembershipPage() {
         <p className="text-lg text-secondary mb-6 max-w-3xl mx-auto">
           Our members love the exclusive products and benefits they receive with their Exercise Recovery Alliance membership.
         </p>
-        <Button asChild size="lg" className="btn-primary-enhanced">
-          <Link href={user ? (user.isMember ? "/shop" : "#membership-form") : "/auth"}>
-            {user ? (user.isMember ? "Browse Member Products" : "Join Now for $29") : "Sign In to Join"}
-          </Link>
-        </Button>
+        {!user?.isMember && (
+          <Button asChild size="lg" className="btn-primary-enhanced">
+            <Link href={user ? "#membership-form" : "/auth"}>
+              {user ? "Join Now for $29" : "Sign In to Join"}
+            </Link>
+          </Button>
+        )}
       </div>
     </div>
   );

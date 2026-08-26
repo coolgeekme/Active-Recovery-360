@@ -45,7 +45,7 @@ export default function HomePage() {
       icon: benefitIcons.lifetimeAccess
     },
     {
-      title: "Member Pricing on Clinical Recovery Service",
+      title: "Member Pricing on Clinical Recovery Services",
       description: "Access special member pricing on clinical recovery services",
       icon: benefitIcons.clinicalServices
     }
