@@ -633,7 +633,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-primary">Free Welcome Kit</h3>
-                <p className="text-secondary text-sm">Receive a recovery starter kit ($35 value) with your membership</p>
+                <p className="text-secondary text-sm">Receive a recovery starter kit ($39 value) with your membership</p>
               </div>
             </div>
             

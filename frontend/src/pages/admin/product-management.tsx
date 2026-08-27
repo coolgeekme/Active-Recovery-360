@@ -543,16 +543,15 @@ export default function ProductManagement() {
             </div>
           ) : (
             <>
-              {filterCategory && (
-                <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                  <ArrowUp className="h-3 w-3" />
-                  <ArrowDown className="h-3 w-3" />
-                  <span>
-                    Use the up/down arrows to reorder products within this category.
-                    This affects shop and category-page ordering for customers.
-                  </span>
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                <ArrowUp className="h-3 w-3" />
+                <ArrowDown className="h-3 w-3" />
+                <span>
+                  {filterCategory
+                    ? "Use the up/down arrows to reorder products within this category."
+                    : "Use the up/down arrows to reorder products. This affects shop ordering for customers."}
+                </span>
+              </p>
               <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
@@ -605,7 +604,6 @@ export default function ProductManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {filterCategory && (
                             <>
                               <Button
                                 variant="ghost"
@@ -646,7 +644,6 @@ export default function ProductManagement() {
                                 <ArrowDown className="h-4 w-4" />
                               </Button>
                             </>
-                          )}
                           <Button 
                             variant="ghost" 
                             size="icon"

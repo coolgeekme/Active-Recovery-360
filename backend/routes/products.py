@@ -284,17 +284,19 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
     return {"message": "Product deleted"}
 
 
-async def _normalize_category_order(category_id: str) -> list[dict]:
-    """Assign sequential displayOrder (10, 20, 30, ...) to every product in
-    the given category based on its current effective order. Returns the
-    normalized list of documents in their new order. Idempotent."""
+async def _normalize_order(category_id: Optional[str] = None) -> list[dict]:
+    """Assign sequential displayOrder (10, 20, 30, ...) to products based on
+    their current effective order. When `category_id` is given, scope to that
+    category; otherwise normalize the entire catalog. Returns the normalized
+    list of documents in their new order. Idempotent."""
     products = get_collection("products")
+    match = {"categoryIds": category_id} if category_id else {}
     pipeline = [
-        {"$match": {"categoryIds": category_id}},
+        {"$match": match},
         {"$addFields": {"_effectiveOrder": {"$ifNull": ["$displayOrder", 999999]}}},
         {"$sort": {"_effectiveOrder": 1, "name": 1}},
     ]
-    docs = await products.aggregate(pipeline).to_list(length=500)
+    docs = await products.aggregate(pipeline).to_list(length=1000)
     for index, doc in enumerate(docs):
         new_order = (index + 1) * 10
         if doc.get("displayOrder") != new_order:
@@ -312,10 +314,9 @@ async def move_product(
     categoryId: Optional[str] = Query(default=None),
     admin: dict = Depends(require_admin),
 ):
-    """Swap a product's displayOrder with its neighbour inside the given
-    category. direction=up moves it earlier in the list, direction=down
-    moves it later. `categoryId` scopes the reorder to a single category; when
-    omitted, the product's first category is used."""
+    """Swap a product's displayOrder with its neighbour. When `categoryId` is
+    provided, reorder is scoped to that category; otherwise the entire catalog
+    is reordered (the shop's default ordering)."""
     products = get_collection("products")
     try:
         target = await products.find_one({"_id": ObjectId(product_id)})
@@ -324,18 +325,13 @@ async def move_product(
     if not target:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    target_categories = _category_ids(target)
-    if not target_categories:
-        raise HTTPException(status_code=400, detail="Product has no category to reorder within")
     if categoryId:
-        if categoryId not in target_categories:
+        if categoryId not in _category_ids(target):
             raise HTTPException(status_code=400, detail="Product is not in the specified category")
-        category_id = categoryId
+        ordered = await _normalize_order(categoryId)
     else:
-        category_id = target_categories[0]
-
-    # Ensure every product in the category has a deterministic displayOrder.
-    ordered = await _normalize_category_order(category_id)
+        # No category scoping: reorder across the entire catalog (shop default).
+        ordered = await _normalize_order(None)
     ids = [str(d["_id"]) for d in ordered]
     try:
         current_index = ids.index(product_id)
