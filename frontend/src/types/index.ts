@@ -60,6 +60,8 @@ export interface Product {
   hasVariants?: boolean;
   variants?: ProductVariant[];
   hidePrice?: boolean;
+  displayOrder?: number;
+  categoryOrder?: Record<string, number>;
 }
 
 export interface Category {

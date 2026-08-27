@@ -75,6 +75,7 @@ def transform_product(doc: dict, show_price: bool = True) -> dict:
         "hasVariants": doc.get("hasVariants", False),
         "variants": doc.get("variants", []),
         "displayOrder": doc.get("displayOrder"),
+        "categoryOrder": doc.get("categoryOrder", {}),
         "hidePrice": hide_price,
     }
 
@@ -115,14 +116,18 @@ async def get_products(
         if not visibility:
             query["visibility"] = {"$ne": "doctor"}
 
-    # Sort by displayOrder (ascending) so admins can control product order
-    # within a category. Products without a displayOrder fall to the end,
-    # tie-broken by name for stable, predictable output.
+    # Sort by displayOrder (ascending) so admins can control product order.
+    # When a category is requested, prefer the per-category order
+    # (`categoryOrder.{categoryId}`) so multi-category products sort correctly
+    # within each category, falling back to the global displayOrder.
+    effective_order_expr = (
+        {"$ifNull": [f"$categoryOrder.{categoryId}", "$displayOrder", 999999]}
+        if categoryId
+        else {"$ifNull": ["$displayOrder", 999999]}
+    )
     pipeline = [
         {"$match": query},
-        {"$addFields": {
-            "_effectiveOrder": {"$ifNull": ["$displayOrder", 999999]}
-        }},
+        {"$addFields": {"_effectiveOrder": effective_order_expr}},
         {"$sort": {"_effectiveOrder": 1, "name": 1}},
         {"$limit": 200},
     ]
@@ -285,25 +290,40 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
 
 
 async def _normalize_order(category_id: Optional[str] = None) -> list[dict]:
-    """Assign sequential displayOrder (10, 20, 30, ...) to products based on
-    their current effective order. When `category_id` is given, scope to that
-    category; otherwise normalize the entire catalog. Returns the normalized
-    list of documents in their new order. Idempotent."""
+    """Assign sequential ordering to products. When `category_id` is given the
+    ordering is stored per-category in `categoryOrder.{category_id}` (so a
+    product's position in one category never disturbs another); otherwise the
+    global `displayOrder` field is used. Returns the normalized list of
+    documents in their new order. Idempotent."""
     products = get_collection("products")
     match = {"categoryIds": category_id} if category_id else {}
+    effective_order_expr = (
+        {"$ifNull": [f"$categoryOrder.{category_id}", "$displayOrder", 999999]}
+        if category_id
+        else {"$ifNull": ["$displayOrder", 999999]}
+    )
     pipeline = [
         {"$match": match},
-        {"$addFields": {"_effectiveOrder": {"$ifNull": ["$displayOrder", 999999]}}},
+        {"$addFields": {"_effectiveOrder": effective_order_expr}},
         {"$sort": {"_effectiveOrder": 1, "name": 1}},
     ]
     docs = await products.aggregate(pipeline).to_list(length=1000)
     for index, doc in enumerate(docs):
         new_order = (index + 1) * 10
-        if doc.get("displayOrder") != new_order:
-            await products.update_one(
-                {"_id": doc["_id"]}, {"$set": {"displayOrder": new_order}}
-            )
-            doc["displayOrder"] = new_order
+        if category_id:
+            current = (doc.get("categoryOrder") or {}).get(category_id)
+            if current != new_order:
+                await products.update_one(
+                    {"_id": doc["_id"]},
+                    {"$set": {f"categoryOrder.{category_id}": new_order}},
+                )
+                doc.setdefault("categoryOrder", {})[category_id] = new_order
+        else:
+            if doc.get("displayOrder") != new_order:
+                await products.update_one(
+                    {"_id": doc["_id"]}, {"$set": {"displayOrder": new_order}}
+                )
+                doc["displayOrder"] = new_order
     return docs
 
 
@@ -349,13 +369,26 @@ async def move_product(
 
     current_doc = ordered[current_index]
     neighbor_doc = ordered[neighbor_index]
-    # Swap displayOrder values
-    await products.update_one(
-        {"_id": current_doc["_id"]}, {"$set": {"displayOrder": neighbor_doc["displayOrder"]}}
-    )
-    await products.update_one(
-        {"_id": neighbor_doc["_id"]}, {"$set": {"displayOrder": current_doc["displayOrder"]}}
-    )
+    if categoryId:
+        # Swap per-category order values, leaving the global displayOrder alone.
+        current_order = (current_doc.get("categoryOrder") or {}).get(categoryId)
+        neighbor_order = (neighbor_doc.get("categoryOrder") or {}).get(categoryId)
+        await products.update_one(
+            {"_id": current_doc["_id"]},
+            {"$set": {f"categoryOrder.{categoryId}": neighbor_order}},
+        )
+        await products.update_one(
+            {"_id": neighbor_doc["_id"]},
+            {"$set": {f"categoryOrder.{categoryId}": current_order}},
+        )
+    else:
+        # Swap global displayOrder values
+        await products.update_one(
+            {"_id": current_doc["_id"]}, {"$set": {"displayOrder": neighbor_doc["displayOrder"]}}
+        )
+        await products.update_one(
+            {"_id": neighbor_doc["_id"]}, {"$set": {"displayOrder": current_doc["displayOrder"]}}
+        )
     return {"message": "Moved", "moved": True, "direction": direction}
 
 

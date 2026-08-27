@@ -19,6 +19,7 @@ import AdminLoginPage from "@/pages/admin-login-page";
 import ShopPage from "@/pages/shop-page";
 import MembershipPage from "@/pages/membership-page";
 import MembershipCheckoutPage from "@/pages/membership-checkout-page";
+import MembershipSuccessPage from "@/pages/membership-success-page";
 import ProductPage from "@/pages/product-page";
 import DoctorStorefrontPage from "@/pages/doctor-storefront-page";
 import DoctorsPage from "@/pages/doctors-page";
@@ -72,6 +73,7 @@ function AppRouter() {
           <Route path="/membership" component={MembershipPage} />
           <Route path="/membership/checkout" component={MembershipCheckoutPage} />
           <Route path="/membership-checkout" component={MembershipCheckoutPage} />
+          <Route path="/membership-success" component={MembershipSuccessPage} />
           <Route path="/product/:id" component={ProductPage} />
           <Route path="/doctors" component={DoctorsPage} />
           <Route path="/doctors/:id" component={DoctorStorefrontPage} />

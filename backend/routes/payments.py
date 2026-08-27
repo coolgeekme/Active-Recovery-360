@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 import os
+import asyncio
 
 from services.database import get_collection
 from routes.auth import require_auth
+from services.email import send_membership_welcome_email
 
 router = APIRouter()
 
@@ -71,6 +73,9 @@ async def confirm_membership_payment(data: dict, user: dict = Depends(require_au
     stripe = get_stripe()
     
     payment_intent_id = data.get("paymentIntentId")
+    tshirt_size = data.get("tshirtSize")
+    shipping_address = data.get("shippingAddress")
+    phone = data.get("phone")
     
     try:
         payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
@@ -85,15 +90,29 @@ async def confirm_membership_payment(data: dict, user: dict = Depends(require_au
                     {"$inc": {"usedCount": 1}}
                 )
             
-            # Update user membership
+            # Update user membership + demographics
             users = get_collection("users")
+            update_fields: dict = {"isMember": True}
+            if tshirt_size:
+                update_fields["tshirtSize"] = tshirt_size
+            if shipping_address:
+                update_fields["shippingAddress"] = shipping_address
+            if phone:
+                update_fields["phone"] = phone
+            
             result = await users.find_one_and_update(
                 {"_id": ObjectId(user["id"])},
-                {"$set": {"isMember": True}},
+                {"$set": update_fields},
                 return_document=True
             )
             
             if result:
+                # Send welcome email (fire-and-forget; don't block the response)
+                first_name = (result.get("fullName") or "there").split(" ")[0]
+                asyncio.create_task(
+                    send_membership_welcome_email(result.get("email"), first_name)
+                )
+                
                 return {
                     "id": str(result["_id"]),
                     "username": result.get("username"),

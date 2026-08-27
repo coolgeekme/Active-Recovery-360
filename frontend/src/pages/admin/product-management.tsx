@@ -318,12 +318,23 @@ export default function ProductManagement() {
   });
 
   // Filter products
-  const filteredProducts = products.filter(product => {
-    if (filterVisibility && product.visibility !== filterVisibility) return false;
-    if (filterCategory && !(product.categoryIds || []).includes(filterCategory)) return false;
-    if (filterFeatured !== undefined && product.featured !== filterFeatured) return false;
-    return true;
-  });
+  const filteredProducts = [...products]
+    .filter(product => {
+      if (filterVisibility && product.visibility !== filterVisibility) return false;
+      if (filterCategory && !(product.categoryIds || []).includes(filterCategory)) return false;
+      if (filterFeatured !== undefined && product.featured !== filterFeatured) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (filterCategory) {
+        // Within a category, sort by that category's own order (fallback to global).
+        const ao = a.categoryOrder?.[filterCategory] ?? a.displayOrder ?? 999999;
+        const bo = b.categoryOrder?.[filterCategory] ?? b.displayOrder ?? 999999;
+        return ao - bo;
+      }
+      // No category filter: keep the API's global displayOrder.
+      return 0;
+    });
 
   // Format price from cents to dollars
   const formatPrice = (price: number) => {

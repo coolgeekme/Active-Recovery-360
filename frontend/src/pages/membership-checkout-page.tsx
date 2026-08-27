@@ -14,16 +14,29 @@ import { Loader2, CheckCircle, Tag, X } from "lucide-react";
 const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 
+const MEMBERSHIP_PRICE = 29; // one-time membership fee in dollars
+
+const TSHIRT_SIZES = ["S", "M", "L", "XL", "XXL"];
+
+interface Demographics {
+  tshirtSize: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+}
+
 interface CheckoutFormProps {
   appliedDiscount: any;
   setAppliedDiscount: (discount: any) => void;
   createPaymentIntent: (discountCode?: string) => Promise<void>;
 }
 
-function CheckoutForm({ 
-  appliedDiscount, 
-  setAppliedDiscount, 
-  createPaymentIntent 
+function CheckoutForm({
+  appliedDiscount,
+  setAppliedDiscount,
+  createPaymentIntent,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -31,41 +44,43 @@ function CheckoutForm({
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   // Discount code state
   const [discountCode, setDiscountCode] = useState("");
   const [discountLoading, setDiscountLoading] = useState(false);
-  const [originalAmount] = useState(49);
-  
+  const [originalAmount] = useState(MEMBERSHIP_PRICE);
+
+  // Demographics (needed to ship the free recovery kit + t-shirt)
+  const [tshirtSize, setTshirtSize] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
+  const [phone, setPhone] = useState("");
+
   // Calculate final amount
   const calculateFinalAmount = () => {
     if (!appliedDiscount) return originalAmount;
-    
+
     if (appliedDiscount.discountType === "percentage") {
       return originalAmount - (originalAmount * appliedDiscount.discountValue / 100);
     } else {
-      // Fixed discount (in cents, convert to dollars)
       return Math.max(0, originalAmount - (appliedDiscount.discountValue / 100));
     }
   };
-  
+
   const finalAmount = calculateFinalAmount();
-  
+
   // Apply discount code
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) {
-      toast({
-        title: "Please enter a discount code",
-        variant: "destructive",
-      });
+      toast({ title: "Please enter a discount code", variant: "destructive" });
       return;
     }
-    
+
     setDiscountLoading(true);
     try {
-      // Recreate payment intent with discount code
       await createPaymentIntent(discountCode.trim().toUpperCase());
-      
       toast({
         title: "Discount Applied!",
         description: "Your membership price has been updated.",
@@ -81,14 +96,12 @@ function CheckoutForm({
       setDiscountLoading(false);
     }
   };
-  
+
   // Remove applied discount
   const removeDiscount = () => {
     setAppliedDiscount(null);
     setDiscountCode("");
-    toast({
-      title: "Discount Removed",
-    });
+    toast({ title: "Discount Removed" });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -98,12 +111,49 @@ function CheckoutForm({
       return;
     }
 
+    // Validate demographics
+    if (!tshirtSize) {
+      toast({
+        title: "T-shirt size required",
+        description: "Please select a t-shirt size for your free gift.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
+
+    const demographics: Demographics = {
+      tshirtSize,
+      street,
+      city,
+      state,
+      zip,
+      phone,
+    };
+
+    // Persist demographics so the /membership-success page (3DS redirect path)
+    // can still complete activation if the card requires a redirect.
+    localStorage.setItem("ar360_pending_demographics", JSON.stringify(demographics));
 
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: window.location.origin + "/membership-success",
+        // persist demographics through the redirect for 3DS cards
+        payment_method_data: {
+          billing_details: {
+            name: user?.fullName || undefined,
+            email: user?.email || undefined,
+            phone: phone || undefined,
+            address: {
+              line1: street || undefined,
+              city: city || undefined,
+              state: state || undefined,
+              postal_code: zip || undefined,
+            },
+          },
+        },
       },
       redirect: "if_required",
     });
@@ -120,14 +170,19 @@ function CheckoutForm({
       try {
         await apiRequest("POST", "/api/confirm-membership-payment", {
           paymentIntentId: paymentIntent.id,
+          tshirtSize,
+          shippingAddress: { street, city, state, zip },
+          phone,
         });
-        
+
+        localStorage.removeItem("ar360_pending_demographics");
+
         toast({
           title: "Welcome to Active Recovery 360!",
           description: "Your membership has been activated successfully.",
         });
-        
-        navigate("/");
+
+        navigate("/membership-success");
       } catch (error) {
         toast({
           title: "Error",
@@ -154,7 +209,9 @@ function CheckoutForm({
             <div className="flex justify-between items-center">
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900">Active Recovery 360 Membership</h3>
-                <p className="text-sm text-gray-600 mt-1">Lifetime access to exclusive products</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Lifetime access to exclusive products + a free recovery kit &amp; t-shirt
+                </p>
               </div>
               <div className="text-right">
                 {appliedDiscount && (
@@ -162,44 +219,38 @@ function CheckoutForm({
                     ${originalAmount.toFixed(2)}
                   </div>
                 )}
-                <div className="text-2xl font-bold text-primary">
-                  ${finalAmount.toFixed(2)}
-                </div>
+                <div className="text-2xl font-bold text-primary">${finalAmount.toFixed(2)}</div>
                 <div className="text-sm text-gray-600">one-time</div>
               </div>
             </div>
           </div>
-            
-            {/* Applied Discount Display */}
-            {appliedDiscount && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 text-green-600" />
-                    <div>
-                      <div className="text-sm font-medium text-green-800">
-                        {appliedDiscount.code}
-                      </div>
-                      <div className="text-xs text-green-700">
-                        {appliedDiscount.description}
-                      </div>
-                    </div>
+
+          {/* Applied Discount Display */}
+          {appliedDiscount && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-green-600" />
+                  <div>
+                    <div className="text-sm font-medium text-green-800">{appliedDiscount.code}</div>
+                    <div className="text-xs text-green-700">{appliedDiscount.description}</div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeDiscount}
-                    className="text-green-600 hover:text-green-800 hover:bg-green-100"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
-                <div className="mt-2 text-xs text-green-800">
-                  Discount: ${(originalAmount - finalAmount).toFixed(2)} off
-                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeDiscount}
+                  className="text-green-600 hover:text-green-800 hover:bg-green-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-            )}
+              <div className="mt-2 text-xs text-green-800">
+                Discount: ${(originalAmount - finalAmount).toFixed(2)} off
+              </div>
+            </div>
+          )}
 
           {/* Discount Code Section */}
           {!appliedDiscount && (
@@ -216,7 +267,7 @@ function CheckoutForm({
                   onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
                   className="flex-1"
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       applyDiscountCode();
                     }
@@ -228,23 +279,78 @@ function CheckoutForm({
                   onClick={applyDiscountCode}
                   disabled={discountLoading || !discountCode.trim()}
                 >
-                  {discountLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Apply"
-                  )}
+                  {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
                 </Button>
               </div>
             </div>
           )}
 
+          {/* Demographics — needed to ship the free kit + t-shirt */}
+          <div className="mb-6 space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Free gift — t-shirt size *</Label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {TSHIRT_SIZES.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setTshirtSize(s)}
+                    className={`px-4 py-2 rounded border text-sm font-medium transition ${
+                      tshirtSize === s
+                        ? "bg-primary text-white border-primary"
+                        : "border-gray-300 hover:border-primary"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="street" className="text-sm font-medium">Shipping address</Label>
+              <Input
+                id="street"
+                type="text"
+                placeholder="Street address"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="text"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="State"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="text"
+                placeholder="ZIP"
+                value={zip}
+                onChange={(e) => setZip(e.target.value)}
+              />
+              <Input
+                type="tel"
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <PaymentElement />
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={!stripe || isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={!stripe || isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -264,7 +370,7 @@ function CheckoutForm({
 export default function MembershipCheckoutPage() {
   const [clientSecret, setClientSecret] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
-  const [elementsKey, setElementsKey] = useState(0); // Key to force Elements remount
+  const [elementsKey, setElementsKey] = useState(0);
   const { user, isLoading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -272,16 +378,16 @@ export default function MembershipCheckoutPage() {
   // Create or recreate payment intent
   const createPaymentIntent = async (discountCode?: string) => {
     if (!user) return;
-    
+
     try {
-      const response = await apiRequest("POST", "/api/create-payment-intent", { 
-        amount: 49,
-        discountCode: discountCode
+      const response = await apiRequest("POST", "/api/create-payment-intent", {
+        amount: MEMBERSHIP_PRICE,
+        discountCode: discountCode,
       });
       const data = await response.json();
       setClientSecret(data.clientSecret);
-      setElementsKey(prev => prev + 1); // Force Elements to remount with new clientSecret
-      
+      setElementsKey((prev) => prev + 1);
+
       if (data.appliedDiscount) {
         setAppliedDiscount(data.appliedDiscount);
       } else {
@@ -312,7 +418,6 @@ export default function MembershipCheckoutPage() {
       return;
     }
 
-    // Create initial payment intent for membership
     if (user) {
       createPaymentIntent();
     }
@@ -334,13 +439,11 @@ export default function MembershipCheckoutPage() {
     );
   }
 
-  const options = {
-    clientSecret,
-  };
+  const options = { clientSecret };
 
   return (
     <Elements key={elementsKey} stripe={stripePromise} options={options}>
-      <CheckoutForm 
+      <CheckoutForm
         appliedDiscount={appliedDiscount}
         setAppliedDiscount={setAppliedDiscount}
         createPaymentIntent={createPaymentIntent}

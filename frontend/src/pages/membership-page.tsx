@@ -156,7 +156,7 @@ export default function MembershipPage() {
         </p>
         {!user?.isMember && (
           <Button asChild size="lg" className="btn-primary-enhanced">
-            <Link href={user ? "#membership-form" : "/auth"}>
+            <Link href={user ? "/membership/checkout" : "/auth"}>
               {user ? "Join Now for $29" : "Sign In to Join"}
             </Link>
           </Button>

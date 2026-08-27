@@ -66,6 +66,15 @@ export default function ProductPage() {
       });
     });
     
+    // Fallback: some variants are differentiated only by `name` (e.g. "4 Count Pack"
+    // vs "10 Count Pack") with empty `attributes`. Surface them as a single selector.
+    if (Object.keys(options).length === 0) {
+      const names = [...new Set(product.variants.map(v => v.name).filter(Boolean))];
+      if (names.length > 1) {
+        options["option"] = names;
+      }
+    }
+    
     return options;
   }, [product]);
 
@@ -84,15 +93,22 @@ export default function ProductPage() {
   const handleVariantChange = (attributeKey: string, value: string) => {
     if (!product?.variants) return;
     
-    // Find variant that matches all current selections plus the new one
-    const currentAttributes = selectedVariant?.attributes || {};
-    const newAttributes = { ...currentAttributes, [attributeKey]: value };
+    let matchingVariant;
     
-    const matchingVariant = product.variants.find(v => {
-      return Object.entries(newAttributes).every(([key, val]) => {
-        return v.attributes[key as keyof typeof v.attributes] === val;
+    if (attributeKey === "option") {
+      // Fallback: match by variant name for name-only variants
+      matchingVariant = product.variants.find(v => v.name === value);
+    } else {
+      // Find variant that matches all current selections plus the new one
+      const currentAttributes = selectedVariant?.attributes || {};
+      const newAttributes = { ...currentAttributes, [attributeKey]: value };
+      
+      matchingVariant = product.variants.find(v => {
+        return Object.entries(newAttributes).every(([key, val]) => {
+          return v.attributes[key as keyof typeof v.attributes] === val;
+        });
       });
-    });
+    }
     
     if (matchingVariant) {
       setSelectedVariant(matchingVariant);
@@ -260,10 +276,12 @@ export default function ProductPage() {
               {Object.entries(variantOptions).map(([attributeKey, values]) => (
                 <div key={attributeKey} className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground capitalize">
-                    {attributeKey === 'packSize' ? 'Pack Size' : attributeKey}
+                    {attributeKey === 'packSize' ? 'Pack Size' : attributeKey === 'option' ? 'Options' : attributeKey}
                   </label>
                   <Select
-                    value={selectedVariant?.attributes[attributeKey as keyof typeof selectedVariant.attributes] || ''}
+                    value={attributeKey === 'option'
+                      ? (selectedVariant?.name || '')
+                      : (selectedVariant?.attributes[attributeKey as keyof typeof selectedVariant.attributes] || '')}
                     onValueChange={(value) => handleVariantChange(attributeKey, value)}
                   >
                     <SelectTrigger className="w-full" data-testid={`variant-select-${attributeKey}`}>
