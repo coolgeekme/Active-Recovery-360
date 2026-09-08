@@ -192,6 +192,12 @@ export default function TeamsTrainersPage() {
         </div>
 
         {/* Signup form */}
+        <div className="max-w-2xl mx-auto mb-4">
+          <p className="text-center text-xl md:text-2xl font-montserrat font-semibold text-primary mb-6 leading-snug">
+            Sign up today for our Teams/ATC affiliate program to raise funds for
+            your team&apos;s athletic training and recovery needs.
+          </p>
+        </div>
         <div className="max-w-2xl mx-auto">
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-8 pb-8">
