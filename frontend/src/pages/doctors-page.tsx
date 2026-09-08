@@ -3,12 +3,14 @@ import { User } from "@/types";
 import {
   Loader2,
   CheckCircle2,
+  Check,
   Activity,
   Pill,
   Dumbbell,
   ShieldCheck,
   Thermometer,
   Sparkles,
+  Stethoscope,
   TrendingUp,
   HandCoins,
   Heart,
@@ -115,6 +117,14 @@ const PARTNER_BENEFITS = [
   "Premium recovery brands",
   "Dedicated support",
   "Easy online ordering",
+];
+
+const WHY_SIGN_UP = ["Access to members", "Market your services", "Local customers"];
+
+const EXPOSURE_TIERS = [
+  { name: "Silver", detail: "No fee, listing only" },
+  { name: "Gold", detail: "Premium listing slot, monthly fee" },
+  { name: "Platinum", detail: "Home page listing, member access marketing, service reviews" },
 ];
 
 export default function DoctorsPage() {
@@ -247,18 +257,42 @@ export default function DoctorsPage() {
         </div>
       </section>
 
-      {/* ELEVATE */}
+      {/* PROVIDER SIGN-UP BLUE BOX */}
       <section className="bg-primary text-white">
         <div className="container mx-auto px-4 py-16 max-w-4xl text-center">
-          <h2 className="text-2xl sm:text-3xl font-montserrat font-bold mb-4">
-            Elevate Your Patient Recovery Program
+          <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
+            <Stethoscope className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-montserrat font-bold mb-3">
+            Sign up to provide clinical recovery services
           </h2>
-          <p className="text-base sm:text-lg text-white/90 leading-relaxed">
-            Today's patients expect more than treatment alone — they want complete recovery
-            solutions they can use at home and in everyday life. Active Recovery 360 helps
-            healthcare providers extend care beyond the clinic with recovery products that improve
-            patient engagement, support healing, and enhance performance.
+          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
+            Why sign up
           </p>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-10">
+            {WHY_SIGN_UP.map((reason) => (
+              <span key={reason} className="inline-flex items-center gap-2 text-white">
+                <span className="bg-white text-primary rounded-full h-5 w-5 inline-flex items-center justify-center">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+                {reason}
+              </span>
+            ))}
+          </div>
+          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
+            Choose your level of exposure
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+            {EXPOSURE_TIERS.map((tier) => (
+              <div key={tier.name} className="bg-white rounded-lg p-6 text-center shadow-lg">
+                <h3 className="font-montserrat font-bold text-primary text-xl mb-2">{tier.name}</h3>
+                <p className="text-secondary text-sm">{tier.detail}</p>
+              </div>
+            ))}
+          </div>
+          <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
+            <a href="/auth?tab=register">Apply as a Healthcare Professional</a>
+          </Button>
         </div>
       </section>
 
