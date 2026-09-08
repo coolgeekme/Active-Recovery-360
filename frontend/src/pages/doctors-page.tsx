@@ -258,8 +258,8 @@ export default function DoctorsPage() {
       </section>
 
       {/* PROVIDER SIGN-UP BLUE BOX */}
-      <section className="bg-primary text-white">
-        <div className="container mx-auto px-4 py-16 max-w-4xl text-center">
+      <section className="bg-primary text-white pt-16">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
           <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
             <Stethoscope className="h-8 w-8 text-white" />
           </div>
@@ -269,27 +269,41 @@ export default function DoctorsPage() {
           <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
             Why sign up
           </p>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-10">
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 pb-16">
             {WHY_SIGN_UP.map((reason) => (
               <span key={reason} className="inline-flex items-center gap-2 text-white">
-                <span className="bg-white text-primary rounded-full h-5 w-5 inline-flex items-center justify-center">
-                  <Check className="h-3.5 w-3.5" />
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-white">
+                  <Check className="h-3 w-3 text-white" />
                 </span>
                 {reason}
               </span>
             ))}
           </div>
-          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
+        </div>
+      </section>
+
+      {/* EXPOSURE TIERS (white strip between blue bands so card text keeps site colors) */}
+      <section className="bg-white py-12">
+        <div className="container mx-auto px-4 max-w-4xl text-center">
+          <p className="font-montserrat font-semibold uppercase tracking-wide text-sm text-primary mb-6">
             Choose your level of exposure
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {EXPOSURE_TIERS.map((tier) => (
-              <div key={tier.name} className="bg-white rounded-lg p-6 text-center shadow-lg">
+              <div
+                key={tier.name}
+                className="bg-white rounded-lg p-6 text-center shadow border border-primary/10"
+              >
                 <h3 className="font-montserrat font-bold text-primary text-xl mb-2">{tier.name}</h3>
                 <p className="text-secondary text-sm">{tier.detail}</p>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-primary text-white pb-16">
+        <div className="container mx-auto px-4 max-w-4xl text-center pt-10">
           <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
             <a href="/auth?tab=register">Apply as a Healthcare Professional</a>
           </Button>

@@ -1,0 +1,21 @@
+{
+  "summary": "Verified fix for Silver/Gold/Platinum tier cards on /doctors and /recovery-services. All tier <h3> headings now compute to dark navy blue rgb(6,61,107) on white parent background rgb(255,255,255) — no more white-on-white. Apply as a Healthcare Professional button exists on /doctors with href='/auth?tab=register'. No console errors on /doctors or /recovery-services. Regression: /, /shop, /membership loaded clean. /teams-trainers shows 429 rate-limit errors unrelated to this bug.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Global CSS rule '.bg-primary [class*=\"text-\"] { color: white !important }' remains a latent trap for future devs — consider scoping it more narrowly or removing !important to avoid recurrence."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fully fixed. Tier heading computed color = rgb(6,61,107), parent bg = rgb(255,255,255) on both /doctors and /recovery-services. /teams-trainers 429 errors are pre-existing rate-limit noise, not related to this bug.",
+  "rca of the issue": "Original bug: global CSS `.bg-primary [class*='text-'] { color: white !important }` forced tier <h3 class='text-primary'> to white while sitting on white cards inside a .bg-primary section. Fix (commit 0933c9f) restructured pages into 3 stacked bands so tier cards now live in a non-.bg-primary middle white strip; the global rule no longer matches, so text-primary correctly renders dark navy."
+}
