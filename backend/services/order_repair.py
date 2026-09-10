@@ -56,7 +56,7 @@ async def run_order_repair() -> dict:
 
     # Imported here (not at module import time) to avoid an import cycle:
     # routes.products imports from services, and this runs post-startup.
-    from routes.products import _normalize_order
+    from routes.products import _category_match, _normalize_order
 
     products = get_collection("products")
     categories = get_collection("categories")
@@ -65,12 +65,13 @@ async def run_order_repair() -> dict:
 
     async for cat in categories.find({}):
         cid = str(cat["_id"])
-        total = await products.count_documents({"categoryIds": cid})
+        membership = _category_match(cid)  # array OR legacy scalar
+        total = await products.count_documents(membership)
         if not total:
             report["empty"] += 1
             continue
         keyed_before = await products.count_documents(
-            {"categoryIds": cid, f"categoryOrder.{cid}": {"$exists": True}}
+            {**membership, f"categoryOrder.{cid}": {"$exists": True}}
         )
         await _normalize_order(cid)
         report["normalized"].append(
@@ -96,7 +97,7 @@ async def run_order_repair() -> dict:
             report["pin_errors"].append({"pin": pair, "error": "product not found"})
             continue
 
-        members = await products.find({"categoryIds": category_id}).to_list(length=2000)
+        members = await products.find(_category_match(category_id)).to_list(length=2000)
         if not members:
             report["pin_errors"].append({"pin": pair, "error": "category has no products"})
             continue

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Exercise order_repair.run_order_repair against an in-memory fake DB (no Mongo needed).
 
-Verifies: opt-in gating, per-category normalization calls, pin placement at the
-end, pin error paths, and idempotency of the report. Stubs `services.database`
-and `routes.products` so no real Mongo or app boot is needed.
+Covers: opt-in gating, per-category normalization, products stored with the
+legacy scalar `categoryId` (the shape that made the move endpoint see a partial
+list), pin placement at the end, pin error paths, and idempotency.
+
+Stubs `services.database` and `routes.products` so no real Mongo or app boot is
+required. Run: `python backend/tests/test_order_repair.py`
 """
 import asyncio
 import importlib.util
@@ -25,6 +28,8 @@ TOP_CAT = ObjectId("6c0000000000000000000001")
 SC_CAT_ID = str(SC_CAT)
 TOP_CAT_ID = str(TOP_CAT)
 
+LEGACY_ID = ObjectId("6b0000000000000000000005")
+
 
 class FakeCursor:
     def __init__(self, docs):
@@ -44,29 +49,37 @@ class FakeCollection:
     def __init__(self, docs):
         self.docs = docs
 
+    def _match(self, doc, query):
+        for key, value in query.items():
+            if key == "$or":
+                if not any(self._match(doc, sub) for sub in value):
+                    return False
+                continue
+            if key == "categoryIds":
+                ids = doc.get("categoryIds")
+                if value in (ids if isinstance(ids, list) else []):
+                    continue
+                return False
+            if key.startswith("categoryOrder."):
+                cid = key.split(".", 1)[1]
+                if isinstance(value, dict) and "$exists" in value:
+                    if cid in (doc.get("categoryOrder") or {}):
+                        continue
+                    return False
+                if (doc.get("categoryOrder") or {}).get(cid) == value:
+                    continue
+                return False
+            if doc.get(key) != value:
+                return False
+        return True
+
     def find(self, query=None):
         query = query or {}
-        out = []
-        for d in self.docs:
-            if all(self._match(d, k, v) for k, v in query.items()):
-                out.append(d)
-        return FakeCursor(out)
-
-    def _match(self, doc, key, value):
-        if key == "categoryIds":
-            return value in (doc.get("categoryIds") or [])
-        if key.startswith("categoryOrder."):
-            cid = key.split(".", 1)[1]
-            if isinstance(value, dict) and "$exists" in value:
-                return cid in (doc.get("categoryOrder") or {})
-            return (doc.get("categoryOrder") or {}).get(cid) == value
-        if key == "_id":
-            return doc.get("_id") == value
-        return doc.get(key) == value
+        return FakeCursor([d for d in self.docs if self._match(d, query)])
 
     async def find_one(self, query):
         for d in self.docs:
-            if all(self._match(d, k, v) for k, v in query.items()):
+            if self._match(d, query):
                 return d
         return None
 
@@ -85,17 +98,21 @@ class FakeCollection:
         return types.SimpleNamespace(modified_count=1)
 
 
-# --- in-memory fixture: the real broken production shape -------------------
+# --- fixture: the real broken production shape ----------------------------
 products = [
     {"_id": BIO_BLADE, "name": "Bio Blade", "categoryIds": [SC_CAT_ID],
-     "categoryOrder": {SC_CAT_ID: 10}, "displayOrder": 100},
+     "categoryOrder": {SC_CAT_ID: 10}, "displayOrder": 30},
     {"_id": QMOUNT, "name": "QMount - Massage Gun Wall Mount", "categoryIds": [SC_CAT_ID],
      "categoryOrder": {SC_CAT_ID: 20}, "displayOrder": 710},
-    {"_id": ObjectId("6b0000000000000000000002"), "name": "Chirp Sole Vibe", "categoryIds": [SC_CAT_ID],
+    {"_id": "6b0000000000000000000002", "name": "Chirp Sole Vibe", "categoryIds": [SC_CAT_ID],
      "displayOrder": 300},
-    {"_id": ObjectId("6b0000000000000000000003"), "name": "Wave Vibrating Roller", "categoryIds": [SC_CAT_ID],
+    {"_id": "6b0000000000000000000003", "name": "Wave Vibrating Roller", "categoryIds": [SC_CAT_ID],
      "displayOrder": 810},
-    {"_id": ObjectId("6b0000000000000000000004"), "name": "Topical A", "categoryIds": [TOP_CAT_ID],
+    # LEGACY SHAPE: no `categoryIds` array at all, only the scalar field. The old
+    # ordering helper ignored this document entirely.
+    {"_id": LEGACY_ID, "name": "Legacy Scalar Product", "categoryId": SC_CAT_ID,
+     "displayOrder": 500},
+    {"_id": "6b0000000000000000000004", "name": "Topical A", "categoryIds": [TOP_CAT_ID],
      "displayOrder": 20},
 ]
 categories = [{"_id": SC_CAT, "name": "Self-Care Tools"}, {"_id": TOP_CAT, "name": "Topicals"}]
@@ -103,12 +120,23 @@ categories = [{"_id": SC_CAT, "name": "Self-Care Tools"}, {"_id": TOP_CAT, "name
 normalize_calls = []
 
 
+def in_cat(p, cid):
+    """Mirror routes.products._category_ids: array first, legacy scalar fallback."""
+    if cid in (p.get("categoryIds") or []):
+        return True
+    return p.get("categoryId") == cid
+
+
+def category_match(cid):
+    return {"$or": [{"categoryIds": cid}, {"categoryId": cid}]}
+
+
 async def fake_normalize(category_id=None):
     """Mirror the real helper: assign 10,20,30… in current effective order."""
     normalize_calls.append(category_id)
     if category_id is None:
         return []
-    members = [p for p in products if category_id in (p.get("categoryIds") or [])]
+    members = [p for p in products if in_cat(p, category_id)]
     members.sort(key=lambda p: ((p.get("categoryOrder") or {}).get(category_id)
                                 or p.get("displayOrder") or 999999, p.get("name", "")))
     for i, m in enumerate(members, 1):
@@ -116,7 +144,7 @@ async def fake_normalize(category_id=None):
     return members
 
 
-# --- stub the modules the repair imports ----------------------------------
+# --- stub the modules the repair imports ---------------------------------
 services_pkg = types.ModuleType("services")
 db_mod = types.ModuleType("services.database")
 db_mod.get_collection = lambda name: {"products": FakeCollection(products),
@@ -128,6 +156,7 @@ sys.modules["services.database"] = db_mod
 routes_pkg = types.ModuleType("routes")
 prod_mod = types.ModuleType("routes.products")
 prod_mod._normalize_order = fake_normalize
+prod_mod._category_match = category_match
 routes_pkg.products = prod_mod
 sys.modules["routes"] = routes_pkg
 sys.modules["routes.products"] = prod_mod
@@ -150,6 +179,17 @@ def eff(pid, cid):
     return (p.get("categoryOrder") or {}).get(str(cid))
 
 
+def sc_order():
+    mem = [p for p in products if in_cat(p, SC_CAT_ID)]
+    mem.sort(key=lambda p: ((p.get("categoryOrder") or {}).get(SC_CAT_ID) or 999999))
+    return [p["name"] for p in mem]
+
+
+def sc_values():
+    return {p["name"]: (p.get("categoryOrder") or {}).get(SC_CAT_ID)
+            for p in products if in_cat(p, SC_CAT_ID)}
+
+
 async def main():
     print("1) gating")
     os.environ.pop("AR360_ORDER_REPAIR", None)
@@ -159,46 +199,38 @@ async def main():
 
     print("2) repair run (with pin)")
     os.environ["AR360_ORDER_REPAIR"] = "1"
-    os.environ["AR360_ORDER_PINS"] = f"{QMOUNT}:{SC_CAT}"  # ObjectId renders as the 24-hex string
+    os.environ["AR360_ORDER_PINS"] = f"{QMOUNT}:{SC_CAT_ID}"
     r = await order_repair.run_order_repair()
     names = {c["name"] for c in r["normalized"]}
     check("normalized both categories", names == {"Self-Care Tools", "Topicals"}, str(names))
-    sc = next(c for c in r["normalized"] if c["categoryId"] == str(SC_CAT))
-    check("reported 2 of 4 keyed before", sc["keyedBefore"] == 2, json.dumps(sc))
-    check("all 4 members now keyed", all(eff(str(p["_id"]), SC_CAT) for p in products
-                                         if SC_CAT_ID in (p.get("categoryIds") or [])))
+    sc = next(c for c in r["normalized"] if c["categoryId"] == SC_CAT_ID)
+    check("counts the LEGACY scalar product too (5, not 4)", sc["members"] == 5, json.dumps(sc))
+    check("reported 2 of 5 keyed before", sc["keyedBefore"] == 2, json.dumps(sc))
+    check("all 5 members now keyed", all(eff(str(p["_id"]), SC_CAT) for p in products if in_cat(p, SC_CAT_ID)))
+    check("legacy scalar product got a key", eff(str(LEGACY_ID), SC_CAT) is not None,
+          str(eff(str(LEGACY_ID), SC_CAT)))
     check("order preserved (Bio Blade < Chirp < Wave)",
           eff(str(BIO_BLADE), SC_CAT) < eff("6b0000000000000000000002", SC_CAT) < eff("6b0000000000000000000003", SC_CAT))
     check("QMount pinned LAST", eff(str(QMOUNT), SC_CAT) > max(
         eff(str(p["_id"]), SC_CAT) for p in products
-        if SC_CAT_ID in (p.get("categoryIds") or []) and p["_id"] != QMOUNT))
-    check("pin reported", bool(r["pinned"]) and r["pinned"][0]["order"] == eff(str(QMOUNT), SC_CAT), json.dumps(r["pinned"]))
+        if in_cat(p, SC_CAT_ID) and p["_id"] != QMOUNT))
+    check("pin reported", bool(r["pinned"]) and r["pinned"][0]["order"] == eff(str(QMOUNT), SC_CAT),
+          json.dumps(r["pinned"]))
 
     print("3) idempotency")
-
-    def sc_order():
-        mem = [p for p in products if SC_CAT_ID in (p.get("categoryIds") or [])]
-        mem.sort(key=lambda p: ((p.get("categoryOrder") or {}).get(SC_CAT_ID) or 999999))
-        return [p["name"] for p in mem]
-
-    def sc_values():
-        return {p["name"]: (p.get("categoryOrder") or {}).get(SC_CAT_ID)
-                for p in products if SC_CAT_ID in (p.get("categoryIds") or [])}
-
     order_after_first = sc_order()
     r2 = await order_repair.run_order_repair()
     check("re-run preserves the ORDER", sc_order() == order_after_first, str(sc_order()))
     check("QMount still last after re-run", sc_order()[-1].startswith("QMount"), str(sc_order()))
     check("re-run reports every member already keyed",
           all(c["keyedBefore"] == c["members"] for c in r2["normalized"]), json.dumps(r2["normalized"]))
-
     values_after_second = sc_values()
-    r3 = await order_repair.run_order_repair()
+    await order_repair.run_order_repair()
     check("values reach steady state by run 2 (no further churn)",
           sc_values() == values_after_second, f"{values_after_second} -> {sc_values()}")
 
     print("4) pin error paths")
-    os.environ["AR360_ORDER_PINS"] = "not-an-objectid:" + SC_CAT_ID + ";deadbeefdeadbeefdeadbeef:" + SC_CAT_ID
+    os.environ["AR360_ORDER_PINS"] = f"not-an-objectid:{SC_CAT_ID};deadbeefdeadbeefdeadbeef:{SC_CAT_ID}"
     r3 = await order_repair.run_order_repair()
     check("invalid id + missing product both reported", len(r3["pin_errors"]) == 2, json.dumps(r3["pin_errors"]))
     check("no pins applied on error", r3["pinned"] == [], json.dumps(r3["pinned"]))

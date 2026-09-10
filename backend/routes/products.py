@@ -39,6 +39,17 @@ def _category_ids(doc: dict) -> list[str]:
     return []
 
 
+def _category_match(category_id: str) -> dict:
+    """Query fragment matching every product in a category.
+
+    Must cover BOTH storage shapes: the current `categoryIds` array and the
+    legacy scalar `categoryId` (see _category_ids). Matching only the array
+    silently operates on a subset - that is what made the move endpoint report
+    "Already at bottom" for a product that was visibly mid-list.
+    """
+    return {"$or": [{"categoryIds": category_id}, {"categoryId": category_id}]}
+
+
 def _payload_category_ids(data: dict) -> list[str] | None:
     """Extract and normalize category ids from a create/update payload.
     Accepts `categoryIds` (list) with a legacy `categoryId` (scalar) fallback.
@@ -95,7 +106,7 @@ async def get_products(
     if categoryId:
         # Match both the new `categoryIds` array and legacy scalar `categoryId`
         # so category pages keep working during the migration window.
-        query["$or"] = [{"categoryIds": categoryId}, {"categoryId": categoryId}]
+        query.update(_category_match(categoryId))
     if featured is not None:
         query["featured"] = featured
     if doctorId:
@@ -296,7 +307,7 @@ async def _normalize_order(category_id: Optional[str] = None) -> list[dict]:
     global `displayOrder` field is used. Returns the normalized list of
     documents in their new order. Idempotent."""
     products = get_collection("products")
-    match = {"categoryIds": category_id} if category_id else {}
+    match = _category_match(category_id) if category_id else {}
     effective_order_expr = (
         {"$ifNull": [f"$categoryOrder.{category_id}", "$displayOrder", 999999]}
         if category_id
@@ -443,7 +454,7 @@ async def normalize_product_order(
         if categoryId not in _category_ids(target):
             raise HTTPException(status_code=400, detail="Product is not in the specified category")
 
-        members = await products.find({"categoryIds": categoryId}).to_list(length=1000)
+        members = await products.find(_category_match(categoryId)).to_list(length=1000)
         highest = max(
             ((m.get("categoryOrder") or {}).get(categoryId) or 0) for m in members
         )
