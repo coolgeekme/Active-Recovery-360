@@ -392,6 +392,75 @@ async def move_product(
     return {"message": "Moved", "moved": True, "direction": direction}
 
 
+@router.post("/admin/products/normalize-order")
+async def normalize_product_order(
+    categoryId: Optional[str] = Query(default=None),
+    placeLast: Optional[str] = Query(default=None),
+    admin: dict = Depends(require_admin),
+):
+    """Backfill sequential per-category order keys so the admin table, the
+    storefront and `move` all read from the same list. Idempotent — re-running
+    assigns the same values.
+
+    Products sort by `categoryOrder.<categoryId>`, falling back to the global
+    `displayOrder`. When a category has a MIX of both (some products keyed, most
+    not) the effective order is incoherent, and a move can report "already at
+    bottom" for a product that is visibly mid-list. Normalizing rewrites every
+    member of the category to 10, 20, 30, …
+
+    - no `categoryId`: normalize every category, then the global `displayOrder`
+    - `categoryId`: normalize just that category
+    - `placeLast` (requires `categoryId`): after normalizing, pin that product
+      to the end of the category (honours a specific "put X last" request)
+    """
+    products = get_collection("products")
+    categories = get_collection("categories")
+    report: list[dict] = []
+
+    if categoryId:
+        ordered = await _normalize_order(categoryId)
+        report.append({"categoryId": categoryId, "count": len(ordered)})
+    else:
+        all_categories = await categories.find({}).to_list(length=200)
+        for cat in all_categories:
+            cid = str(cat["_id"])
+            ordered = await _normalize_order(cid)
+            report.append(
+                {"categoryId": cid, "name": cat.get("name", ""), "count": len(ordered)}
+            )
+        await _normalize_order(None)
+
+    pinned = None
+    if placeLast:
+        if not categoryId:
+            raise HTTPException(status_code=400, detail="categoryId is required with placeLast")
+        try:
+            target = await products.find_one({"_id": ObjectId(placeLast)})
+        except InvalidId:
+            raise HTTPException(status_code=404, detail="Product not found")
+        if not target:
+            raise HTTPException(status_code=404, detail="Product not found")
+        if categoryId not in _category_ids(target):
+            raise HTTPException(status_code=400, detail="Product is not in the specified category")
+
+        members = await products.find({"categoryIds": categoryId}).to_list(length=1000)
+        highest = max(
+            ((m.get("categoryOrder") or {}).get(categoryId) or 0) for m in members
+        )
+        await products.update_one(
+            {"_id": target["_id"]},
+            {"$set": {f"categoryOrder.{categoryId}": highest + 10}},
+        )
+        pinned = {
+            "productId": placeLast,
+            "name": target.get("name"),
+            "categoryId": categoryId,
+            "order": highest + 10,
+        }
+
+    return {"message": "Order normalized", "categories": report, "pinned": pinned}
+
+
 @router.post("/uploads/image")
 async def upload_image(file: UploadFile = File(...), admin: dict = Depends(require_admin)):
     """Admin-only endpoint to upload a product image to Object Storage.
