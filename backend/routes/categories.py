@@ -30,7 +30,7 @@ async def get_category(category_id: str):
     
     try:
         doc = await categories.find_one({"_id": ObjectId(category_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Category not found")
     
     if not doc:
@@ -63,7 +63,7 @@ async def update_category(category_id: str, category_data: dict, admin: dict = D
             {"$set": category_data},
             return_document=True
         )
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Category not found")
     
     if not result:
@@ -77,7 +77,7 @@ async def delete_category(category_id: str, admin: dict = Depends(require_admin)
     
     try:
         result = await categories.delete_one({"_id": ObjectId(category_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Category not found")
     
     if result.deleted_count == 0:

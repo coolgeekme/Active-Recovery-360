@@ -47,7 +47,7 @@ async def get_order(order_id: str, user: dict = Depends(require_auth)):
     
     try:
         doc = await orders.find_one({"_id": ObjectId(order_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Order not found")
     
     if not doc:
@@ -224,7 +224,7 @@ async def update_order_status(order_id: str, status_data: dict, admin: dict = De
             {"$set": {"status": status}},
             return_document=True
         )
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Order not found")
     
     if not result:

@@ -144,7 +144,7 @@ async def get_product(
     
     try:
         doc = await products.find_one({"_id": ObjectId(product_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
     
     if not doc:
@@ -280,7 +280,7 @@ async def delete_product(product_id: str, admin: dict = Depends(require_admin)):
                 )
         
         result = await products.delete_one({"_id": ObjectId(product_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
     
     if result.deleted_count == 0:

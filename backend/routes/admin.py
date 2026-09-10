@@ -57,7 +57,7 @@ async def update_user_role(user_id: str, role_data: dict, admin: dict = Depends(
             {"$set": updates},
             return_document=True
         )
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="User not found")
     
     if not result:
@@ -129,7 +129,7 @@ async def approve_hcp(user_id: str, admin: dict = Depends(require_admin)):
     
     try:
         user = await users.find_one({"_id": ObjectId(user_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="User not found")
     
     if not user:
@@ -174,7 +174,7 @@ async def reject_hcp(user_id: str, rejection_data: dict = None, admin: dict = De
     
     try:
         user = await users.find_one({"_id": ObjectId(user_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="User not found")
     
     if not user:
@@ -254,7 +254,7 @@ async def make_user_admin(user_id: str, admin: dict = Depends(require_admin)):
             {"$set": {"isAdmin": True}},
             return_document=True
         )
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="User not found")
     
     if not result:

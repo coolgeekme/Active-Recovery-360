@@ -45,7 +45,7 @@ async def add_to_cart(item_data: dict, user: dict = Depends(require_member)):
     # Verify product exists
     try:
         product_doc = await products.find_one({"_id": ObjectId(product_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Product not found")
     
     if not product_doc:
@@ -101,7 +101,7 @@ async def update_cart_item(item_id: str, update_data: dict, user: dict = Depends
     
     try:
         item = await cart_items.find_one({"_id": ObjectId(item_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Cart item not found")
     
     if not item:
@@ -127,7 +127,7 @@ async def remove_from_cart(item_id: str, user: dict = Depends(require_auth)):
     
     try:
         item = await cart_items.find_one({"_id": ObjectId(item_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Cart item not found")
     
     if not item:

@@ -34,7 +34,7 @@ async def get_doctor(doctor_id: str):
     
     try:
         doc = await users.find_one({"_id": ObjectId(doctor_id), "isDoctor": True})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Doctor not found")
     
     if not doc:

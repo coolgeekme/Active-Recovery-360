@@ -122,6 +122,16 @@ OBJ_STORAGE_APP_NAME=ar360
 - Admin: `admin@example.com` / `password` (use `/admin-login`)
 - HCP: `drsmith` / `test123` (approved)
 
+### Feb 6, 2026 — Order-Repair Startup Hook (mirrors GitHub commit 0bd3076)
+- ✅ Applied 3 files from GitHub main (commit 0bd3076 → preview commit 7c76121):
+  - `backend/services/order_repair.py`: opt-in per-category normalization (10,20,30…) plus pin-to-end.
+  - `backend/tests/test_order_repair.py`: in-memory fake DB, 14 checks, **ALL CHECKS PASSED** locally.
+  - `backend/server.py`: lifespan wraps `run_order_repair()` in try/except (non-fatal).
+- Gating: only runs when `AR360_ORDER_REPAIR=1`. Optional pins via `AR360_ORDER_PINS=<productId>:<categoryId>[,...]`.
+- Verified locally: unset → skipped cleanly; set → normalized all 10 categories against preview DB with no errors.
+- Deploy queued to production (`emergent__send_to_deployer` job `e97472ae-746e-498b-8701-d29994b94be9`). Deployer was asked to (a) ship code, (b) set `AR360_ORDER_REPAIR=1` + `AR360_ORDER_PINS=6a8ca86e476b82a84db78789:69a74a0ce5b1b6ab12650623` on the production service (or state that user must do it via Deployment settings), (c) restart prod and paste back the `[ORDER-REPAIR] done {...}` log line.
+- **Verification pending**: awaiting deployer's `[ORDER-REPAIR] done` log line and public-API confirmation that Self-Care Tools order is 10,20,…,200 with QMount LAST.
+
 ## Remaining Tasks (P1/P2)
 - [ ] **(P1)** Stripe checkout flow E2E with new variant products (guest → register → pay)
 - [ ] **(P1)** Set `VITE_STRIPE_PUBLIC_KEY` in preview `.env` to actually exercise Stripe Elements

@@ -146,7 +146,7 @@ async def delete_discount_code(code_id: str, admin: dict = Depends(require_admin
     
     try:
         result = await discount_codes.delete_one({"_id": ObjectId(code_id)})
-    except:
+    except Exception:
         raise HTTPException(status_code=404, detail="Discount code not found")
     
     if result.deleted_count == 0:
