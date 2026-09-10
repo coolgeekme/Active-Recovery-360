@@ -122,6 +122,13 @@ OBJ_STORAGE_APP_NAME=ar360
 - Admin: `admin@example.com` / `password` (use `/admin-login`)
 - HCP: `drsmith` / `test123` (approved)
 
+### Feb 6, 2026 — Legacy `categoryId` scalar matcher (mirrors GitHub commit 9b5a0da → preview 547a0a0)
+- Root cause of Kevin's "Already at bottom" bug: 55 of 81 prod products still stored the LEGACY scalar `categoryId` and had no `categoryIds` array. `_normalize_order` matched `{"categoryIds": cid}`, so it saw a subset (2 of 20 in Self-Care Tools); move endpoint built a 2-item list and put QMount at index 1 of 2 (= last, false).
+- Client repaired prod data as admin: `POST /api/seed/migrate-multi-category` (55 products backfilled), then `POST /api/admin/products/normalize-order` (13 categories keyed), then `normalize-order?categoryId=…&placeLast=6a8ca86e476b82a84db78789` (QMount pinned last).
+- Hardening deployed: `backend/routes/products.py` now uses `_category_match()` (array OR legacy scalar) in ordering helper, pin lookup, and list query; `backend/services/order_repair.py` uses same matcher.
+- Tests: 16 checks incl. legacy-scalar fixture → **ALL CHECKS PASSED** locally.
+- `AR360_ORDER_REPAIR` env var no longer required (never set on prod anyway per deployer diagnostic on run 9fb434e9).
+
 ### Feb 6, 2026 — Order-Repair Startup Hook (mirrors GitHub commit 0bd3076)
 - ✅ Applied 3 files from GitHub main (commit 0bd3076 → preview commit 7c76121):
   - `backend/services/order_repair.py`: opt-in per-category normalization (10,20,30…) plus pin-to-end.
