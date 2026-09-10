@@ -122,6 +122,11 @@ OBJ_STORAGE_APP_NAME=ar360
 - Admin: `admin@example.com` / `password` (use `/admin-login`)
 - HCP: `drsmith` / `test123` (approved)
 
+### Feb 6, 2026 — Remove PREVIEW watermark from shipped CSS (mirrors GitHub commit 6512361 → preview c3b82fc)
+- P0 prod bug: `frontend/src/index.css` carried an unconditional `body::before { content: "PREVIEW"; 8vw; rotate(-45deg); z-index:9999 }` block added by earlier auto-commit 45835b5, shipped to production unguarded — rendered on every page of activerecovery360.com for real customers.
+- Fix: removed the entire body::before block (only that rule; no other CSS touched). Preview watermark now belongs to the preview proxy, not the product stylesheet — must not be reinstated in app source.
+- Deployed with 547a0a0 (legacy-scalar hardening) in the same push. Verification handed to deployer: new hashed `/assets/index-*.css` must NOT contain "PREVIEW", `getComputedStyle(body,'::before').content` on `/doctors` must not be `"PREVIEW"`, and `/api/products?categoryId=…623` must still return QMount last (key 200).
+
 ### Feb 6, 2026 — Legacy `categoryId` scalar matcher (mirrors GitHub commit 9b5a0da → preview 547a0a0)
 - Root cause of Kevin's "Already at bottom" bug: 55 of 81 prod products still stored the LEGACY scalar `categoryId` and had no `categoryIds` array. `_normalize_order` matched `{"categoryIds": cid}`, so it saw a subset (2 of 20 in Self-Care Tools); move endpoint built a 2-item list and put QMount at index 1 of 2 (= last, false).
 - Client repaired prod data as admin: `POST /api/seed/migrate-multi-category` (55 products backfilled), then `POST /api/admin/products/normalize-order` (13 categories keyed), then `normalize-order?categoryId=…&placeLast=6a8ca86e476b82a84db78789` (QMount pinned last).
