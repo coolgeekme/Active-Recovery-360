@@ -38,6 +38,12 @@ async def lifespan(app: FastAPI):
         print("[STARTUP] Object storage initialized")
     except Exception as e:
         print(f"[STARTUP] Object storage init failed (non-fatal): {e}")
+    try:
+        from services.order_repair import run_order_repair
+
+        await run_order_repair()
+    except Exception as e:
+        print(f"[STARTUP] Product-order repair failed (non-fatal): {e}")
     yield
     # Shutdown
     await close_db()
