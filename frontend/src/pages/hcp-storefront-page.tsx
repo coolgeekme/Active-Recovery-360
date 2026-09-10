@@ -14,6 +14,7 @@ interface StorefrontProfile {
   storefrontBio?: string | null;
   storefrontHeadshotUrl?: string | null;
   storefrontBannerUrl?: string | null;
+  storefrontLogoUrl?: string | null;
   storefrontWelcomeMessage?: string | null;
   storefrontEnabled: boolean;
 }
@@ -91,6 +92,15 @@ export default function HcpStorefrontPage() {
                 className="h-24 w-24 sm:h-28 sm:w-28 rounded-full object-cover border-4 border-white shadow"
                 data-testid="hcp-headshot"
               />
+            ) : profile.storefrontLogoUrl ? (
+              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-white border-4 border-white shadow flex items-center justify-center overflow-hidden">
+                <img
+                  src={profile.storefrontLogoUrl}
+                  alt={`${profile.fullName} logo`}
+                  className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+                  data-testid="hcp-logo-placeholder"
+                />
+              </div>
             ) : (
               <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-primary/10 border-4 border-white shadow flex items-center justify-center">
                 <Stethoscope className="h-10 w-10 text-primary" />
@@ -103,6 +113,14 @@ export default function HcpStorefrontPage() {
               <h1 className="text-2xl sm:text-3xl font-montserrat font-bold text-primary">
                 {profile.fullName}
               </h1>
+              {profile.storefrontLogoUrl && profile.storefrontHeadshotUrl && (
+                <img
+                  src={profile.storefrontLogoUrl}
+                  alt="Clinic logo"
+                  className="h-9 w-9 rounded object-contain border bg-white p-0.5"
+                  data-testid="hcp-clinic-logo"
+                />
+              )}
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium">
                 <ShieldCheck className="h-3 w-3" />
                 Verified HCP

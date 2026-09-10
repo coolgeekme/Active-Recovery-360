@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Upload, Image as ImageIcon, ExternalLink, CheckCircle2, Circle } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon, ExternalLink, CheckCircle2, Circle, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types";
@@ -20,6 +27,7 @@ export interface StorefrontEditableUser {
   storefrontBio?: string | null;
   storefrontHeadshotUrl?: string | null;
   storefrontBannerUrl?: string | null;
+  storefrontLogoUrl?: string | null;
   storefrontWelcomeMessage?: string | null;
   storefrontFeaturedProductIds?: string[];
   commissionPercent?: number;
@@ -48,6 +56,7 @@ export default function StorefrontEditor({
   const { toast } = useToast();
   const headshotInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
+  const logoInput = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useQuery<{ editable: StorefrontEditableUser }>({
     queryKey: [fetchEndpoint],
@@ -57,8 +66,15 @@ export default function StorefrontEditor({
     queryKey: ["/api/products"],
   });
 
+  const { data: categories = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const [productQuery, setProductQuery] = useState("");
+  const [productCategory, setProductCategory] = useState<string>("all");
+
   const [draft, setDraft] = useState<StorefrontEditableUser | null>(null);
-  const [uploading, setUploading] = useState<"headshot" | "banner" | null>(null);
+  const [uploading, setUploading] = useState<"headshot" | "banner" | "logo" | null>(null);
 
   useEffect(() => {
     if (data?.editable) {
@@ -69,6 +85,7 @@ export default function StorefrontEditor({
         storefrontBio: data.editable.storefrontBio || "",
         storefrontHeadshotUrl: data.editable.storefrontHeadshotUrl || "",
         storefrontBannerUrl: data.editable.storefrontBannerUrl || "",
+        storefrontLogoUrl: data.editable.storefrontLogoUrl || "",
         storefrontWelcomeMessage: data.editable.storefrontWelcomeMessage || "",
         storefrontFeaturedProductIds: data.editable.storefrontFeaturedProductIds || [],
         commissionPercent: data.editable.commissionPercent ?? 0,
@@ -102,7 +119,7 @@ export default function StorefrontEditor({
     },
   });
 
-  const upload = async (kind: "headshot" | "banner", file: File) => {
+  const upload = async (kind: "headshot" | "banner" | "logo", file: File) => {
     if (!file) return;
     setUploading(kind);
     try {
@@ -119,15 +136,20 @@ export default function StorefrontEditor({
         throw new Error(err);
       }
       const out = await res.json();
+      const fieldByKind: Record<typeof kind, keyof StorefrontEditableUser> = {
+        headshot: "storefrontHeadshotUrl",
+        banner: "storefrontBannerUrl",
+        logo: "storefrontLogoUrl",
+      };
       setDraft((prev) =>
-        prev
-          ? {
-              ...prev,
-              [kind === "headshot" ? "storefrontHeadshotUrl" : "storefrontBannerUrl"]: out.url,
-            }
-          : prev
+        prev ? { ...prev, [fieldByKind[kind]]: out.url } : prev
       );
-      toast({ title: `${kind === "headshot" ? "Headshot" : "Banner"} uploaded` });
+      const labelByKind: Record<typeof kind, string> = {
+        headshot: "Headshot",
+        banner: "Banner",
+        logo: "Clinic logo",
+      };
+      toast({ title: `${labelByKind[kind]} uploaded` });
     } catch (e: any) {
       toast({
         title: "Upload failed",
@@ -160,9 +182,17 @@ export default function StorefrontEditor({
 
   const slugSafe = (draft.storefrontSlug || "").trim().toLowerCase();
 
+  const filteredProducts = allProducts.filter((p) => {
+    const q = productQuery.trim().toLowerCase();
+    if (q && !(p.name || "").toLowerCase().includes(q)) return false;
+    if (productCategory !== "all" && !(p.categoryIds || []).includes(productCategory)) return false;
+    return true;
+  });
+
   const onboardingSteps = [
     { label: "Add a bio", done: !!(draft.storefrontBio && draft.storefrontBio.trim()) },
     { label: "Add a headshot", done: !!draft.storefrontHeadshotUrl },
+    { label: "Add your clinic logo", done: !!draft.storefrontLogoUrl },
     { label: "Pick products to feature", done: (draft.storefrontFeaturedProductIds || []).length > 0 },
     { label: "Publish your storefront", done: !!draft.storefrontEnabled },
   ];
@@ -351,40 +381,137 @@ export default function StorefrontEditor({
             </Button>
           </div>
         </div>
+        <div>
+          <Label>Clinic Logo</Label>
+          <p className="text-xs text-muted-foreground mt-1 mb-2">
+            Your practice or clinic logo — shown on your storefront alongside your name.
+          </p>
+          <div className="flex items-center gap-3">
+            {draft.storefrontLogoUrl ? (
+              <img
+                src={draft.storefrontLogoUrl}
+                alt="Clinic logo"
+                className="h-20 w-20 rounded object-contain border bg-white p-1"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded border bg-muted flex items-center justify-center">
+                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+            <input
+              ref={logoInput}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) upload("logo", f);
+                if (e.target) e.target.value = "";
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => logoInput.current?.click()}
+              disabled={uploading === "logo"}
+              data-testid="upload-logo-btn"
+            >
+              {uploading === "logo" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              <span className="ml-2">Upload</span>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Featured products */}
       <div>
-        <Label className="text-base font-semibold">Curated Products</Label>
-        <p className="text-xs text-muted-foreground mb-3">
-          Pick the products you'd like to feature on your storefront ({(draft.storefrontFeaturedProductIds || []).length} selected).
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto border rounded-md p-3">
-          {allProducts.map((p) => {
-            const checked = (draft.storefrontFeaturedProductIds || []).includes(p.id);
-            return (
-              <label
-                key={p.id}
-                className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-muted/30 ${
-                  checked ? "bg-primary/5 border border-primary/20" : ""
-                }`}
-              >
-                <Checkbox
-                  checked={checked}
-                  onCheckedChange={(c) => toggleProduct(p.id, !!c)}
-                  data-testid={`product-toggle-${p.id}`}
-                />
-                <img
-                  src={p.imageUrl || "https://via.placeholder.com/40"}
-                  alt={p.name}
-                  className="h-10 w-10 rounded object-cover"
-                />
-                <span className="text-sm flex-1 truncate">{p.name}</span>
-                {checked && <CheckCircle2 className="h-4 w-4 text-primary" />}
-              </label>
-            );
-          })}
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+          <Label className="text-base font-semibold">Curated Products</Label>
+          <span className="text-xs text-muted-foreground" data-testid="selected-count">
+            {(draft.storefrontFeaturedProductIds || []).length} selected
+          </span>
         </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Search the catalog and check the products you want customers to see on your storefront.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={productQuery}
+              onChange={(e) => setProductQuery(e.target.value)}
+              placeholder="Search products by name"
+              className="pl-9"
+              data-testid="product-search-input"
+            />
+          </div>
+          <div className="sm:w-56">
+            <Select value={productCategory} onValueChange={setProductCategory}>
+              <SelectTrigger data-testid="product-category-filter">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All categories</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-80 overflow-y-auto border rounded-md p-3">
+          {filteredProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground p-2 col-span-full">
+              No products match your search.
+            </p>
+          ) : (
+            filteredProducts.map((p) => {
+              const checked = (draft.storefrontFeaturedProductIds || []).includes(p.id);
+              return (
+                <label
+                  key={p.id}
+                  className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-muted/30 ${
+                    checked ? "bg-primary/5 border border-primary/20" : ""
+                  }`}
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(c) => toggleProduct(p.id, !!c)}
+                    data-testid={`product-toggle-${p.id}`}
+                  />
+                  <img
+                    src={p.imageUrl || "https://via.placeholder.com/40"}
+                    alt={p.name}
+                    className="h-10 w-10 rounded object-cover"
+                  />
+                  <span className="text-sm flex-1 truncate">{p.name}</span>
+                  {checked && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                </label>
+              );
+            })
+          )}
+        </div>
+
+        {(draft.storefrontFeaturedProductIds || []).length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => update({ storefrontFeaturedProductIds: [] })}
+            data-testid="clear-products-btn"
+          >
+            Clear all selected products
+          </Button>
+        )}
       </div>
 
       {/* Commission (admin only) */}

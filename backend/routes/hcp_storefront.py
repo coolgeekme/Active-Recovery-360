@@ -35,6 +35,7 @@ EDITABLE_FIELDS = {
     "storefrontBio",
     "storefrontHeadshotUrl",
     "storefrontBannerUrl",
+    "storefrontLogoUrl",
     "storefrontWelcomeMessage",
     "storefrontFeaturedProductIds",
 }
@@ -84,6 +85,7 @@ async def _hydrate_storefront(user_doc: dict, include_products: bool = True) -> 
         "storefrontBio": user_doc.get("storefrontBio"),
         "storefrontHeadshotUrl": user_doc.get("storefrontHeadshotUrl"),
         "storefrontBannerUrl": user_doc.get("storefrontBannerUrl"),
+        "storefrontLogoUrl": user_doc.get("storefrontLogoUrl"),
         "storefrontWelcomeMessage": user_doc.get("storefrontWelcomeMessage"),
         "storefrontEnabled": user_doc.get("storefrontEnabled", False),
     }

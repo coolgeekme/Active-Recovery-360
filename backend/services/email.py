@@ -206,3 +206,50 @@ async def send_hcp_approval_email(
     """
     
     return await send_email(to_email, subject, html_content)
+
+async def send_hcp_signup_received_email(to_email: str, user_name: str = "there") -> dict:
+    """Send the acknowledgement email when a provider submits an HCP application."""
+    subject = "We received your Active Recovery 360 provider application"
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #0f4c81; color: white; padding: 20px; text-align: center; }}
+            .content {{ padding: 30px; background-color: #f9f9f9; }}
+            .button {{ display: inline-block; padding: 12px 30px; background-color: #0f4c81; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+            .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Active Recovery 360</h1>
+            </div>
+            <div class="content">
+                <p>Hi {user_name},</p>
+                <p>Thank you for applying to provide clinical recovery services with Active Recovery 360.</p>
+                <p>We've received your application and our team is reviewing your credentials. This usually takes 1&ndash;2 business days.</p>
+                <p><strong>What happens next:</strong></p>
+                <ul>
+                    <li>We verify your license and practice information.</li>
+                    <li>You'll get an email the moment your account is approved.</li>
+                    <li>Once approved, you can publish your storefront and start listing your services.</li>
+                </ul>
+                <p>You can check your application status any time from your dashboard:</p>
+                <p style="text-align: center;">
+                    <a href="{FRONTEND_URL}/hcp/dashboard" class="button">View Application Status</a>
+                </p>
+                <p>Questions in the meantime? Just reply to this email.</p>
+                <p>&mdash; The Active Recovery 360 Team</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 Active Recovery 360. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return await send_email(to_email, subject, html_content)

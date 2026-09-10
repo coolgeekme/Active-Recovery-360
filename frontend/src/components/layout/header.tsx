@@ -15,7 +15,8 @@ import {
   Home,
   Heart,
   Users,
-  MapPin
+  MapPin,
+  Stethoscope
 } from "lucide-react";
 import { ERALogo } from "@/lib/era-logo";
 import {
@@ -102,6 +103,11 @@ export default function Header() {
                     {user.isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin">Admin Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {user.isDoctor && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/hcp/dashboard">My Storefront</Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
@@ -192,6 +198,14 @@ export default function Header() {
                         <Button variant="outline" className="w-full justify-start">
                           <User className="h-5 w-5 mr-2" />
                           Admin Dashboard
+                        </Button>
+                      </Link>
+                    )}
+                    {user.isDoctor && (
+                      <Link href="/hcp/dashboard" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="outline" className="w-full justify-start">
+                          <Stethoscope className="h-5 w-5 mr-2" />
+                          My Storefront
                         </Button>
                       </Link>
                     )}

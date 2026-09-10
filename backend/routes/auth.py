@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from bson import ObjectId
 from datetime import datetime
+import asyncio
 
 from models.schemas import UserCreate, UserLogin, UserResponse, FirebaseAuth, PasswordResetRequest, PasswordReset
 from services.database import get_collection
@@ -10,7 +11,11 @@ from services.auth import (
     hash_password, verify_password, create_access_token, decode_access_token, 
     verify_firebase_token, generate_reset_token, create_reset_token_expiry, is_reset_token_valid
 )
-from services.email import send_password_reset_email, send_hcp_approval_email
+from services.email import (
+    send_password_reset_email,
+    send_hcp_approval_email,
+    send_hcp_signup_received_email,
+)
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
@@ -205,6 +210,15 @@ async def firebase_auth(auth_data: FirebaseAuth):
         result = await users.insert_one(new_user)
         new_user["_id"] = result.inserted_id
         user = new_user
+
+        # Acknowledge the provider application right away (fire-and-forget).
+        if new_user.get("hcpStatus") == "pending":
+            asyncio.create_task(
+                send_hcp_signup_received_email(
+                    new_user["email"],
+                    (new_user.get("fullName") or "there").split(" ")[0],
+                )
+            )
     
     # Create token
     token = create_access_token({"sub": str(user["_id"])})
@@ -374,4 +388,13 @@ async def hcp_reapply(license_data: dict, user: dict = Depends(require_auth)):
     )
     
     updated_user = await users.find_one({"_id": ObjectId(user["id"])})
+
+    # Acknowledge the new application (fire-and-forget).
+    asyncio.create_task(
+        send_hcp_signup_received_email(
+            updated_user.get("email"),
+            (updated_user.get("fullName") or "there").split(" ")[0],
+        )
+    )
+
     return transform_user(updated_user)
