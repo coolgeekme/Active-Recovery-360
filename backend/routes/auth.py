@@ -48,6 +48,12 @@ def transform_user(user_doc: dict) -> dict:
         "storefrontBio": user_doc.get("storefrontBio"),
         "storefrontHeadshotUrl": user_doc.get("storefrontHeadshotUrl"),
         "storefrontBannerUrl": user_doc.get("storefrontBannerUrl"),
+        # storefrontLogoUrl must be here too: the HCP storefront editor seeds its
+        # draft from `editable` and PUTs the whole draft back. Omitting it made the
+        # "Add your clinic logo" checklist item impossible to complete and, because
+        # the draft defaulted to "", any later save from a freshly-loaded page
+        # overwrote the stored logo with an empty string.
+        "storefrontLogoUrl": user_doc.get("storefrontLogoUrl"),
         "storefrontWelcomeMessage": user_doc.get("storefrontWelcomeMessage"),
         "storefrontFeaturedProductIds": user_doc.get("storefrontFeaturedProductIds", []),
         "commissionPercent": user_doc.get("commissionPercent", 0),
