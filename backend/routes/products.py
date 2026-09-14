@@ -50,6 +50,33 @@ def _category_match(category_id: str) -> dict:
     return {"$or": [{"categoryIds": category_id}, {"categoryId": category_id}]}
 
 
+def _related_product_ids(data: dict, exclude_id: str | None = None) -> list[str] | None:
+    """Normalise a `relatedProductIds` payload into a clean, de-duplicated list.
+
+    Accepts ids as strings; anything that is not a 24-hex ObjectId is dropped
+    rather than raising, so a stale id in the payload can never break a product
+    save. The product itself is never allowed to be its own related product.
+    Returns None when the caller did not send the field at all, so a partial
+    update leaves the stored list untouched.
+    """
+    if "relatedProductIds" not in data:
+        return None
+    raw = data.get("relatedProductIds") or []
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for item in raw:
+        value = str(item).strip()
+        if not value or value == exclude_id or value in out:
+            continue
+        try:
+            ObjectId(value)
+        except Exception:
+            continue
+        out.append(value)
+    return out
+
+
 def _payload_category_ids(data: dict) -> list[str] | None:
     """Extract and normalize category ids from a create/update payload.
     Accepts `categoryIds` (list) with a legacy `categoryId` (scalar) fallback.
@@ -88,6 +115,9 @@ def transform_product(doc: dict, show_price: bool = True) -> dict:
         "displayOrder": doc.get("displayOrder"),
         "categoryOrder": doc.get("categoryOrder", {}),
         "hidePrice": hide_price,
+        # Admin-curated "Related Products" for this product's page. Empty means
+        # the storefront falls back to its automatic same-category list.
+        "relatedProductIds": [str(x) for x in (doc.get("relatedProductIds") or [])],
     }
 
 @router.get("/products")
@@ -96,6 +126,7 @@ async def get_products(
     categoryId: Optional[str] = None,
     featured: Optional[bool] = None,
     doctorId: Optional[str] = None,
+    ids: Optional[str] = None,
     current_user: Optional[dict] = Depends(get_current_user),
 ):
     products = get_collection("products")
@@ -111,6 +142,17 @@ async def get_products(
         query["featured"] = featured
     if doctorId:
         query["doctorIds"] = doctorId
+    # Comma-separated id list, used to render a product's curated related items
+    # in the exact order the admin chose.
+    wanted_ids = [i.strip() for i in (ids or "").split(",") if i.strip()] if ids else []
+    if wanted_ids:
+        object_ids = []
+        for value in wanted_ids:
+            try:
+                object_ids.append(ObjectId(value))
+            except Exception:
+                continue
+        query["_id"] = {"$in": object_ids}
 
     # Hide `doctor`-visibility products from non-HCP / non-admin viewers, even
     # if they explicitly ask for that tier via ?visibility=doctor. HCPs and
@@ -143,6 +185,11 @@ async def get_products(
         {"$limit": 200},
     ]
     docs = await products.aggregate(pipeline).to_list(length=200)
+
+    if wanted_ids:
+        # Preserve the requested order - the admin's curated order is the point.
+        rank = {value: i for i, value in enumerate(wanted_ids)}
+        docs.sort(key=lambda d: rank.get(str(d["_id"]), len(rank)))
 
     return [transform_product(doc, show_price=is_privileged) for doc in docs]
 
@@ -197,6 +244,7 @@ async def create_product(product_data: dict, admin: dict = Depends(require_admin
         "hasVariants": has_variants,
         "variants": variants,
         "hidePrice": bool(product_data.get("hidePrice", False)),
+        "relatedProductIds": _related_product_ids(product_data) or [],
     }
 
     result = await products.insert_one(new_product)
@@ -227,6 +275,12 @@ async def update_product(product_id: str, product_data: dict, admin: dict = Depe
         raise HTTPException(status_code=404, detail="Product not found")
 
     update_data = dict(product_data)
+
+    # Normalize the curated related-products list (never include the product itself).
+    if "relatedProductIds" in update_data:
+        update_data["relatedProductIds"] = (
+            _related_product_ids(update_data, exclude_id=product_id) or []
+        )
 
     # Normalize category assignment. Pop both keys from the payload and, when a
     # category assignment was provided, store the normalized `categoryIds` list.

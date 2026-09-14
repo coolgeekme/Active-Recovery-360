@@ -27,6 +27,7 @@ import {
   Lock
 } from "lucide-react";
 import ProductGrid from "@/components/product/product-grid";
+import CuratedRelatedProducts from "@/components/product/curated-related-products";
 import Breadcrumbs from "@/components/layout/breadcrumbs";
 import { Category } from "@/types";
 
@@ -413,7 +414,14 @@ export default function ProductPage() {
           </TabsList>
           
           <TabsContent value="related">
-            <ProductGrid category={product.categoryIds?.[0]} limit={4} />
+            {product.relatedProductIds && product.relatedProductIds.length > 0 ? (
+              <CuratedRelatedProducts
+                ids={product.relatedProductIds}
+                currentProductId={product.id}
+              />
+            ) : (
+              <ProductGrid category={product.categoryIds?.[0]} limit={4} />
+            )}
           </TabsContent>
           
           <TabsContent value="featured">

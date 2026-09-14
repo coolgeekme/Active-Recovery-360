@@ -58,6 +58,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import RelatedProductsPicker from "@/components/admin/related-products-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -101,6 +102,7 @@ const productFormSchema = z.object({
   hidePrice: z.boolean().default(false),
   doctorIds: z.array(z.string()).optional(),
   brand: z.string().optional(),
+  relatedProductIds: z.array(z.string()).default([]),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -392,6 +394,7 @@ export default function ProductManagement() {
       hidePrice: product.hidePrice || false,
       doctorIds: product.doctorIds || [],
       brand: product.brand || "",
+      relatedProductIds: product.relatedProductIds || [],
     });
 
     // Hydrate variant drafts from the existing product
@@ -901,6 +904,29 @@ export default function ProductManagement() {
 
               <FormField
                 control={addProductForm.control}
+                name="relatedProductIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Related Products</FormLabel>
+                    <RelatedProductsPicker
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      currentProductId={undefined}
+                      products={products}
+                      idPrefix="add"
+                    />
+                    <FormDescription>
+                      Shown under the &ldquo;Related Products&rdquo; tab on this product&rsquo;s page.
+                      Products appear in the order you tick them. Leave empty to keep the
+                      automatic same-category list.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={addProductForm.control}
                 name="featured"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -1222,6 +1248,29 @@ export default function ProductManagement() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={editProductForm.control}
+                name="relatedProductIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Related Products</FormLabel>
+                    <RelatedProductsPicker
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      currentProductId={selectedProduct?.id}
+                      products={products}
+                      idPrefix="edit"
+                    />
+                    <FormDescription>
+                      Shown under the &ldquo;Related Products&rdquo; tab on this product&rsquo;s page.
+                      Products appear in the order you tick them. Leave empty to keep the
+                      automatic same-category list.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={editProductForm.control}

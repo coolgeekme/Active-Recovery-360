@@ -62,6 +62,8 @@ export interface Product {
   hidePrice?: boolean;
   displayOrder?: number;
   categoryOrder?: Record<string, number>;
+  /** Admin-curated "Related Products". Empty = fall back to same-category. */
+  relatedProductIds?: string[];
 }
 
 export interface Category {

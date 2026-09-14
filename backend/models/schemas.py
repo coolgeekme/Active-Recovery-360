@@ -94,6 +94,7 @@ class ProductBase(BaseModel):
     variants: List[ProductVariant] = []  # Empty for simple products
     has_variants: bool = Field(default=False, alias="hasVariants")
     hide_price: bool = Field(default=False, alias="hidePrice")  # Provider-only pricing: product visible, price hidden from non-HCP
+    related_product_ids: List[str] = Field(default=[], alias="relatedProductIds")  # Admin-curated "Related Products" for the product page
 
     class Config:
         populate_by_name = True
