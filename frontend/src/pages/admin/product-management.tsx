@@ -75,7 +75,8 @@ import {
   Filter,
   RefreshCw,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Search
 } from "lucide-react";
 
 // Create a schema for the product form
@@ -118,6 +119,7 @@ export default function ProductManagement() {
   const [filterVisibility, setFilterVisibility] = useState<string | undefined>(undefined);
   const [filterCategory, setFilterCategory] = useState<string | undefined>(undefined);
   const [filterFeatured, setFilterFeatured] = useState<boolean | undefined>(undefined);
+  const [searchTerm, setSearchTerm] = useState("");
   // Variant drafts kept outside react-hook-form because they're a complex
   // dynamic list. They are merged into the payload at submit time.
   const [addVariants, setAddVariants] = useState<VariantDraft[]>([]);
@@ -320,11 +322,18 @@ export default function ProductManagement() {
   });
 
   // Filter products
+  const search = searchTerm.trim().toLowerCase();
   const filteredProducts = [...products]
     .filter(product => {
       if (filterVisibility && product.visibility !== filterVisibility) return false;
       if (filterCategory && !(product.categoryIds || []).includes(filterCategory)) return false;
       if (filterFeatured !== undefined && product.featured !== filterFeatured) return false;
+      // Free-text search across name and brand. Matches anywhere in the string
+      // so "cbd cream" finds "Extract Labs CBD Muscle & Recovery Cream".
+      if (search) {
+        const haystack = `${product.name || ""} ${product.brand || ""}`.toLowerCase();
+        if (!search.split(/\s+/).every(term => haystack.includes(term))) return false;
+      }
       return true;
     })
     .sort((a, b) => {
@@ -335,6 +344,23 @@ export default function ProductManagement() {
         return ao - bo;
       }
       // No category filter: keep the API's global displayOrder.
+      return 0;
+    });
+
+  // The reorder arrows move a product among its CATEGORY neighbours on the
+  // server, so "is this the first/last item" has to be judged against the
+  // category list - not against `filteredProducts`, which a search or a
+  // visibility filter may have narrowed to a handful of rows. Using the
+  // filtered list greys out "Move up" on the top search result even though the
+  // product is mid-category and would move fine.
+  const moveScopeProducts = products
+    .filter(product => !filterCategory || (product.categoryIds || []).includes(filterCategory))
+    .sort((a, b) => {
+      if (filterCategory) {
+        const ao = a.categoryOrder?.[filterCategory] ?? a.displayOrder ?? 999999;
+        const bo = b.categoryOrder?.[filterCategory] ?? b.displayOrder ?? 999999;
+        return ao - bo;
+      }
       return 0;
     });
 
@@ -420,6 +446,7 @@ export default function ProductManagement() {
     setFilterVisibility(undefined);
     setFilterCategory(undefined);
     setFilterFeatured(undefined);
+    setSearchTerm("");
   };
 
   if (!user?.isAdmin) {
@@ -475,6 +502,31 @@ export default function ProductManagement() {
           {/* Filters */}
           <div className="mb-6 bg-muted/20 p-4 rounded-md">
             <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="space-y-2 flex-1">
+                <label className="text-sm font-medium">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products by name"
+                    className="pl-9 pr-9"
+                    value={searchTerm}
+                    data-testid="product-search-filter"
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      aria-label="Clear search"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      data-testid="product-search-clear"
+                      onClick={() => setSearchTerm("")}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2 flex-1">
                 <label className="text-sm font-medium">Visibility</label>
                 <Select
@@ -545,15 +597,30 @@ export default function ProductManagement() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">No products found.</p>
-              <Button 
-                variant="link" 
-                onClick={() => setIsAddDialogOpen(true)}
-                className="mt-2"
-              >
-                Add a product
-              </Button>
+            <div className="text-center py-10" data-testid="product-empty-state">
+              {searchTerm || filterVisibility || filterCategory || filterFeatured !== undefined ? (
+                <>
+                  <p className="text-muted-foreground">
+                    {searchTerm
+                      ? `No products match "${searchTerm}".`
+                      : "No products match the current filters."}
+                  </p>
+                  <Button variant="link" onClick={resetFilters} className="mt-2">
+                    Clear search and filters
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-muted-foreground">No products found.</p>
+                  <Button 
+                    variant="link" 
+                    onClick={() => setIsAddDialogOpen(true)}
+                    className="mt-2"
+                  >
+                    Add a product
+                  </Button>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -631,7 +698,7 @@ export default function ProductManagement() {
                                 }
                                 disabled={
                                   moveProductMutation.isPending ||
-                                  filteredProducts[0]?.id === product.id
+                                  moveScopeProducts[0]?.id === product.id
                                 }
                                 title="Move up"
                                 data-testid={`move-up-${product.id}`}
@@ -650,7 +717,7 @@ export default function ProductManagement() {
                                 }
                                 disabled={
                                   moveProductMutation.isPending ||
-                                  filteredProducts[filteredProducts.length - 1]?.id === product.id
+                                  moveScopeProducts[moveScopeProducts.length - 1]?.id === product.id
                                 }
                                 title="Move down"
                                 data-testid={`move-down-${product.id}`}
