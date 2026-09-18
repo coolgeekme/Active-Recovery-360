@@ -202,12 +202,24 @@ export default function ProductManagement() {
       );
       return await res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      const scope = variables.categoryId
+        ? getCategoryNames([variables.categoryId])[0]
+        : null;
       if (data && data.moved === false) {
         toast({
           title: "Cannot move further",
-          description: data.message || "Already at the edge of the list",
+          description: scope
+            ? `${data.message || "Already at the edge of the list"} (${scope})`
+            : data.message || "Already at the edge of the list",
+        });
+      } else if (data && data.moved && scope) {
+        // Name the category so it is obvious WHICH list moved - moving in the
+        // wrong scope is what made this look broken.
+        toast({
+          title: `Moved in ${scope}`,
+          description: "The shop order for this category is updated.",
         });
       }
     },
@@ -363,6 +375,18 @@ export default function ProductManagement() {
       }
       return 0;
     });
+
+  // Reordering only means anything inside a category, so the arrows ALWAYS
+  // scope to one. Without a category selected the arrow used to send no
+  // categoryId: the server then reordered the global list and the product's
+  // categoryOrder - the field every category page actually sorts by - never
+  // changed, so the row looked like it hadn't moved. Default to the product's
+  // own category and switch the view to it, so the admin sees the real order.
+  const handleMove = (product: Product, direction: "up" | "down") => {
+    const scoped = filterCategory || (product.categoryIds || [])[0];
+    if (!filterCategory && scoped) setFilterCategory(scoped);
+    moveProductMutation.mutate({ id: product.id, direction, categoryId: scoped });
+  };
 
   // Format price from cents to dollars
   const formatPrice = (price: number) => {
@@ -629,8 +653,8 @@ export default function ProductManagement() {
                 <ArrowDown className="h-3 w-3" />
                 <span>
                   {filterCategory
-                    ? "Use the up/down arrows to reorder products within this category."
-                    : "Use the up/down arrows to reorder products. This affects shop ordering for customers."}
+                    ? "Use the up/down arrows to reorder products within this category. This is the order customers see."
+                    : "Use the up/down arrows to reorder a product within its category. Pick a category above to see its full order."}
                 </span>
               </p>
               <div className="border rounded-md overflow-hidden">
@@ -689,16 +713,11 @@ export default function ProductManagement() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() =>
-                                  moveProductMutation.mutate({
-                                    id: product.id,
-                                    direction: "up",
-                                    categoryId: filterCategory,
-                                  })
-                                }
+                                onClick={() => handleMove(product, "up")}
                                 disabled={
                                   moveProductMutation.isPending ||
-                                  moveScopeProducts[0]?.id === product.id
+                                  (!!filterCategory &&
+                                    moveScopeProducts[0]?.id === product.id)
                                 }
                                 title="Move up"
                                 data-testid={`move-up-${product.id}`}
@@ -708,16 +727,11 @@ export default function ProductManagement() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() =>
-                                  moveProductMutation.mutate({
-                                    id: product.id,
-                                    direction: "down",
-                                    categoryId: filterCategory,
-                                  })
-                                }
+                                onClick={() => handleMove(product, "down")}
                                 disabled={
                                   moveProductMutation.isPending ||
-                                  moveScopeProducts[moveScopeProducts.length - 1]?.id === product.id
+                                  (!!filterCategory &&
+                                    moveScopeProducts[moveScopeProducts.length - 1]?.id === product.id)
                                 }
                                 title="Move down"
                                 data-testid={`move-down-${product.id}`}
