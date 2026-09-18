@@ -234,7 +234,7 @@ export default function RecoveryServicesPage() {
                 </a>
               </Button>
               <Button asChild size="lg" className="bg-primary text-white border-2 border-white hover:bg-white hover:text-primary font-semibold">
-                <Link href="/doctors">Become a Provider</Link>
+                <Link href="/recovery-services/signup">Become a Provider</Link>
               </Button>
             </div>
           </div>
@@ -367,7 +367,7 @@ export default function RecoveryServicesPage() {
       <section className="bg-primary text-white pb-16">
         <div className="container mx-auto px-4 max-w-4xl text-center pt-10">
           <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
-            <Link href="/doctors">Sign Up as a Provider</Link>
+            <Link href="/recovery-services/signup">Sign Up as a Provider</Link>
           </Button>
         </div>
       </section>

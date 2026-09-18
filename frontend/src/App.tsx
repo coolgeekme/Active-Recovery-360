@@ -47,6 +47,8 @@ import HcpDashboardPage from "@/pages/hcp-dashboard-page";
 import AdminHcpStorefrontEditPage from "@/pages/admin/hcp-storefront-edit-page";
 import RecoveryServicesPage from "@/pages/recovery-services-page";
 import RecoveryServiceDetailPage from "@/pages/recovery-service-detail-page";
+import RecoveryProviderSignupPage from "@/pages/recovery-provider-signup-page";
+import AdminRecoveryProviderApplicationsPage from "@/pages/admin/recovery-provider-applications-page";
 import AdminRecoveryServicesPage from "@/pages/admin/recovery-services-page";
 import AdminRecoveryServiceFormPage from "@/pages/admin/recovery-service-form-page";
 import AdminContactMessagesPage from "@/pages/admin/contact-messages-page";
@@ -89,6 +91,7 @@ function AppRouter() {
           {/* HCP Storefronts (public) */}
           <Route path="/hcp/dashboard" component={HcpDashboardPage} />
           <Route path="/hcp/:slug" component={HcpStorefrontPage} />
+          <Route path="/recovery-services/signup" component={RecoveryProviderSignupPage} />
 
           {/* Recovery Services directory */}
           <Route path="/recovery-services" component={RecoveryServicesPage} />
@@ -99,6 +102,7 @@ function AppRouter() {
           <ProtectedRoute path="/account" component={AccountPage} />
           <ProtectedRoute path="/account/orders" component={OrdersPage} />
           <ProtectedRoute path="/admin" component={AdminPage} requireAdmin={true} />
+          <ProtectedRoute path="/admin/recovery-providers" component={AdminRecoveryProviderApplicationsPage} requireAdmin={true} />
           <ProtectedRoute path="/admin/products" component={ProductManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/products/new" component={ProductManagement} requireAdmin={true} />
           <ProtectedRoute path="/admin/orders" component={OrderManagement} requireAdmin={true} />

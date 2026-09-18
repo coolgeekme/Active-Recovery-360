@@ -19,8 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Loader2, 
+import { Briefcase, Loader2, 
   Package, 
   Users, 
   ShoppingBag, 
@@ -28,8 +27,7 @@ import {
   Settings, 
   BarChart,
   PlusCircle,
-  Inbox
-} from "lucide-react";
+  Inbox } from "lucide-react";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -226,6 +224,12 @@ export default function AdminPage() {
                   <Link href="/admin/hcp">
                     <Users className="h-4 w-4 mr-2" />
                     HCP Applications
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild data-testid="recovery-provider-applications-link">
+                  <Link href="/admin/recovery-providers">
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Provider Applications
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>

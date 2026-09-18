@@ -22,6 +22,7 @@ from routes.files import router as files_router
 from routes.hcp_storefront import router as hcp_storefront_router
 from routes.recovery_services import router as recovery_services_router
 from routes.contact import router as contact_router
+from routes.recovery_providers import router as recovery_providers_router
 from routes.affiliates import router as affiliates_router
 from routes.teams import router as teams_router
 from services.database import connect_db, close_db
@@ -89,6 +90,7 @@ app.include_router(seed_router, prefix="/api/seed", tags=["Seed"])
 app.include_router(files_router, prefix="/api", tags=["Files"])
 app.include_router(hcp_storefront_router, prefix="/api", tags=["HCP Storefront"])
 app.include_router(recovery_services_router, prefix="/api", tags=["Recovery Services"])
+app.include_router(recovery_providers_router, prefix="/api", tags=["Recovery Providers"])
 app.include_router(contact_router, prefix="/api", tags=["Contact"])
 app.include_router(affiliates_router, prefix="/api", tags=["Affiliates"])
 app.include_router(teams_router, prefix="/api", tags=["Teams & Trainers"])
