@@ -119,12 +119,12 @@ const PARTNER_BENEFITS = [
   "Easy online ordering",
 ];
 
-const WHY_SIGN_UP = ["Access to members", "Market your services", "Local customers"];
-
-const EXPOSURE_TIERS = [
-  { name: "Silver", detail: "No fee, listing only" },
-  { name: "Gold", detail: "Premium listing slot, monthly fee" },
-  { name: "Platinum", detail: "Home page listing, member access marketing, service reviews" },
+// Kevin (Sep 21): the HCP sign-up panel "is only for HCP storefronts", so these
+// describe the storefront, not clinical service listings.
+const WHY_SIGN_UP = [
+  "Your own branded storefront",
+  "Hand-pick the products you feature",
+  "One link to share with patients",
 ];
 
 export default function DoctorsPage() {
@@ -264,7 +264,7 @@ export default function DoctorsPage() {
             <Stethoscope className="h-8 w-8 text-white" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-montserrat font-bold mb-3">
-            Sign up to provide clinical recovery services
+            Set up your HCP storefront
           </h2>
           <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
             Why sign up
@@ -277,26 +277,6 @@ export default function DoctorsPage() {
                 </span>
                 {reason}
               </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* EXPOSURE TIERS (white strip between blue bands so card text keeps site colors) */}
-      <section className="bg-white py-12">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <p className="font-montserrat font-semibold uppercase tracking-wide text-sm text-primary mb-6">
-            Choose your level of exposure
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {EXPOSURE_TIERS.map((tier) => (
-              <div
-                key={tier.name}
-                className="bg-white rounded-lg p-6 text-center shadow border border-primary/10"
-              >
-                <h3 className="font-montserrat font-bold text-primary text-xl mb-2">{tier.name}</h3>
-                <p className="text-secondary text-sm">{tier.detail}</p>
-              </div>
             ))}
           </div>
         </div>

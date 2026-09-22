@@ -642,8 +642,8 @@ export default function AuthPage() {
                 <CheckIcon className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-primary">Doctor Storefronts</h3>
-                <p className="text-secondary text-sm">Shop from curated collections by medical professionals</p>
+                <h3 className="font-semibold text-primary">Clinical Recovery Discounts</h3>
+                <p className="text-secondary text-sm">Access to discounted pricing on local clinical recovery services</p>
               </div>
             </div>
           </div>

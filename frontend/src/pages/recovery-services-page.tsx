@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   Activity,
+  ArrowRight,
   Check,
   Compass,
   Dumbbell,
@@ -139,6 +140,30 @@ const POPULAR_SERVICES = [
 
 const WHY_SIGN_UP = ["Access to members", "Market your services", "Local customers"];
 
+// Kevin (Sep 21): "nothing happens when I click on any of the options". These
+// cards and tags were static <Badge>/<Card> elements with hover styling and no
+// handler, so they looked clickable and did nothing. Each now drives the live
+// directory filter below.
+const DIRECTORY_CATEGORY_FILTER: Record<string, string> = {
+  "Sports Recovery Clinics": "Physical Therapy",
+  "Injury Recovery & Rehabilitation": "Physical Therapy",
+  "Mobility & Flexibility Specialists": "Stretching / Mobility",
+  "Wellness & Recovery Centers": "Recovery Lounge",
+};
+
+const POPULAR_SERVICE_FILTER: Record<string, string> = {
+  "Sports recovery therapy": "Physical Therapy",
+  "Exercise rehabilitation": "Physical Therapy",
+  "Stretch therapy": "Stretching / Mobility",
+  "Cryotherapy": "Cryotherapy",
+  "Compression therapy": "Compression Therapy",
+  "Mobility training": "Stretching / Mobility",
+  "Athletic recovery": "Recovery Lounge",
+  "Performance recovery": "Physical Therapy",
+  "Soft tissue therapy": "Massage Therapy",
+  "Functional movement coaching": "Stretching / Mobility",
+};
+
 const EXPOSURE_TIERS = [
   { name: "Silver", detail: "No fee, listing only" },
   { name: "Gold", detail: "Premium listing slot, monthly fee" },
@@ -175,6 +200,21 @@ export default function RecoveryServicesPage() {
   }, [services]);
 
   const cityOptions = state !== ANY ? [...(citiesByState[state] || [])].sort() : [];
+
+  // Send the visitor to the live directory with a filter applied. This is what
+  // the category cards and popular-service tags now do on click.
+  const goToDirectory = (nextCategory?: string, searchTerm?: string) => {
+    if (nextCategory) {
+      setCategory(nextCategory);
+      setQ("");
+    } else if (searchTerm) {
+      setQ(searchTerm);
+      setCategory(ANY);
+    }
+    document
+      .getElementById("directory")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // Client-side filtering (server returns published, we further narrow)
   const filtered = useMemo(() => {
@@ -257,8 +297,15 @@ export default function RecoveryServicesPage() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {DIRECTORY_CATEGORIES.map((c) => (
-            <Card key={c.title} className="border-primary/10 hover:border-primary/30 transition-colors">
-              <CardContent className="pt-6">
+            <button
+              key={c.title}
+              type="button"
+              onClick={() => goToDirectory(DIRECTORY_CATEGORY_FILTER[c.title])}
+              data-testid={`directory-category-${c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              className="text-left w-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <Card className="border-primary/10 hover:border-primary/30 transition-colors h-full cursor-pointer">
+                <CardContent className="pt-6">
                 <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-4">
                   <c.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -274,9 +321,13 @@ export default function RecoveryServicesPage() {
                       {item}
                     </li>
                   ))}
-                </ul>
-              </CardContent>
-            </Card>
+                  </ul>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                    View providers <ArrowRight className="h-4 w-4" />
+                  </span>
+                </CardContent>
+              </Card>
+            </button>
           ))}
         </div>
       </section>
@@ -308,13 +359,20 @@ export default function RecoveryServicesPage() {
         </h2>
         <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
           {POPULAR_SERVICES.map((tag) => (
-            <Badge
+            <button
               key={tag}
-              variant="outline"
-              className="px-4 py-2 text-sm border-primary/20 bg-primary/5 text-primary font-medium"
+              type="button"
+              onClick={() => goToDirectory(POPULAR_SERVICE_FILTER[tag], tag)}
+              data-testid={`popular-service-${tag.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              {tag}
-            </Badge>
+              <Badge
+                variant="outline"
+                className="px-4 py-2 text-sm border-primary/20 bg-primary/5 text-primary font-medium hover:bg-primary hover:text-white transition-colors cursor-pointer"
+              >
+                {tag}
+              </Badge>
+            </button>
           ))}
         </div>
       </section>

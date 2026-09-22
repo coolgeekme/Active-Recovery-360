@@ -14,7 +14,11 @@ from routes.auth import require_admin
 router = APIRouter()
 
 # Where contact-form submissions are delivered
-CONTACT_RECIPIENTS = ["reggie@coolgeek.me", "kevin@activerecovery360.com"]
+CONTACT_RECIPIENTS = [
+    "info@activerecovery360.com",
+    "kevin@activerecovery360.com",
+    "reggie@coolgeek.me",
+]
 
 
 class ContactSubmission(BaseModel):
@@ -81,9 +85,14 @@ async def submit_contact_form(payload: ContactSubmission):
         )
         results.append({"recipient": recipient, **result})
 
-    any_failure = any(r.get("status") == "error" for r in results)
+    # "skipped" means the mail credential is missing, so nothing was delivered.
+    # It must NOT be reported as success - previously the form told the user
+    # "your message has been sent" while sending nothing at all.
+    any_failure = any(
+        r.get("status") in ("error", "skipped") for r in results
+    )
     if any_failure:
-        # Don't 500 the user — message was saved; just include status
+        # Don't 500 the user — message was saved; just report honestly.
         return {
             "status": "partial",
             "message": "Your message was received. Email delivery had an issue but the team will see it.",
