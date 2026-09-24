@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useSearchParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
 export default function MembershipSuccessPage() {
-  const [location] = useLocation();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const [activating, setActivating] = useState(false);
   const [activated, setActivated] = useState(false);
 
-  // Read Stripe redirect params (present when a 3DS card redirects back)
-  const params = new URLSearchParams(location.split("?")[1] || "");
-  const paymentIntentId = params.get("payment_intent");
-  const redirectStatus = params.get("redirect_status");
+  // Read Stripe redirect params (present when a 3DS card redirects back).
+  // wouter's useLocation() omits the query string, so these used to always be
+  // null and the 3DS round-trip never finished activating the membership.
+  const paymentIntentId = searchParams.get("payment_intent");
+  const redirectStatus = searchParams.get("redirect_status");
 
   useEffect(() => {
     // If Stripe redirected back here (3DS), finish activation on the backend.

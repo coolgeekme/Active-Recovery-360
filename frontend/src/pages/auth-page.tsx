@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useLocation } from "wouter";
+import { useLocation, useSearchParams } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,17 +55,22 @@ export default function AuthPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const { user, firebaseLoginMutation, loginMutation, logoutMutation } = useAuth();
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  // Get tab from URL query parameter
+  // Get tab from URL query parameter.
+  //
+  // NOTE: wouter's useLocation() returns location.pathname ONLY — it does NOT
+  // include location.search. Reading the query via `location.split("?")[1]`
+  // therefore returned undefined every single time, so ?tab=register never
+  // switched the tab and every provider sign-up CTA silently landed the visitor
+  // on the Login tab. useSearchParams() reads the real, reactive query string.
   useEffect(() => {
-    const params = new URLSearchParams(location.split("?")[1]);
-    const tab = params.get("tab");
-    if (tab === "register") {
+    if (searchParams.get("tab") === "register") {
       setActiveTab("register");
     }
-  }, [location]);
+  }, [searchParams]);
 
   // If user is already logged in, redirect to home page — EXCEPT when they
   // explicitly asked for the registration form.
@@ -80,11 +85,10 @@ export default function AuthPage() {
   // above in the SAME commit, so `activeTab` is still "login" on this pass and
   // the redirect would fire before the tab ever updated.
   useEffect(() => {
-    const params = new URLSearchParams(location.split("?")[1]);
-    if (user && params.get("tab") !== "register") {
+    if (user && searchParams.get("tab") !== "register") {
       navigate("/");
     }
-  }, [user, navigate, location]);
+  }, [user, navigate, searchParams]);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({

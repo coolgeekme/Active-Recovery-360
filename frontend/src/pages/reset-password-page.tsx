@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link, useLocation } from "wouter";
+import { Link, useSearchParams } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,18 +26,19 @@ export default function ResetPasswordPage() {
   const [isInvalidToken, setIsInvalidToken] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
+  const [searchParams] = useSearchParams();
   const API_URL = import.meta.env.VITE_API_URL || '';
 
+  // wouter's useLocation() omits the query string, so this used to read
+  // undefined and mark EVERY reset link as an invalid token.
   useEffect(() => {
-    const params = new URLSearchParams(location.split("?")[1]);
-    const tokenParam = params.get("token");
+    const tokenParam = searchParams.get("token");
     if (!tokenParam) {
       setIsInvalidToken(true);
     } else {
       setToken(tokenParam);
     }
-  }, [location]);
+  }, [searchParams]);
 
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
