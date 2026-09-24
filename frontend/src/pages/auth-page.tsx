@@ -54,7 +54,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const { user, firebaseLoginMutation, loginMutation } = useAuth();
+  const { user, firebaseLoginMutation, loginMutation, logoutMutation } = useAuth();
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -67,12 +67,24 @@ export default function AuthPage() {
     }
   }, [location]);
 
-  // If user is already logged in, redirect to home page
+  // If user is already logged in, redirect to home page — EXCEPT when they
+  // explicitly asked for the registration form.
+  //
+  // The provider sign-up CTAs ("Become a Provider Partner", "Apply as a
+  // Healthcare Professional") link straight to /auth?tab=register. Bouncing a
+  // logged-in visitor off that URL made the page flash and then drop them on the
+  // home page with no explanation, so provider sign-up looked broken to anyone
+  // already signed in.
+  //
+  // Read the URL directly instead of `activeTab`: the tab is set by the effect
+  // above in the SAME commit, so `activeTab` is still "login" on this pass and
+  // the redirect would fire before the tab ever updated.
   useEffect(() => {
-    if (user) {
+    const params = new URLSearchParams(location.split("?")[1]);
+    if (user && params.get("tab") !== "register") {
       navigate("/");
     }
-  }, [user, navigate]);
+  }, [user, navigate, location]);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -205,6 +217,10 @@ export default function AuthPage() {
           // If user wants membership, redirect to checkout
           if (data.isMember) {
             navigate("/membership/checkout");
+          } else {
+            // The logged-in guard above deliberately does not fire on the
+            // register tab, so send them home explicitly after sign-up.
+            navigate("/");
           }
         }
       });
@@ -354,6 +370,28 @@ export default function AuthPage() {
                   <CardDescription>
                     Sign up to access recovery products and resources
                   </CardDescription>
+                  {user && (
+                    <div
+                      className="mt-4 rounded-md border-l-4 border-blue-400 bg-blue-50/30 p-4"
+                      data-testid="already-signed-in-notice"
+                    >
+                      <p className="text-sm text-secondary">
+                        You are already signed in as{" "}
+                        <span className="font-semibold">{user.email}</span>. Provider
+                        applications are created with a new account, so sign out first if
+                        you want to apply with a different email.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => logoutMutation.mutate()}
+                      >
+                        Sign out
+                      </Button>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <Form {...registerForm}>
