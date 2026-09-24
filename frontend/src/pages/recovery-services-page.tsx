@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import {
   Activity,
   ArrowRight,
+  BadgeCheck,
   Check,
   Compass,
   Dumbbell,
@@ -18,9 +19,12 @@ import {
   Stethoscope,
   Tag,
   Globe,
+  Handshake,
   Lock,
   List as ListIcon,
   Map as MapIcon,
+  ShoppingBag,
+  TrendingUp,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -138,7 +142,67 @@ const POPULAR_SERVICES = [
   "Functional movement coaching",
 ];
 
-const WHY_SIGN_UP = ["Access to members", "Market your services", "Local customers"];
+// Kevin, Sep 24 2026 — "website  local recovery services  blue box sign up page.docx".
+// His copy verbatim for the Local Recovery Services blue box. Emoji markers in
+// his doc are swapped for lucide icons to match the rest of the site (no emojis
+// anywhere else on AR360); wording is unchanged.
+const PROVIDER_BENEFITS = [
+  {
+    icon: MapPin,
+    title: "Local Visibility",
+    detail:
+      "Create a professional provider profile that helps potential clients find exercise and recovery services in their area.",
+  },
+  {
+    icon: Handshake,
+    title: "Referral Opportunities",
+    detail:
+      "Connect with other professionals serving patients, athletes and active adults who need complementary recovery services.",
+  },
+  {
+    icon: Activity,
+    title: "Reach Active Clients & Athletes",
+    detail:
+      "Put your practice in front of people looking for help with injury recovery, rehabilitation, mobility, performance and injury prevention.",
+  },
+  {
+    icon: ShoppingBag,
+    title: "Recovery Product Access",
+    detail:
+      "Explore opportunities to use and recommend recovery products and equipment available through the Active Recovery 360 marketplace.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Professional Profile",
+    detail:
+      "Showcase your specialties, services, credentials, location, website and contact information.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Grow Your Practice",
+    detail:
+      "Increase awareness of your services and build relationships with other professionals within the local recovery ecosystem.",
+  },
+];
+
+// Kevin's "WHO SHOULD JOIN?" list, verbatim.
+const WHO_SHOULD_JOIN = [
+  "Physical Therapists",
+  "Chiropractors",
+  "Athletic Trainers",
+  "Sports Medicine Professionals",
+  "Strength & Conditioning Coaches",
+  "Exercise Physiologists",
+  "Personal Trainers",
+  "Massage Therapists",
+  "Mobility & Recovery Specialists",
+  "Rehabilitation Professionals",
+  "Sports Performance Specialists",
+  "Orthopedic Rehabilitation Providers",
+  "Post-Surgical Recovery Providers",
+  "Wellness & Movement Professionals",
+  "Other qualified exercise and recovery providers",
+];
 
 // Kevin (Sep 21): "nothing happens when I click on any of the options". These
 // cards and tags were static <Badge>/<Card> elements with hover styling and no
@@ -163,12 +227,6 @@ const POPULAR_SERVICE_FILTER: Record<string, string> = {
   "Soft tissue therapy": "Massage Therapy",
   "Functional movement coaching": "Stretching / Mobility",
 };
-
-const EXPOSURE_TIERS = [
-  { name: "Silver", detail: "No fee, listing only" },
-  { name: "Gold", detail: "Premium listing slot, monthly fee" },
-  { name: "Platinum", detail: "Home page listing, member access marketing, service reviews" },
-];
 
 export default function RecoveryServicesPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -377,53 +435,69 @@ export default function RecoveryServicesPage() {
         </div>
       </section>
 
-      {/* PROVIDER SIGN-UP BLUE BOX */}
-      <section className="py-0 bg-primary text-white pt-16">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
-            <Stethoscope className="h-8 w-8 text-white" />
+      {/* PROVIDER SIGN-UP BLUE BOX — Kevin's copy, Sep 24 2026 */}
+      <section className="py-0 bg-primary text-white pt-16" id="provider-signup">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center">
+            <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Stethoscope className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-white mb-4">
+              Get Found. Get Connected. Help More People Recover.
+            </h2>
+            <p className="text-white/90 leading-relaxed max-w-3xl mx-auto mb-4">
+              Join the Active Recovery 360 Local Provider Network and connect your practice
+              with people looking for exercise, injury &amp; performance, recovery services
+              in their community.
+            </p>
+            <p className="text-white/80 leading-relaxed max-w-3xl mx-auto">
+              Whether you are a physical therapist, chiropractor, athletic trainer, strength
+              &amp; conditioning professional, massage therapist, sports medicine provider,
+              recovery specialist, or other qualified exercise and recovery professional,
+              Active Recovery 360 can help put your services in front of the people who need them.
+            </p>
           </div>
-          <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-white mb-3">
-            Sign up to provide clinical recovery services
-          </h2>
-          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
-            Why sign up
+
+          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm text-center mt-12 mb-6">
+            Why Join Active Recovery 360?
           </p>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 pb-16">
-            {WHY_SIGN_UP.map((reason) => (
-              <span key={reason} className="inline-flex items-center gap-2 text-white">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-white">
-                  <Check className="h-3 w-3 text-white" />
-                </span>
-                {reason}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {PROVIDER_BENEFITS.map((b) => (
+              <div
+                key={b.title}
+                className="bg-white/10 border border-white/15 rounded-lg p-5 text-left"
+                data-testid={`provider-benefit-${b.title.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+              >
+                <b.icon className="h-6 w-6 text-white mb-3" />
+                <h3 className="font-montserrat font-bold text-white text-base uppercase tracking-wide mb-2">
+                  {b.title}
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed">{b.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm text-center mt-12 mb-6">
+            Who Should Join?
+          </p>
+          <p className="text-white/80 text-center mb-5">
+            Active Recovery 360 is building a network that can include:
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 pb-16">
+            {WHO_SHOULD_JOIN.map((role) => (
+              <span
+                key={role}
+                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-sm"
+              >
+                {role}
               </span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* EXPOSURE TIERS (white strip between blue bands so card text keeps site colors) */}
-      <section className="bg-white py-12">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <p className="font-montserrat font-semibold uppercase tracking-wide text-sm text-primary mb-6">
-            Choose your level of exposure
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {EXPOSURE_TIERS.map((tier) => (
-              <div
-                key={tier.name}
-                className="bg-white rounded-lg p-6 text-center shadow border border-primary/10"
-              >
-                <h3 className="font-montserrat font-bold text-primary text-xl mb-2">{tier.name}</h3>
-                <p className="text-secondary text-sm">{tier.detail}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="bg-primary text-white pb-16">
-        <div className="container mx-auto px-4 max-w-4xl text-center pt-10">
+        <div className="container mx-auto px-4 max-w-4xl text-center pt-4">
           <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
             <Link href="/recovery-services/signup">Sign Up as a Provider</Link>
           </Button>

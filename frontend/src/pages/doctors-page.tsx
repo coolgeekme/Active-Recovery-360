@@ -119,12 +119,101 @@ const PARTNER_BENEFITS = [
   "Easy online ordering",
 ];
 
-// Kevin (Sep 21): the HCP sign-up panel "is only for HCP storefronts", so these
-// describe the storefront, not clinical service listings.
-const WHY_SIGN_UP = [
-  "Your own branded storefront",
-  "Hand-pick the products you feature",
-  "One link to share with patients",
+// Kevin, Sep 24 2026 — "web page 360 Healthcare Provider Account.docx".
+// His copy verbatim for the HCP sign-up blue box. He wrote: "I would like the
+// following information in the blue box on the HCP sign up page only (not on the
+// clinical recovery services sign up)". Rendered as an expanded blue region with
+// sub-blocks so ~50 bullets stay scannable (his own note: "I realize it's a lot of
+// text, if needed we can discuss how to reduce the amount of wording").
+const HCP_BLUE_BOX_SECTIONS = [
+  {
+    title: "Create a Free Provider Account",
+    bullets: [
+      "Access a Professional Recovery Product Marketplace",
+      "Shop Products for Your Patients",
+      "Provider-Only Benefits",
+    ],
+  },
+  {
+    title: "Build Your Practice with Active Recovery 360",
+    lead: "Create Your Provider Storefront",
+    bullets: [
+      "Showcase your practice",
+      "List your recovery services",
+      "Provide patients with a direct shopping experience",
+      "Connect your practice with local consumers and athletes",
+    ],
+  },
+  {
+    title: "Generate Additional Revenue",
+    bullets: [
+      "Earn revenue from qualifying product sales",
+      "Offer recommended recovery products directly to patients",
+      "Develop customized product bundles",
+      "Create recurring recovery-product purchases",
+    ],
+  },
+  {
+    title: "Improve Patient Convenience",
+    bullets: [
+      "Patients can shop 24/7",
+      "Products can be ordered from home",
+      "Easy access to recommended recovery products",
+      "Convenient reorder options",
+    ],
+  },
+];
+
+const HCP_RECOVERY_CATEGORIES = [
+  "Mobility & flexibility",
+  "Exercise therapy",
+  "Injury recovery",
+  "Compression",
+  "Bracing & supports",
+  "Kinesiology tape",
+  "Massage & soft-tissue recovery",
+  "Hot & cold therapy",
+  "Muscle recovery",
+  "Sports performance",
+  "Post-exercise recovery",
+  "Rehabilitation equipment",
+];
+
+const HCP_BEYOND_CLINIC = [
+  "Give patients access to recommended products",
+  "Create personalized recovery product lists",
+  "Support home exercise and recovery",
+  "Encourage continued engagement",
+  "Make reordering simple",
+  "Build an ongoing relationship with patients",
+];
+
+const HCP_WHY_AR360 = [
+  "Provider-focused ecommerce platform",
+  "Recovery product marketplace",
+  "Provider directory",
+  "Patient shopping experience",
+  "Provider storefronts",
+  "Product recommendations",
+  "Practice marketing opportunities",
+  "Potential additional revenue streams",
+  "Growing network of recovery professionals",
+];
+
+// Kevin's HCP "Who Should Join?" list, verbatim (differs from the Local Recovery
+// Services list — he specified each separately, so do not merge them).
+const HCP_WHO_SHOULD_JOIN = [
+  "Physical Therapists",
+  "Chiropractors",
+  "Athletic Trainers",
+  "Sports Medicine Professionals",
+  "Orthopedic Practices",
+  "Rehabilitation Centers",
+  "Personal Trainers",
+  "Strength & Conditioning Professionals",
+  "Massage Therapists",
+  "Wellness Professionals",
+  "Sports Performance Centers",
 ];
 
 export default function DoctorsPage() {
@@ -257,36 +346,123 @@ export default function DoctorsPage() {
         </div>
       </section>
 
-      {/* PROVIDER SIGN-UP BLUE BOX */}
-      <section className="bg-primary text-white pt-16">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
-            <Stethoscope className="h-8 w-8 text-white" />
+      {/* PROVIDER SIGN-UP BLUE BOX — Kevin's copy, Sep 24 2026 (HCP page only) */}
+      <section className="bg-primary text-white pt-16" id="provider-signup">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center">
+            <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Stethoscope className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-montserrat font-bold mb-3">
+              Why Healthcare Providers Should Sign Up
+            </h2>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-montserrat font-bold mb-3">
-            Set up your HCP storefront
-          </h2>
-          <p className="text-white/70 font-montserrat font-semibold uppercase tracking-wide text-sm mb-6">
-            Why sign up
-          </p>
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 pb-16">
-            {WHY_SIGN_UP.map((reason) => (
-              <span key={reason} className="inline-flex items-center gap-2 text-white">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-white">
-                  <Check className="h-3 w-3 text-white" />
-                </span>
-                {reason}
-              </span>
+
+          {/* Sub-blocks: account, practice, revenue, convenience */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
+            {HCP_BLUE_BOX_SECTIONS.map((sec) => (
+              <div
+                key={sec.title}
+                className="bg-white/10 border border-white/15 rounded-lg p-5 text-left"
+                data-testid={`hcp-box-${sec.title.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+              >
+                <h3 className="font-montserrat font-bold text-white text-base uppercase tracking-wide mb-3">
+                  {sec.title}
+                </h3>
+                {sec.lead ? (
+                  <p className="text-white/90 text-sm font-semibold mb-2">{sec.lead}</p>
+                ) : null}
+                <ul className="space-y-2">
+                  {sec.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-white/80 text-sm leading-relaxed">
+                      <Check className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
+          </div>
+
+          {/* Products designed around recovery */}
+          <div className="mt-10 text-center">
+            <h3 className="font-montserrat font-bold text-white text-base uppercase tracking-wide mb-2">
+              Products Designed Around Recovery
+            </h3>
+            <p className="text-white/90 mb-5">One Marketplace. Multiple Recovery Needs.</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {HCP_RECOVERY_CATEGORIES.map((c) => (
+                <span
+                  key={c}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-sm"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Beyond the clinic */}
+          <div className="mt-10 text-center">
+            <h3 className="font-montserrat font-bold text-white text-base uppercase tracking-wide mb-2">
+              Connect With Your Patients Beyond the Clinic
+            </h3>
+            <p className="text-white/80 max-w-2xl mx-auto mb-5">
+              Active Recovery 360 helps providers extend the recovery experience beyond the
+              treatment room.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
+              {HCP_BEYOND_CLINIC.map((b) => (
+                <div key={b} className="flex items-start gap-2 bg-white/5 rounded-md p-3">
+                  <Check className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
+                  <span className="text-white/80 text-sm leading-relaxed">{b}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Why AR360 */}
+          <div className="mt-10 text-center pb-16">
+            <h3 className="font-montserrat font-bold text-white text-base uppercase tracking-wide mb-2">
+              Why Active Recovery 360?
+            </h3>
+            <p className="text-white/90 mb-5">
+              Exercise + Injury + Performance Recovery — All in One Marketplace
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-left">
+              {HCP_WHY_AR360.map((b) => (
+                <div key={b} className="flex items-start gap-2 bg-white/5 rounded-md p-3">
+                  <Check className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
+                  <span className="text-white/80 text-sm leading-relaxed">{b}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="bg-primary text-white pb-16">
-        <div className="container mx-auto px-4 max-w-4xl text-center pt-10">
-          <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
-            <a href="/auth?tab=register">Apply as a Healthcare Professional</a>
-          </Button>
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="text-center mb-5">
+            <h3 className="font-montserrat font-bold text-white text-base uppercase tracking-wide">
+              Who Should Join?
+            </h3>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 pb-10">
+            {HCP_WHO_SHOULD_JOIN.map((role) => (
+              <span
+                key={role}
+                className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-sm"
+              >
+                {role}
+              </span>
+            ))}
+          </div>
+          <div className="text-center">
+            <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
+              <a href="/auth?tab=register">Apply as a Healthcare Professional</a>
+            </Button>
+          </div>
         </div>
       </section>
 
