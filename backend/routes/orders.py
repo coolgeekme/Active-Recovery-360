@@ -3,6 +3,7 @@ from bson import ObjectId
 from datetime import datetime
 
 from services.database import get_collection
+from services import goaffpro
 from routes.auth import require_auth, require_member, require_admin
 
 router = APIRouter()
@@ -27,6 +28,12 @@ def transform_order(doc: dict) -> dict:
         "hcpReferralName": doc.get("hcpReferralName"),
         "hcpCommissionPercent": doc.get("hcpCommissionPercent"),
         "hcpCommissionAmount": doc.get("hcpCommissionAmount"),
+        # Affiliate attribution (GoAffPro). HCP referral wins when both exist.
+        "affiliateRef": doc.get("affiliateRef"),
+        "affiliateClickedAt": doc.get("affiliateClickedAt"),
+        "goaffproSyncStatus": doc.get("goaffproSyncStatus"),
+        "goaffproSyncMessage": doc.get("goaffproSyncMessage"),
+        "goaffproSyncedAt": doc.get("goaffproSyncedAt"),
     }
 
 @router.get("/orders")
@@ -162,6 +169,14 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         "createdAt": datetime.utcnow(),
     }
 
+    # Affiliate attribution (GoAffPro). Stored raw here; the precedence rule
+    # against hcpReferralId is resolved at completion time in services.goaffpro
+    # so the rule lives in exactly one place.
+    raw_affiliate_ref = (order_data.get("affiliateRef") or "").strip()
+    if raw_affiliate_ref:
+        new_order["affiliateRef"] = raw_affiliate_ref
+        new_order["affiliateClickedAt"] = datetime.utcnow()
+
     # HCP referral attribution. Customer's frontend can pass either
     # `hcpReferralSlug` (storefront URL slug) or `hcpReferralId` (user id).
     # We resolve to a real approved HCP and snapshot commission % at order
@@ -229,5 +244,15 @@ async def update_order_status(order_id: str, status_data: dict, admin: dict = De
     
     if not result:
         raise HTTPException(status_code=404, detail="Order not found")
-    
+
+    # Report the conversion to GoAffPro when an admin confirms the sale.
+    # `completed` is the only honest commission trigger this shop has: there is
+    # no online payment event to hang it on. Fail soft — a GoAffPro problem must
+    # never block or roll back the order update (services.goaffpro never raises).
+    if status == "completed":
+        report = await goaffpro.report_order(result)
+        applied = goaffpro.sync_fields(report)
+        await orders.update_one({"_id": result["_id"]}, {"$set": applied})
+        result.update(applied)
+
     return transform_order(result)

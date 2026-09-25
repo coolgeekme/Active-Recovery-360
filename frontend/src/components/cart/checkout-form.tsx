@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useLocation } from "wouter";
+import { useAffiliateRef } from "@/hooks/use-affiliate-ref";
 
 interface CheckoutFormProps {
   subtotal: number;
@@ -45,6 +46,7 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
   const { toast } = useToast();
   const { clearCart, cartItems } = useCart();
   const [, navigate] = useLocation();
+  const { affiliateRef, clear: clearAffiliateRef } = useAffiliateRef();
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -73,6 +75,9 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
         paymentMethod: "credit", // In a real app, we would handle payment processing
         discountCode: discountCode || undefined,
         hcpReferralSlug: hcpReferralSlug || undefined,
+        // Affiliate attribution. Both refs are sent; the SERVER enforces
+        // precedence (HCP referral wins) so the rule lives in exactly one place.
+        affiliateRef: affiliateRef?.ref || undefined,
         items: cartItems.map((i) => ({
           productId: i.productId,
           quantity: i.quantity,
@@ -80,8 +85,10 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
         })),
       });
       
-      // After successful order, clear the cart and HCP referral
+      // After a successful order, clear the cart and both referral sources.
+      // The order doc now holds the attribution, so clearing client-side is safe.
       await clearCart();
+      clearAffiliateRef();
       try {
         window.localStorage.removeItem("ar360_hcp_referral");
         window.dispatchEvent(new StorageEvent("storage", { key: "ar360_hcp_referral" }));

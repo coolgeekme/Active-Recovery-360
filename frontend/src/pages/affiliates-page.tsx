@@ -8,6 +8,7 @@ import {
   Mail,
   Loader2,
   CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Breadcrumbs from "@/components/layout/breadcrumbs";
+
+/**
+ * GoAffPro-hosted affiliate portal. Unset until the program goes live, in which
+ * case this page falls back to the "notify me" interest list — we never show a
+ * signup CTA pointing at a portal that doesn't exist yet.
+ */
+const AFFILIATE_PORTAL_URL = (
+  import.meta.env.VITE_GOAFFPRO_PORTAL_URL as string | undefined
+)?.trim();
+
+const isLive = Boolean(AFFILIATE_PORTAL_URL);
 
 export default function AffiliatesPage() {
   const { toast } = useToast();
@@ -88,16 +100,46 @@ export default function AffiliatesPage() {
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-1.5 rounded-full text-sm font-montserrat font-semibold mb-6">
               <Sparkles className="h-4 w-4" />
-              Coming Soon
+              {isLive ? "Now Accepting Affiliates" : "Coming Soon"}
             </span>
             <h1 className="text-4xl md:text-6xl font-montserrat font-bold mb-4 tracking-wide">
               Active Recovery 360 Affiliate Program
             </h1>
             <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-              Earn commissions by sharing the recovery products you love.
-              We&apos;re putting the finishing touches on our affiliate program —
-              be the first to know when it goes live.
+              {isLive ? (
+                <>
+                  Earn commissions by sharing the recovery products you love.
+                  Join the program, grab your unique referral link, and start
+                  earning on every order.
+                </>
+              ) : (
+                <>
+                  Earn commissions by sharing the recovery products you love.
+                  We&apos;re putting the finishing touches on our affiliate
+                  program — be the first to know when it goes live.
+                </>
+              )}
             </p>
+
+            {isLive && (
+              <div className="mt-8">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  data-testid="affiliate-portal-cta"
+                >
+                  <a
+                    href={AFFILIATE_PORTAL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Join the Affiliate Program
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </a>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         {/* Subtle gradient blob for depth */}
@@ -127,69 +169,97 @@ export default function AffiliatesPage() {
           ))}
         </div>
 
-        {/* Notify form */}
+        {/* Portal CTA when live, else the interest list */}
         <div className="max-w-2xl mx-auto">
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="pt-8 pb-8">
-              {submitted ? (
-                <div className="text-center" data-testid="affiliate-success">
-                  <CheckCircle2 className="h-14 w-14 text-primary mx-auto mb-4" />
-                  <h2 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                    You&apos;re on the list
-                  </h2>
-                  <p className="text-secondary">
-                    We&apos;ll email <span className="font-semibold">{email}</span> as soon
-                    as the affiliate program launches.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="text-center mb-6">
-                    <Mail className="h-8 w-8 text-primary mx-auto mb-3" />
+          {isLive ? (
+            <Card
+              className="border-primary/20 bg-primary/5"
+              data-testid="affiliate-portal-card"
+            >
+              <CardContent className="pt-8 pb-8 text-center">
+                <TrendingUp className="h-10 w-10 text-primary mx-auto mb-4" />
+                <h2 className="text-2xl font-montserrat font-bold text-primary mb-2">
+                  Ready to start earning?
+                </h2>
+                <p className="text-secondary text-sm mb-6 max-w-md mx-auto">
+                  Applications, your referral link, and your commission
+                  dashboard all live in the affiliate portal.
+                </p>
+                <Button asChild size="lg" className="w-full sm:w-auto">
+                  <a
+                    href={AFFILIATE_PORTAL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open the Affiliate Portal
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-8 pb-8">
+                {submitted ? (
+                  <div className="text-center" data-testid="affiliate-success">
+                    <CheckCircle2 className="h-14 w-14 text-primary mx-auto mb-4" />
                     <h2 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                      Get early access
+                      You&apos;re on the list
                     </h2>
-                    <p className="text-secondary text-sm">
-                      Drop your email and we&apos;ll notify you the moment applications open.
+                    <p className="text-secondary">
+                      We&apos;ll email <span className="font-semibold">{email}</span> as soon
+                      as the affiliate program launches.
                     </p>
                   </div>
-                  <form
-                    onSubmit={handleSubmit}
-                    className="space-y-3 max-w-md mx-auto"
-                    data-testid="affiliate-signup-form"
-                  >
-                    <Input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Your name (optional)"
-                      data-testid="affiliate-name"
-                    />
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      required
-                      data-testid="affiliate-email"
-                    />
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full"
-                      disabled={submitting}
-                      data-testid="affiliate-submit-btn"
+                ) : (
+                  <>
+                    <div className="text-center mb-6">
+                      <Mail className="h-8 w-8 text-primary mx-auto mb-3" />
+                      <h2 className="text-2xl font-montserrat font-bold text-primary mb-2">
+                        Get early access
+                      </h2>
+                      <p className="text-secondary text-sm">
+                        Drop your email and we&apos;ll notify you the moment applications open.
+                      </p>
+                    </div>
+                    <form
+                      onSubmit={handleSubmit}
+                      className="space-y-3 max-w-md mx-auto"
+                      data-testid="affiliate-signup-form"
                     >
-                      {submitting ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      Notify Me When It Launches
-                    </Button>
-                  </form>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                      <Input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your name (optional)"
+                        data-testid="affiliate-name"
+                      />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        required
+                        data-testid="affiliate-email"
+                      />
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full"
+                        disabled={submitting}
+                        data-testid="affiliate-submit-btn"
+                      >
+                        {submitting ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
+                        Notify Me When It Launches
+                      </Button>
+                    </form>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <p className="text-center text-xs text-muted-foreground mt-4">
             Are you a healthcare professional looking to set up a storefront for your practice?{" "}
