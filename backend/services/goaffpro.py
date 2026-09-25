@@ -116,6 +116,26 @@ async def report_order(order: dict) -> dict:
                 "reported": False,
             }
 
+        # GoAffPro answers HTTP 200 even when the request FAILED — failures come
+        # back in the body, e.g. {"error":"shop not found <id>"}. Trusting the
+        # status code alone would record a rejected conversion as "synced" and
+        # silently lose the sale. Verified by probing the live endpoint.
+        body_text = response.text[:300]
+        try:
+            body_json = response.json()
+        except Exception:
+            body_json = None
+
+        if isinstance(body_json, dict) and body_json.get("error"):
+            logger.error(
+                "GoAffPro returned an error for order %s: %s", order_id, body_text
+            )
+            return {
+                "status": STATUS_FAILED,
+                "message": f"GoAffPro error: {body_json.get('error')}",
+                "reported": False,
+            }
+
         logger.info("GoAffPro conversion reported for order %s", order_id)
         return {
             "status": STATUS_SYNCED,

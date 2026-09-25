@@ -161,6 +161,80 @@ def test_report_order_skips_without_calling_out(monkeypatch):
     assert called["n"] == 0
 
 
+# --- the HTTP-200-with-an-error-body trap ----------------------------------
+#
+# GoAffPro answers 200 even for a FAILED request; the failure is in the body
+# ({"error": "shop not found <id>"}). Verified against the live endpoint.
+# Treating the status code as success would mark a rejected conversion as
+# "synced" and silently lose the sale AND the commission data.
+
+class _FakeResponse:
+    def __init__(self, status_code, text, json_value):
+        self.status_code = status_code
+        self.text = text
+        self._json = json_value
+
+    def json(self):
+        if isinstance(self._json, Exception):
+            raise self._json
+        return self._json
+
+
+def _client_returning(response):
+    class OneShotClient:
+        def __init__(self, *a, **kw):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            return False
+
+        async def post(self, *a, **kw):
+            return response
+
+    return OneShotClient
+
+
+def test_http_200_with_error_body_is_a_failure(monkeypatch):
+    resp = _FakeResponse(
+        200, '{"error":"shop not found abc"}', {"error": "shop not found abc"}
+    )
+    monkeypatch.setattr(goaffpro.httpx, "AsyncClient", _client_returning(resp))
+
+    result = asyncio.run(goaffpro.report_order(order(affiliateRef="aff-abc")))
+    assert result["status"] == STATUS_FAILED
+    assert result["reported"] is False
+    assert "shop not found" in result["message"]
+
+
+def test_http_200_with_clean_body_is_success(monkeypatch):
+    resp = _FakeResponse(200, '{"success":true}', {"success": True})
+    monkeypatch.setattr(goaffpro.httpx, "AsyncClient", _client_returning(resp))
+
+    result = asyncio.run(goaffpro.report_order(order(affiliateRef="aff-abc")))
+    assert result["status"] == STATUS_SYNCED
+    assert result["reported"] is True
+
+
+def test_non_json_200_body_does_not_crash(monkeypatch):
+    """A weird body must degrade, not raise."""
+    resp = _FakeResponse(200, "<html>gateway</html>", ValueError("not json"))
+    monkeypatch.setattr(goaffpro.httpx, "AsyncClient", _client_returning(resp))
+
+    result = asyncio.run(goaffpro.report_order(order(affiliateRef="aff-abc")))
+    assert result["status"] == STATUS_SYNCED
+
+
+def test_http_500_is_a_failure(monkeypatch):
+    resp = _FakeResponse(500, "boom", ValueError("not json"))
+    monkeypatch.setattr(goaffpro.httpx, "AsyncClient", _client_returning(resp))
+
+    result = asyncio.run(goaffpro.report_order(order(affiliateRef="aff-abc")))
+    assert result["status"] == STATUS_FAILED
+
+
 def test_sync_fields_records_attempt_and_keeps_success_stamp():
     ok = goaffpro.sync_fields({"status": STATUS_SYNCED, "message": "done", "reported": True})
     assert ok["goaffproSyncStatus"] == STATUS_SYNCED
