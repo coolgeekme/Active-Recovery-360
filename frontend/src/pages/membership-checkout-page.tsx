@@ -65,7 +65,10 @@ function CheckoutForm({
     if (appliedDiscount.discountType === "percentage") {
       return originalAmount - (originalAmount * appliedDiscount.discountValue / 100);
     } else {
-      return Math.max(0, originalAmount - (appliedDiscount.discountValue / 100));
+      // discountValue for a flat discount is stored in DOLLARS (matching the
+      // admin UI and the backend's apply_discount). Dividing by 100 here made a
+      // $5 discount display as $0.05 off.
+      return Math.max(0, originalAmount - appliedDiscount.discountValue);
     }
   };
 

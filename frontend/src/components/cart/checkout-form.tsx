@@ -33,9 +33,6 @@ const checkoutFormSchema = z.object({
   city: z.string().min(2, { message: "City is required" }),
   state: z.string().min(2, { message: "State is required" }),
   zipCode: z.string().min(5, { message: "Zip code is required" }),
-  cardNumber: z.string().min(15, { message: "Valid card number is required" }),
-  expiryDate: z.string().min(4, { message: "Valid expiry date is required" }),
-  cvv: z.string().min(3, { message: "Valid CVV is required" }),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
@@ -57,9 +54,6 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
       city: "",
       state: "",
       zipCode: "",
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
     },
   });
 
@@ -72,7 +66,9 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
 
       await apiRequest("POST", "/api/orders", {
         shippingAddress,
-        paymentMethod: "credit", // In a real app, we would handle payment processing
+        // No card is collected or charged online — the team arranges payment
+        // after the order is received. The backend ignores this field.
+        paymentMethod: "pay_later",
         discountCode: discountCode || undefined,
         hcpReferralSlug: hcpReferralSlug || undefined,
         // Affiliate attribution. Both refs are sent; the SERVER enforces
@@ -99,8 +95,8 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
       setIsComplete(true);
       
       toast({
-        title: "Order placed successfully!",
-        description: "Thank you for your purchase.",
+        title: "Order received!",
+        description: "We'll be in touch to arrange payment.",
       });
       
       // Redirect to account/orders page after a delay
@@ -130,9 +126,10 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
     return (
       <div className="text-center py-10">
         <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-primary mb-2">Order Confirmed!</h2>
+        <h2 className="text-2xl font-bold text-primary mb-2">Order Received!</h2>
         <p className="text-muted-foreground mb-6">
-          Your order has been placed successfully. You'll receive a confirmation email shortly.
+          Thanks — your order has been received. Our team will contact you
+          shortly to arrange payment and confirm shipping.
         </p>
         <div className="flex justify-center space-x-4">
           <Button variant="outline" asChild>
@@ -241,53 +238,16 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
         </div>
 
         <div>
-          <h2 className="text-xl font-bold text-primary mb-4">Payment Information</h2>
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="cardNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Card Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="4242 4242 4242 4242" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="expiryDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expiry Date</FormLabel>
-                    <FormControl>
-                      <Input placeholder="MM/YY" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="cvv"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CVV</FormLabel>
-                    <FormControl>
-                      <Input placeholder="123" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <h2 className="text-xl font-bold text-primary mb-4">Payment</h2>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm text-amber-900">
+              <strong>Payment is not collected online.</strong> Once you submit
+              your order, our team will contact you to arrange payment and
+              confirm shipping — no card details are needed now.
+            </p>
           </div>
         </div>
+            
 
         <div className="bg-primary/5 p-4 rounded-lg">
           <div className="flex justify-between mb-2">
@@ -312,10 +272,10 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              Submitting...
             </>
           ) : (
-            `Place Order - ${formatPrice(subtotal)}`
+            `Submit Order - ${formatPrice(subtotal)}`
           )}
         </Button>
       </form>

@@ -57,3 +57,10 @@ credentials.json
 *.pem
 *.key
 .credentials
+
+# Python test/venv artifacts (never commit these)
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
