@@ -50,7 +50,7 @@ function CheckoutForm({
   const [discountLoading, setDiscountLoading] = useState(false);
   const [originalAmount] = useState(MEMBERSHIP_PRICE);
 
-  // Demographics (needed to ship the free recovery kit + t-shirt)
+  // Demographics (needed to ship the free welcome kit + t-shirt)
   const [tshirtSize, setTshirtSize] = useState("");
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
@@ -213,7 +213,7 @@ function CheckoutForm({
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900">Active Recovery 360 Membership</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Lifetime access to exclusive products + a free recovery kit &amp; t-shirt
+                  Lifetime access to exclusive products + a free welcome kit &amp; t-shirt
                 </p>
               </div>
               <div className="text-right">

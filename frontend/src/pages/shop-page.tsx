@@ -23,7 +23,7 @@ import CategoryCard from "@/components/category/category-card";
 import Breadcrumbs from "@/components/layout/breadcrumbs";
 
 export default function ShopPage() {
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("featured");
   
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
@@ -43,9 +43,9 @@ export default function ShopPage() {
 
           <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="mb-8">
             <TabsList>
-              <TabsTrigger value="all">All Products</TabsTrigger>
               <TabsTrigger value="featured">Featured</TabsTrigger>
               <TabsTrigger value="categories">Categories</TabsTrigger>
+              <TabsTrigger value="all">All Products</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="pt-6">
@@ -81,7 +81,7 @@ export default function ShopPage() {
                 </li>
                 <li className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-primary mr-2" />
-                  <span className="text-sm">Free Recovery Kit</span>
+                  <span className="text-sm">Free Welcome Kit</span>
                 </li>
                 <li className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-primary mr-2" />

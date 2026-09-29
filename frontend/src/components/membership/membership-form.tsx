@@ -77,7 +77,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
           </div>
           <div className="flex items-center mb-2">
             <CheckIcon className="h-5 w-5 text-primary mr-2" />
-            <span className="text-primary">FREE Recovery Kit ($39 value)</span>
+            <span className="text-primary">FREE Welcome Kit</span>
           </div>
           <div className="flex items-center mb-2">
             <CheckIcon className="h-5 w-5 text-primary mr-2" />

@@ -312,7 +312,7 @@ export default function RecoveryServicesPage() {
               Local Exercise Recovery Services Directory
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-montserrat font-bold mb-4 tracking-wide">
-              Find Trusted Exercise Recovery Specialists Near You
+              Find Trusted Clinical Exercise, Performance & Injury Recovery Specialist Near You
             </h1>
             <p className="text-lg text-white/90 leading-relaxed mb-3">
               Looking for professional exercise recovery services in your area? Our

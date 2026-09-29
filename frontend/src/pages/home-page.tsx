@@ -125,7 +125,7 @@ export default function HomePage() {
                   </li>
                   <li className="flex items-center">
                     <span className="mr-2">•</span>
-                    Free Recovery Kit ($39 Value)
+                    Free Welcome Kit
                   </li>
                   <li className="flex items-center">
                     <span className="mr-2">•</span>

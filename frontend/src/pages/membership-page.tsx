@@ -29,11 +29,11 @@ export default function MembershipPage() {
   const faqItems = [
     {
       question: "What is included in the membership?",
-      answer: "Your $29 membership includes lifetime access to member-only pricing, a free recovery starter kit ($39 value), and early bird access to new product offerings. There are no recurring fees - just a one-time payment."
+      answer: "Your $29 membership includes lifetime access to member-only pricing, a free welcome kit, and early bird access to new product offerings. There are no recurring fees - just a one-time payment."
     },
     {
-      question: "How do I receive my free recovery kit?",
-      answer: "Your recovery kit will be shipped to you automatically after your membership purchase is completed. You'll receive a confirmation email with tracking information."
+      question: "How do I receive my free welcome kit?",
+      answer: "Your welcome kit will be shipped to you automatically after your membership purchase is completed. You'll receive a confirmation email with tracking information."
     },
     {
       question: "Can I cancel my membership?",
@@ -73,7 +73,7 @@ export default function MembershipPage() {
               </li>
               <li className="flex items-center">
                 <span className="mr-2">•</span>
-                Free Recovery Kit ($39 Value)
+                Free Welcome Kit
               </li>
               <li className="flex items-center">
                 <span className="mr-2">•</span>
@@ -87,28 +87,12 @@ export default function MembershipPage() {
             <div className="mb-6">
               <img 
                 src={recoveryGearBrandImg} 
-                alt="Recovery starter kit" 
+                alt="Welcome kit" 
                 className="rounded-lg shadow w-full h-auto object-cover"
               />
             </div>
           </div>
 
-          <div>
-            <h2 className="text-2xl font-montserrat font-bold text-primary mb-4">Membership Benefits</h2>
-            <div className="space-y-6">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex">
-                  <div className="bg-primary bg-opacity-10 w-12 h-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                    <benefit.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-montserrat font-bold text-primary text-lg mb-1">{benefit.title}</h3>
-                    <p className="text-secondary">{benefit.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div>
@@ -132,6 +116,24 @@ export default function MembershipPage() {
               <MembershipForm />
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Membership Benefits — moved below the Join box per Kevin's Sep 25 markup */}
+      <div className="max-w-5xl mx-auto mb-20">
+        <h2 className="text-2xl font-montserrat font-bold text-primary mb-6">Membership Benefits</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {benefits.map((benefit, index) => (
+            <div key={index} className="flex">
+              <div className="bg-primary bg-opacity-10 w-12 h-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                <benefit.icon className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-montserrat font-bold text-primary text-lg mb-1">{benefit.title}</h3>
+                <p className="text-secondary">{benefit.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
