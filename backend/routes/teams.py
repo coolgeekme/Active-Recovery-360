@@ -1,6 +1,7 @@
 """Teams & Trainers program signup. Captures athletic teams and athletic
 trainers who want a team/affiliate code (fundraiser-style referral) or bulk
 purchase. Admin can review submissions at /admin/team-signups."""
+import asyncio
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr, Field
@@ -8,6 +9,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 from services.database import get_collection
+from services.email import send_team_signup_welcome_email
 from routes.auth import require_admin
 
 router = APIRouter()
@@ -53,6 +55,18 @@ async def create_team_signup(payload: TeamSignup):
             "createdAt": datetime.now(timezone.utc).isoformat(),
         }
     )
+
+    # Acknowledge the signup. Fire-and-forget so a mail failure can never block
+    # or fail the signup itself - same pattern as the membership welcome email.
+    asyncio.create_task(
+        send_team_signup_welcome_email(
+            payload.email,
+            payload.name,
+            payload.organization,
+            payload.role,
+        )
+    )
+
     return {
         "status": "success",
         "message": "Thanks! We'll email you with your team code and next steps.",

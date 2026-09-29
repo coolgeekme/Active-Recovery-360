@@ -253,3 +253,79 @@ async def send_hcp_signup_received_email(to_email: str, user_name: str = "there"
     </html>
     """
     return await send_email(to_email, subject, html_content)
+
+
+async def send_team_signup_welcome_email(
+    to_email: str,
+    contact_name: str = "there",
+    organization: str | None = None,
+    role: str = "team",
+) -> dict:
+    """Acknowledge a Teams & Trainers signup.
+
+    The signup form has always told people "We'll email you with your team code
+    and next steps", but no email was ever sent. This is that email.
+    """
+    role_labels = {
+        "team": "Team / Coach",
+        "trainer": "Athletic Trainer",
+        "both": "Team & Athletic Trainer",
+    }
+    role_label = role_labels.get((role or "").strip().lower(), "Team / Coach")
+    first_name = (contact_name or "there").split(" ")[0] or "there"
+
+    details = [f"<strong>Role:</strong> {role_label}"]
+    if organization:
+        details.insert(0, f"<strong>Organization:</strong> {organization}")
+    details_html = "<br>".join(details)
+
+    subject = "You're on the list - Active Recovery 360 Teams & Trainers"
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #0f4c81; color: white; padding: 20px; text-align: center; }}
+            .content {{ padding: 30px; background-color: #f9f9f9; }}
+            .button {{ display: inline-block; padding: 12px 30px; background-color: #0f4c81; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+            .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Active Recovery 360</h1>
+            </div>
+            <div class="content">
+                <p>Hi {first_name},</p>
+                <p>Thanks for signing up for the Active Recovery 360 Teams &amp; Trainers
+                affiliate program. You're on the list.</p>
+                <p><strong>Your signup details</strong><br>
+                {details_html}</p>
+                <p><strong>What happens next:</strong></p>
+                <ul>
+                    <li>We set up your team's affiliate code.</li>
+                    <li>You get an email with your code and the next steps for sharing it.</li>
+                    <li>Every qualifying referral earns funds toward your team's athletic
+                    training and recovery needs.</li>
+                </ul>
+                <p>We review new signups each business day, so your code is usually ready
+                within 1&ndash;2 business days.</p>
+                <p>In the meantime, take a look at the products your team will be earning
+                toward:</p>
+                <p style="text-align: center;">
+                    <a href="{FRONTEND_URL}/shop" class="button">Browse Recovery Products</a>
+                </p>
+                <p>Questions? Just reply to this email.</p>
+                <p>&mdash; The Active Recovery 360 Team</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 Active Recovery 360. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return await send_email(to_email, subject, html_content)
