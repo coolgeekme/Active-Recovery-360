@@ -140,8 +140,44 @@ async def get_products(
         query.update(_category_match(categoryId))
     if featured is not None:
         query["featured"] = featured
+    curated_order: list[str] = []
     if doctorId:
-        query["doctorIds"] = doctorId
+        # A provider's page shows two things: products explicitly assigned to them
+        # (`doctorIds`) and the products they curated in the storefront editor
+        # (`storefrontFeaturedProductIds`). Only the former was ever queried, and
+        # nothing in the catalog has `doctorIds` populated - so every provider page
+        # rendered "No products found." even when the provider had curated a full
+        # list. Union both sources so curation actually surfaces products.
+        curated_ids: list[str] = []
+        try:
+            owner = await get_collection("users").find_one(
+                {"_id": ObjectId(doctorId)}, {"storefrontFeaturedProductIds": 1}
+            )
+        except Exception:
+            # Not a valid ObjectId - fall back to the legacy match alone.
+            owner = None
+        for value in ((owner or {}).get("storefrontFeaturedProductIds") or []):
+            try:
+                ObjectId(str(value))
+            except Exception:
+                continue
+            curated_ids.append(str(value))
+
+        doctor_scope: dict = {"doctorIds": doctorId}
+        if curated_ids:
+            curated_order = curated_ids
+            doctor_scope = {
+                "$or": [
+                    {"doctorIds": doctorId},
+                    {"_id": {"$in": [ObjectId(i) for i in curated_ids]}},
+                ]
+            }
+        # `categoryId` also claims `$or` - combine with it rather than clobber it.
+        existing_or = query.pop("$or", None)
+        if existing_or:
+            query["$and"] = [{"$or": existing_or}, doctor_scope]
+        else:
+            query.update(doctor_scope)
     # Comma-separated id list, used to render a product's curated related items
     # in the exact order the admin chose.
     wanted_ids = [i.strip() for i in (ids or "").split(",") if i.strip()] if ids else []
@@ -189,6 +225,11 @@ async def get_products(
     if wanted_ids:
         # Preserve the requested order - the admin's curated order is the point.
         rank = {value: i for i, value in enumerate(wanted_ids)}
+        docs.sort(key=lambda d: rank.get(str(d["_id"]), len(rank)))
+    elif curated_order:
+        # The provider curated this list in their own order; honour it over the
+        # global displayOrder so their page matches what they arranged.
+        rank = {value: i for i, value in enumerate(curated_order)}
         docs.sort(key=lambda d: rank.get(str(d["_id"]), len(rank)))
 
     return [transform_product(doc, show_price=is_privileged) for doc in docs]

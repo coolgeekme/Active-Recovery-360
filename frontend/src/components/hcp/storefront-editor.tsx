@@ -231,7 +231,17 @@ export default function StorefrontEditor({
           </div>
           <Switch
             checked={!!draft.storefrontEnabled}
-            onCheckedChange={(v) => update({ storefrontEnabled: v })}
+            onCheckedChange={(v) => {
+              // Persist immediately. This switch is the one control whose state
+              // IS the outcome, so flipping it and walking away must publish.
+              // Previously it only changed local state until "Save Storefront"
+              // was pressed at the bottom of the page, so a provider could
+              // reasonably believe their storefront was live when it was not.
+              const next = { ...draft, storefrontEnabled: v };
+              update({ storefrontEnabled: v });
+              saveMutation.mutate(next);
+            }}
+            disabled={saveMutation.isPending}
             data-testid="storefront-enabled-toggle"
           />
         </div>
