@@ -249,7 +249,7 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild className="font-montserrat bg-primary text-white border-2 border-white hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-200 font-semibold">
-                <Link href="/auth?tab=register">Join as HCP</Link>
+                <Link href="/hcp/signup">Join as HCP</Link>
               </Button>
             </div>
           </div>

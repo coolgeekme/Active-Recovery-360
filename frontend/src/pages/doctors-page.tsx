@@ -237,7 +237,7 @@ export default function DoctorsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="font-semibold btn-primary-enhanced" data-testid="cta-register-hcp">
-              <a href="/auth?tab=register">Become a Provider Partner</a>
+              <a href="/hcp/signup">Become a Provider Partner</a>
             </Button>
             <Button asChild size="lg" variant="outline">
               <a href="#why-us">Learn More</a>
@@ -460,7 +460,7 @@ export default function DoctorsPage() {
           </div>
           <div className="text-center">
             <Button asChild size="lg" className="btn-secondary-enhanced font-semibold">
-              <a href="/auth?tab=register">Apply as a Healthcare Professional</a>
+              <a href="/hcp/signup">Apply as a Healthcare Professional</a>
             </Button>
           </div>
         </div>
@@ -493,7 +493,7 @@ export default function DoctorsPage() {
               Start building a stronger recovery experience for your patients today.
             </p>
             <Button asChild size="lg" className="font-semibold btn-primary-enhanced" data-testid="cta-register-hcp-bottom">
-              <a href="/auth?tab=register">Apply as a Healthcare Professional</a>
+              <a href="/hcp/signup">Apply as a Healthcare Professional</a>
             </Button>
           </div>
         </div>
