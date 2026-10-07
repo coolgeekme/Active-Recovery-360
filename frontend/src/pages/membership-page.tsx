@@ -96,44 +96,46 @@ export default function MembershipPage() {
         </div>
 
         <div>
-          <div className="sticky top-20">
-            {!user ? (
-              <div className="bg-white rounded-lg shadow-lg p-6 mb-8 text-center">
-                <h2 className="text-xl font-montserrat font-bold text-primary mb-4">Join Active Recovery 360</h2>
-                <p className="text-secondary mb-6">
-                  Please create an account or sign in to purchase your alliance membership.
-                </p>
-                <div className="space-x-4">
-                  <Button asChild>
-                    <Link href="/auth">Sign In</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href="/auth?tab=register">Create Account</Link>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <MembershipForm />
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Membership Benefits — moved below the Join box per Kevin's Sep 25 markup */}
-      <div className="max-w-5xl mx-auto mb-20">
-        <h2 className="text-2xl font-montserrat font-bold text-primary mb-6">Membership Benefits</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {benefits.map((benefit, index) => (
-            <div key={index} className="flex">
-              <div className="bg-primary bg-opacity-10 w-12 h-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                <benefit.icon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-montserrat font-bold text-primary text-lg mb-1">{benefit.title}</h3>
-                <p className="text-secondary">{benefit.description}</p>
+          {!user ? (
+            <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+              <h2 className="text-xl font-montserrat font-bold text-primary mb-4">Join Active Recovery 360</h2>
+              <p className="text-secondary mb-6">
+                Please create an account or sign in to purchase your alliance membership.
+              </p>
+              <div className="space-x-4">
+                <Button asChild>
+                  <Link href="/auth">Sign In</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/auth?tab=register">Create Account</Link>
+                </Button>
               </div>
             </div>
-          ))}
+          ) : (
+            <MembershipForm />
+          )}
+
+          {/* Membership Benefits — sat in a full-width band below the two columns,
+              which left ~645px of empty space beside the "Why Join" card (measured
+              live: left column 881px vs right column 236px). Kevin asked for these
+              to sit "in a row, right below the join", so they now stack in the
+              right column where the dead space was. */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-montserrat font-bold text-primary mb-6">Membership Benefits</h2>
+            <div className="grid grid-cols-1 gap-6">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex">
+                  <div className="bg-primary bg-opacity-10 w-12 h-12 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <benefit.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-montserrat font-bold text-primary text-lg mb-1">{benefit.title}</h3>
+                    <p className="text-secondary">{benefit.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

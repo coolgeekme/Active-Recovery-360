@@ -81,7 +81,11 @@ export default function HcpStorefrontPage() {
         <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      <div className="container mx-auto px-4 -mt-16 pb-12">
+      {/* relative z-10 lifts the card above the banner. The banner is
+            position:relative and this container is static, so the banner (and its
+            absolute inset-0 overlay) painted OVER the card's top 64px, cutting off
+            the provider's name. */}
+        <div className="relative z-10 container mx-auto px-4 -mt-16 pb-12">
         {/* Profile card */}
         <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 flex flex-col sm:flex-row gap-6 items-start">
           <div className="flex-shrink-0">
