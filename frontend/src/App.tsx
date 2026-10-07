@@ -43,6 +43,7 @@ import AdminSettings from "@/pages/admin/admin-settings";
 import DiscountManagement from "@/pages/admin/discount-management";
 import HcpManagement from "@/pages/admin/hcp-management";
 import HcpStorefrontPage from "@/pages/hcp-storefront-page";
+import StorefrontGuidePage from "@/pages/storefront-guide-page";
 import HcpDashboardPage from "@/pages/hcp-dashboard-page";
 import AdminHcpStorefrontEditPage from "@/pages/admin/hcp-storefront-edit-page";
 import RecoveryServicesPage from "@/pages/recovery-services-page";
@@ -90,6 +91,9 @@ function AppRouter() {
 
           {/* HCP Storefronts (public) */}
           <Route path="/hcp/dashboard" component={HcpDashboardPage} />
+          {/* /hcp/guide MUST be declared before /hcp/:slug, otherwise the slug
+              route matches "guide" and renders a storefront-not-found page. */}
+          <Route path="/hcp/guide" component={StorefrontGuidePage} />
           <Route path="/hcp/:slug" component={HcpStorefrontPage} />
           <Route path="/recovery-services/signup" component={RecoveryProviderSignupPage} />
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, Upload, Image as ImageIcon, ExternalLink, CheckCircle2, Circle, Search } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon, ExternalLink, CheckCircle2, Circle, Search, HelpCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -217,6 +217,16 @@ export default function StorefrontEditor({
               </li>
             ))}
           </ul>
+          <a
+            href="/hcp/guide"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary underline mt-3"
+            data-testid="storefront-guide-link"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            Full step-by-step guide
+          </a>
         </div>
       )}
 
