@@ -121,6 +121,9 @@ def transform_product(doc: dict, show_price: bool = True) -> dict:
         # Optional per-product sizing guide (braces etc.). Either may be blank.
         "sizeChartUrl": doc.get("sizeChartUrl") or "",
         "sizeChartNote": doc.get("sizeChartNote") or "",
+        # Extra gallery images beyond the primary `imageUrl`. Ordered; the
+        # product page shows `imageUrl` first and falls back to imageUrls[0].
+        "imageUrls": [str(u) for u in (doc.get("imageUrls") or []) if u],
     }
 
 @router.get("/products")
@@ -291,6 +294,7 @@ async def create_product(product_data: dict, admin: dict = Depends(require_admin
         "relatedProductIds": _related_product_ids(product_data) or [],
         "sizeChartUrl": (product_data.get("sizeChartUrl") or "").strip(),
         "sizeChartNote": (product_data.get("sizeChartNote") or "").strip(),
+        "imageUrls": [str(u) for u in (product_data.get("imageUrls") or []) if u],
     }
 
     result = await products.insert_one(new_product)

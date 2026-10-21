@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Product, ProductVariant } from "@/types";
@@ -37,6 +37,9 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  // Gallery selection. Reset by product id so navigating between products
+  // doesn't carry a thumbnail from the previous page.
+  const [galleryImage, setGalleryImage] = useState<string | null>(null);
   
   const { user } = useAuth();
   const { addToCart } = useCart();
@@ -45,6 +48,22 @@ export default function ProductPage() {
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: [`/api/products/${productId}`],
   });
+
+  // Clear any thumbnail selection when the route moves to a different product.
+  useEffect(() => {
+    setGalleryImage(null);
+  }, [productId]);
+
+  // Ordered, de-duplicated image list for the gallery: the primary `imageUrl`
+  // first, then any extra `imageUrls` the admin uploaded. Products that only
+  // ever had one image produce a single-entry list, which hides the thumbnails.
+  const galleryImages = useMemo(() => {
+    if (!product) return [] as string[];
+    const all = [product.imageUrl, ...(product.imageUrls || [])].filter(
+      (u): u is string => typeof u === "string" && u.trim() !== ""
+    );
+    return Array.from(new Set(all));
+  }, [product]);
 
   // Fetch the primary category for the breadcrumb (only after product loads)
   const { data: category } = useQuery<Category>({
@@ -240,12 +259,39 @@ export default function ProductPage() {
         <div>
           <div className="bg-white rounded-lg overflow-hidden shadow-lg">
             <img 
-              src={selectedVariant?.imageUrl || product.imageUrl || "https://via.placeholder.com/500x500?text=No+Image"} 
+              src={
+                galleryImage ||
+                selectedVariant?.imageUrl ||
+                product.imageUrl ||
+                product.imageUrls?.[0] ||
+                "https://via.placeholder.com/500x500?text=No+Image"
+              } 
               alt={selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name} 
               className="w-full h-auto object-contain aspect-square"
               data-testid="product-main-image"
             />
           </div>
+
+          {/* Thumbnail strip — only when the admin added extra gallery images. */}
+          {galleryImages.length > 1 && (
+            <div className="flex flex-wrap gap-2 mt-3" data-testid="product-gallery-thumbs">
+              {galleryImages.map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setGalleryImage(src)}
+                  className={`h-16 w-16 rounded border-2 overflow-hidden bg-white ${
+                    (galleryImage || galleryImages[0]) === src
+                      ? "border-primary"
+                      : "border-transparent hover:border-muted-foreground/40"
+                  }`}
+                  aria-label="View image"
+                >
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Product Details */}

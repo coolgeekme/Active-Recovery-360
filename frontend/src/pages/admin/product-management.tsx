@@ -107,9 +107,123 @@ const productFormSchema = z.object({
   // Optional sizing guide — same URL validation as the product image.
   sizeChartUrl: imageUrlSchema,
   sizeChartNote: z.string().optional(),
+  // Extra gallery images beyond the primary imageUrl.
+  imageUrls: z.array(z.string()).default([]),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
+
+/**
+ * Multi-image gallery editor for a product.
+ *
+ * The product keeps its single `imageUrl` as the primary/display image; this
+ * manages the EXTRA images that sit behind it in the gallery. Uploads go
+ * through the existing admin-only `POST /api/uploads/image` endpoint, and a
+ * URL can also be pasted for images already hosted elsewhere.
+ */
+function GalleryEditor({
+  value,
+  onChange,
+  testIdPrefix,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  testIdPrefix: string;
+}) {
+  const { toast } = useToast();
+  const [urlInput, setUrlInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const images = value || [];
+
+  const addUrl = (u: string) => {
+    if (u && !images.includes(u)) onChange([...images, u]);
+  };
+
+  const onFile = async (file: File) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token = localStorage.getItem("auth_token");
+      const res = await fetch("/api/uploads/image", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: fd,
+      });
+      if (!res.ok) throw new Error((await res.text()).slice(0, 200));
+      const out = await res.json();
+      if (out?.url) addUrl(out.url);
+    } catch (e: any) {
+      toast({
+        title: "Upload failed",
+        description: e?.message || "Could not upload that image",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {images.map((u) => (
+            <div key={u} className="relative">
+              <img src={u} alt="" className="h-20 w-20 object-cover rounded border bg-white" />
+              <button
+                type="button"
+                onClick={() => onChange(images.filter((x) => x !== u))}
+                className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-600 text-white text-xs leading-none"
+                title="Remove image"
+                data-testid={`${testIdPrefix}-remove`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={busy}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f);
+            e.currentTarget.value = "";
+          }}
+          className="text-sm"
+          data-testid={`${testIdPrefix}-upload`}
+        />
+        {busy && <span className="text-sm text-muted-foreground">Uploading…</span>}
+      </div>
+
+      <div className="flex gap-2">
+        <Input
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          placeholder="…or paste an image URL"
+          data-testid={`${testIdPrefix}-url-input`}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            addUrl(urlInput.trim());
+            setUrlInput("");
+          }}
+          data-testid={`${testIdPrefix}-url-add`}
+        >
+          Add
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function ProductManagement() {
   const { user } = useAuth();
@@ -252,6 +366,7 @@ export default function ProductManagement() {
       brand: "",
       sizeChartUrl: "",
       sizeChartNote: "",
+      imageUrls: [],
     },
   });
 
@@ -307,6 +422,7 @@ export default function ProductManagement() {
       brand: "",
       sizeChartUrl: "",
       sizeChartNote: "",
+      imageUrls: [],
     },
   });
 
@@ -454,6 +570,7 @@ export default function ProductManagement() {
       relatedProductIds: product.relatedProductIds || [],
       sizeChartUrl: product.sizeChartUrl || "",
       sizeChartNote: product.sizeChartNote || "",
+      imageUrls: product.imageUrls || [],
     });
 
     // Hydrate variant drafts from the existing product
@@ -928,6 +1045,28 @@ export default function ProductManagement() {
 
                 <FormField
                   control={addProductForm.control}
+                  name="imageUrls"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Additional Images</FormLabel>
+                      <FormControl>
+                        <GalleryEditor
+                          value={field.value || []}
+                          onChange={field.onChange}
+                          testIdPrefix="add-gallery"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload extra photos for the product gallery, or paste an image URL.
+                        The Image URL above stays the main/thumbnail image.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addProductForm.control}
                   name="stockQuantity"
                   render={({ field }) => (
                     <FormItem>
@@ -1311,6 +1450,28 @@ export default function ProductManagement() {
                         />
                       </FormControl>
                       <FormDescription>Optional line shown under the chart.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editProductForm.control}
+                  name="imageUrls"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Additional Images</FormLabel>
+                      <FormControl>
+                        <GalleryEditor
+                          value={field.value || []}
+                          onChange={field.onChange}
+                          testIdPrefix="edit-gallery"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload extra photos for the product gallery, or paste an image URL.
+                        The Image URL above stays the main/thumbnail image.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
