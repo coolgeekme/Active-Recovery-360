@@ -104,6 +104,9 @@ const productFormSchema = z.object({
   doctorIds: z.array(z.string()).optional(),
   brand: z.string().optional(),
   relatedProductIds: z.array(z.string()).default([]),
+  // Optional sizing guide — same URL validation as the product image.
+  sizeChartUrl: imageUrlSchema,
+  sizeChartNote: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -247,6 +250,8 @@ export default function ProductManagement() {
       hidePrice: false,
       doctorIds: [],
       brand: "",
+      sizeChartUrl: "",
+      sizeChartNote: "",
     },
   });
 
@@ -300,6 +305,8 @@ export default function ProductManagement() {
       hidePrice: false,
       doctorIds: [],
       brand: "",
+      sizeChartUrl: "",
+      sizeChartNote: "",
     },
   });
 
@@ -445,6 +452,8 @@ export default function ProductManagement() {
       doctorIds: product.doctorIds || [],
       brand: product.brand || "",
       relatedProductIds: product.relatedProductIds || [],
+      sizeChartUrl: product.sizeChartUrl || "",
+      sizeChartNote: product.sizeChartNote || "",
     });
 
     // Hydrate variant drafts from the existing product
@@ -876,6 +885,49 @@ export default function ProductManagement() {
 
                 <FormField
                   control={addProductForm.control}
+                  name="sizeChartUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Size Chart Image URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://example.com/size-chart.jpg"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="add-size-chart-url"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Optional. When set, the product page shows a collapsible Size Guide.
+                        Use this for braces and sleeves; leave blank otherwise.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addProductForm.control}
+                  name="sizeChartNote"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Size Chart Note</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. Left and right braces are sized separately"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="add-size-chart-note"
+                        />
+                      </FormControl>
+                      <FormDescription>Optional line shown under the chart.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addProductForm.control}
                   name="stockQuantity"
                   render={({ field }) => (
                     <FormItem>
@@ -1216,6 +1268,49 @@ export default function ProductManagement() {
                         />
                       </FormControl>
                       <FormDescription>Full URL (https://...) or relative path (/api/files/...). Leave blank for stock fallback.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editProductForm.control}
+                  name="sizeChartUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Size Chart Image URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://example.com/size-chart.jpg"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="edit-size-chart-url"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Optional. When set, the product page shows a collapsible Size Guide.
+                        Use this for braces and sleeves; leave blank otherwise.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editProductForm.control}
+                  name="sizeChartNote"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Size Chart Note</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g. Left and right braces are sized separately"
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="edit-size-chart-note"
+                        />
+                      </FormControl>
+                      <FormDescription>Optional line shown under the chart.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

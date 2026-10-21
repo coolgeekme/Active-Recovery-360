@@ -312,6 +312,27 @@ export default function ProductPage() {
             </div>
           )}
           
+          {/* Size guide — only rendered when an admin has attached one to this
+              product (braces, sleeves). Native <details> keeps it collapsed so
+              it doesn't push the add-to-cart button below the fold. */}
+          {product.sizeChartUrl && (
+            <details className="mt-6 border rounded-md" data-testid="size-guide">
+              <summary className="cursor-pointer select-none px-4 py-3 font-montserrat font-semibold text-primary">
+                Size Guide
+              </summary>
+              <div className="px-4 py-4 border-t">
+                <img
+                  src={product.sizeChartUrl}
+                  alt={`${product.name} size guide`}
+                  className="w-full h-auto rounded"
+                />
+                {product.sizeChartNote && (
+                  <p className="text-sm text-secondary mt-3">{product.sizeChartNote}</p>
+                )}
+              </div>
+            </details>
+          )}
+
           {canPurchase() ? (
             <div className="space-y-4">
               <div className="flex items-center">

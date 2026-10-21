@@ -118,6 +118,9 @@ def transform_product(doc: dict, show_price: bool = True) -> dict:
         # Admin-curated "Related Products" for this product's page. Empty means
         # the storefront falls back to its automatic same-category list.
         "relatedProductIds": [str(x) for x in (doc.get("relatedProductIds") or [])],
+        # Optional per-product sizing guide (braces etc.). Either may be blank.
+        "sizeChartUrl": doc.get("sizeChartUrl") or "",
+        "sizeChartNote": doc.get("sizeChartNote") or "",
     }
 
 @router.get("/products")
@@ -286,6 +289,8 @@ async def create_product(product_data: dict, admin: dict = Depends(require_admin
         "variants": variants,
         "hidePrice": bool(product_data.get("hidePrice", False)),
         "relatedProductIds": _related_product_ids(product_data) or [],
+        "sizeChartUrl": (product_data.get("sizeChartUrl") or "").strip(),
+        "sizeChartNote": (product_data.get("sizeChartNote") or "").strip(),
     }
 
     result = await products.insert_one(new_product)

@@ -64,6 +64,10 @@ export interface Product {
   categoryOrder?: Record<string, number>;
   /** Admin-curated "Related Products". Empty = fall back to same-category. */
   relatedProductIds?: string[];
+  /** Optional sizing guide image (braces, sleeves). Blank = no guide shown. */
+  sizeChartUrl?: string | null;
+  /** Optional note shown under the sizing guide, e.g. left/right sizing. */
+  sizeChartNote?: string | null;
 }
 
 export interface Category {
