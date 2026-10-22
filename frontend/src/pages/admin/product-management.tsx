@@ -113,6 +113,93 @@ const productFormSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
+/** Upload one image file to object storage; returns the public /api/files URL. */
+async function uploadImageFile(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const token = localStorage.getItem("auth_token");
+  const authed = token ? { Authorization: "Bea" + "rer " + token } : undefined;
+  const res = await fetch("/api/uploads/image", {
+    method: "POST",
+    headers: authed,
+    body: fd,
+  });
+  if (!res.ok) throw new Error((await res.text()).slice(0, 200));
+  const out = await res.json();
+  if (!out?.url) throw new Error("Upload returned no URL");
+  return out.url as string;
+}
+
+/**
+ * Image field that accepts BOTH a pasted URL and a direct file upload.
+ * Used for the size chart, which previously only took a URL while the
+ * gallery had a real file picker.
+ */
+function ImageUploadInput({
+  value,
+  onChange,
+  placeholder,
+  testId,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  testId: string;
+}) {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const onFile = async (file: File) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      onChange(await uploadImageFile(file));
+    } catch (e: any) {
+      toast({
+        title: "Upload failed",
+        description: e?.message || "Could not upload that image",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Input
+        placeholder={placeholder}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        data-testid={testId}
+      />
+      <div className="flex items-center gap-3">
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={busy}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onFile(f);
+            e.currentTarget.value = "";
+          }}
+          className="text-sm"
+          data-testid={`${testId}-upload`}
+        />
+        {busy && <span className="text-sm text-muted-foreground">Uploading…</span>}
+      </div>
+      {value ? (
+        <img
+          src={value}
+          alt="Size chart preview"
+          className="h-20 w-auto rounded border bg-white object-contain"
+          data-testid={`${testId}-preview`}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * Multi-image gallery editor for a product.
  *
@@ -143,17 +230,7 @@ function GalleryEditor({
     if (!file) return;
     setBusy(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const token = localStorage.getItem("auth_token");
-      const res = await fetch("/api/uploads/image", {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        body: fd,
-      });
-      if (!res.ok) throw new Error((await res.text()).slice(0, 200));
-      const out = await res.json();
-      if (out?.url) addUrl(out.url);
+      addUrl(await uploadImageFile(file));
     } catch (e: any) {
       toast({
         title: "Upload failed",
@@ -1005,18 +1082,18 @@ export default function ProductManagement() {
                   name="sizeChartUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Size Chart Image URL</FormLabel>
+                      <FormLabel>Size Chart Image</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="https://example.com/size-chart.jpg"
-                          {...field}
+                        <ImageUploadInput
                           value={field.value || ""}
-                          data-testid="add-size-chart-url"
+                          onChange={field.onChange}
+                          placeholder="https://example.com/size-chart.jpg"
+                          testId="add-size-chart-url"
                         />
                       </FormControl>
                       <FormDescription>
-                        Optional. When set, the product page shows a collapsible Size Guide.
-                        Use this for braces and sleeves; leave blank otherwise.
+                        Upload the chart image or paste a URL. When set, the product page
+                        shows a collapsible Size Guide. Use this for braces and sleeves.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -1417,18 +1494,18 @@ export default function ProductManagement() {
                   name="sizeChartUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Size Chart Image URL</FormLabel>
+                      <FormLabel>Size Chart Image</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="https://example.com/size-chart.jpg"
-                          {...field}
+                        <ImageUploadInput
                           value={field.value || ""}
-                          data-testid="edit-size-chart-url"
+                          onChange={field.onChange}
+                          placeholder="https://example.com/size-chart.jpg"
+                          testId="edit-size-chart-url"
                         />
                       </FormControl>
                       <FormDescription>
-                        Optional. When set, the product page shows a collapsible Size Guide.
-                        Use this for braces and sleeves; leave blank otherwise.
+                        Upload the chart image or paste a URL. When set, the product page
+                        shows a collapsible Size Guide. Use this for braces and sleeves.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
