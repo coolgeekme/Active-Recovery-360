@@ -3,6 +3,11 @@ import { useLocation } from "wouter";
 import { useCart } from "@/hooks/use-cart";
 import { useDiscountCode, calcDiscount } from "@/hooks/use-discount-code";
 import { useHcpReferral } from "@/hooks/use-hcp-referral";
+import {
+  useShippingConfig,
+  calcShipping,
+  amountUntilFreeShipping,
+} from "@/hooks/use-shipping";
 import { Loader2, Tag, X, CheckCircle2, Stethoscope } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -22,7 +27,15 @@ export default function CheckoutPage() {
     0
   );
   const discountAmount = calcDiscount(subtotal, applied);
-  const finalTotal = subtotal - discountAmount;
+
+  // Shipping is priced on what the customer pays for the GOODS (post-discount),
+  // then added on top. The server recomputes this in POST /api/orders — this is
+  // only so the summary matches the invoice.
+  const { config: shippingConfig } = useShippingConfig();
+  const payableGoods = Math.max(0, subtotal - discountAmount);
+  const shippingAmount = calcShipping(payableGoods, shippingConfig);
+  const amountToFreeShipping = amountUntilFreeShipping(payableGoods, shippingConfig);
+  const finalTotal = payableGoods + shippingAmount;
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price / 100);
@@ -59,7 +72,7 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <CheckoutForm
-            subtotal={finalTotal}
+            orderTotal={finalTotal}
             discountCode={applied?.code}
           />
         </div>
@@ -187,9 +200,19 @@ export default function CheckoutPage() {
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Shipping</span>
-                <span>{formatPrice(0)}</span>
+                <span className="text-muted-foreground">{shippingConfig.label}</span>
+                <span data-testid="shipping-amount">
+                  {shippingAmount === 0 ? "Free" : formatPrice(shippingAmount)}
+                </span>
               </div>
+              {amountToFreeShipping > 0 && (
+                <p
+                  className="text-xs text-muted-foreground"
+                  data-testid="free-shipping-nudge"
+                >
+                  Add {formatPrice(amountToFreeShipping)} more for free shipping.
+                </p>
+              )}
             </div>
 
             <Separator className="my-4" />

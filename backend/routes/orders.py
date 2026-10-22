@@ -4,6 +4,7 @@ from datetime import datetime
 
 from services.database import get_collection
 from services import goaffpro
+from services.shipping import calculate_shipping, get_shipping_config
 from routes.auth import require_auth, require_member, require_admin
 
 router = APIRouter()
@@ -18,6 +19,10 @@ def transform_order(doc: dict) -> dict:
         "subtotal": doc.get("subtotal", doc.get("totalAmount", 0)),
         "discountAmount": doc.get("discountAmount", 0),
         "discountCode": doc.get("discountCode"),
+        # Orders written before shipping existed have no field; report 0 so
+        # historical order totals still reconcile.
+        "shippingAmount": doc.get("shippingAmount", 0),
+        "shippingLabel": doc.get("shippingLabel"),
         "status": doc.get("status", "pending"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
@@ -157,11 +162,22 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         discount_code_used = d["code"]
         discount_code_doc_id = d["_id"]
 
+    # Shipping is priced on what the customer actually pays for the goods
+    # (subtotal AFTER discount), then added on top of the order total. Priced
+    # server-side from the settings doc — a client-supplied shipping figure is
+    # never trusted, exactly like the membership price.
+    payable_amount = max(0, total_amount)
+    shipping_cfg = await get_shipping_config()
+    shipping_amount = calculate_shipping(payable_amount, shipping_cfg)
+    total_amount = payable_amount + shipping_amount
+
     new_order = {
         "userId": user["id"],
         "subtotal": subtotal,
         "discountAmount": discount_amount,
         "discountCode": discount_code_used,
+        "shippingAmount": shipping_amount,
+        "shippingLabel": shipping_cfg.get("label"),
         "totalAmount": total_amount,
         "status": "pending",
         "items": order_items,
@@ -203,7 +219,9 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
                 hcp = None
         if hcp:
             commission_pct = float(hcp.get("commissionPercent", 0) or 0)
-            commission_amount = int(round(total_amount * (commission_pct / 100)))
+            # Commission is paid on the GOODS, not on postage — a flat-rate
+            # shipping charge must not inflate a referrer's payout.
+            commission_amount = int(round(payable_amount * (commission_pct / 100)))
             new_order["hcpReferralId"] = str(hcp["_id"])
             new_order["hcpReferralSlug"] = hcp.get("storefrontSlug")
             new_order["hcpReferralName"] = hcp.get("fullName")

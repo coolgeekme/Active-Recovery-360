@@ -87,6 +87,9 @@ export interface Order {
   subtotal?: number;
   discountAmount?: number;
   discountCode?: string | null;
+  /** Shipping charged on this order, in cents. Absent on pre-shipping orders. */
+  shippingAmount?: number;
+  shippingLabel?: string | null;
   status: 'pending' | 'completed' | 'cancelled';
   items: OrderItem[];
   shippingAddress: string;

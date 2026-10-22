@@ -21,7 +21,8 @@ import { useLocation } from "wouter";
 import { useAffiliateRef } from "@/hooks/use-affiliate-ref";
 
 interface CheckoutFormProps {
-  subtotal: number;
+  /** Order grand total in cents — goods after discount PLUS shipping. */
+  orderTotal: number;
   discountCode?: string;
   hcpReferralSlug?: string | null;
 }
@@ -37,7 +38,7 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
-export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }: CheckoutFormProps) {
+export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug }: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
@@ -252,7 +253,7 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
         <div className="bg-primary/5 p-4 rounded-lg">
           <div className="flex justify-between mb-2">
             <span>Subtotal</span>
-            <span>{formatPrice(subtotal)}</span>
+            <span>{formatPrice(orderTotal)}</span>
           </div>
           <div className="flex justify-between mb-2">
             <span>Shipping</span>
@@ -260,7 +261,7 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
           </div>
           <div className="border-t border-gray-200 my-2 pt-2 flex justify-between font-bold">
             <span>Total</span>
-            <span className="text-primary">{formatPrice(subtotal)}</span>
+            <span className="text-primary">{formatPrice(orderTotal)}</span>
           </div>
         </div>
 
@@ -275,7 +276,7 @@ export default function CheckoutForm({ subtotal, discountCode, hcpReferralSlug }
               Submitting...
             </>
           ) : (
-            `Submit Order - ${formatPrice(subtotal)}`
+            `Submit Order - ${formatPrice(orderTotal)}`
           )}
         </Button>
       </form>

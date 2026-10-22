@@ -105,9 +105,20 @@ export default function OrdersPage() {
                       Placed on {formatDate(order.createdAt.toString())}
                     </CardDescription>
                   </div>
-                  <div className="mt-2 md:mt-0 flex items-center">
-                    {getStatusBadge(order.status)}
-                    <span className="ml-4 font-semibold">{formatPrice(order.totalAmount)}</span>
+                  <div className="mt-2 md:mt-0 flex flex-col items-end">
+                    <div className="flex items-center">
+                      {getStatusBadge(order.status)}
+                      <span className="ml-4 font-semibold">{formatPrice(order.totalAmount)}</span>
+                    </div>
+                    {(order.shippingAmount ?? 0) > 0 && (
+                      <span
+                        className="text-xs text-muted-foreground mt-1"
+                        data-testid="order-shipping"
+                      >
+                        includes {formatPrice(order.shippingAmount)}{" "}
+                        {order.shippingLabel || "shipping"}
+                      </span>
+                    )}
                   </div>
                 </div>
               </CardHeader>
