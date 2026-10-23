@@ -119,6 +119,14 @@ export default function OrdersPage() {
                         {order.shippingLabel || "shipping"}
                       </span>
                     )}
+                    {(order.taxAmount ?? 0) > 0 && (
+                      <span
+                        className="text-xs text-muted-foreground"
+                        data-testid="order-tax"
+                      >
+                        includes {formatPrice(order.taxAmount)} sales tax
+                      </span>
+                    )}
                   </div>
                 </div>
               </CardHeader>

@@ -90,6 +90,9 @@ export interface Order {
   /** Shipping charged on this order, in cents. Absent on pre-shipping orders. */
   shippingAmount?: number;
   shippingLabel?: string | null;
+  /** Sales tax charged on this order, in cents. Absent on pre-tax orders. */
+  taxAmount?: number;
+  taxState?: string;
   status: 'pending' | 'completed' | 'cancelled';
   items: OrderItem[];
   shippingAddress: string;

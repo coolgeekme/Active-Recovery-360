@@ -21,10 +21,12 @@ import { useLocation } from "wouter";
 import { useAffiliateRef } from "@/hooks/use-affiliate-ref";
 
 interface CheckoutFormProps {
-  /** Order grand total in cents — goods after discount PLUS shipping. */
+  /** Order grand total in cents — goods after discount PLUS shipping PLUS tax. */
   orderTotal: number;
   discountCode?: string;
   hcpReferralSlug?: string | null;
+  /** Lifts the state field up so the order summary can price sales tax. */
+  onStateChange?: (state: string) => void;
 }
 
 const checkoutFormSchema = z.object({
@@ -38,7 +40,7 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
-export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug }: CheckoutFormProps) {
+export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug, onStateChange }: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
@@ -67,6 +69,9 @@ export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug
 
       await apiRequest("POST", "/api/orders", {
         shippingAddress,
+        // Sent separately so the server can price sales tax without parsing a
+        // free-text address.
+        shippingState: data.state,
         // No card is collected or charged online — the team arranges payment
         // after the order is received. The backend ignores this field.
         paymentMethod: "pay_later",
@@ -215,7 +220,14 @@ export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug
                 <FormItem>
                   <FormLabel>State</FormLabel>
                   <FormControl>
-                    <Input placeholder="NY" {...field} />
+                    <Input
+                      placeholder="AZ"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        onStateChange?.(e.target.value);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

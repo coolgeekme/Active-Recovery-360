@@ -17,11 +17,11 @@ from services.database import get_collection
 
 SETTINGS_ID = "shipping"
 
-# $8.00 flat, free over $75.00 — placeholders until the client confirms.
+# Client-confirmed Oct 23 2026: "$8.00 per order / free shipping over $100".
 DEFAULTS = {
     "enabled": True,
     "flatRate": 800,
-    "freeShippingThreshold": 7500,
+    "freeShippingThreshold": 10000,
     "label": "Standard shipping",
 }
 

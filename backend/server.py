@@ -26,6 +26,7 @@ from routes.recovery_providers import router as recovery_providers_router
 from routes.affiliates import router as affiliates_router
 from routes.teams import router as teams_router
 from routes.shipping import router as shipping_router
+from routes.tax import router as tax_router
 from services.database import connect_db, close_db
 from services.storage import init_storage
 
@@ -96,6 +97,7 @@ app.include_router(contact_router, prefix="/api", tags=["Contact"])
 app.include_router(affiliates_router, prefix="/api", tags=["Affiliates"])
 app.include_router(teams_router, prefix="/api", tags=["Teams & Trainers"])
 app.include_router(shipping_router, prefix="/api", tags=["Shipping"])
+app.include_router(tax_router, prefix="/api", tags=["Tax"])
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

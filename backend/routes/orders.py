@@ -5,6 +5,7 @@ from datetime import datetime
 from services.database import get_collection
 from services import goaffpro
 from services.shipping import calculate_shipping, get_shipping_config
+from services.tax import calculate_tax, get_tax_config, taxable_base
 from routes.auth import require_auth, require_member, require_admin
 
 router = APIRouter()
@@ -23,6 +24,8 @@ def transform_order(doc: dict) -> dict:
         # historical order totals still reconcile.
         "shippingAmount": doc.get("shippingAmount", 0),
         "shippingLabel": doc.get("shippingLabel"),
+        "taxAmount": doc.get("taxAmount", 0),
+        "taxState": doc.get("taxState", ""),
         "status": doc.get("status", "pending"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
@@ -169,7 +172,18 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
     payable_amount = max(0, total_amount)
     shipping_cfg = await get_shipping_config()
     shipping_amount = calculate_shipping(payable_amount, shipping_cfg)
-    total_amount = payable_amount + shipping_amount
+
+    # Sales tax on the destination state (AZ only today). Prefer the explicit
+    # `shippingState` field; fall back to parsing the free-text address so
+    # older clients that only send `shippingAddress` are not silently untaxed.
+    shipping_state = (order_data.get("shippingState")
+                      or order_data.get("shippingAddress")
+                      or "")
+    tax_cfg = await get_tax_config()
+    tax_amount = calculate_tax(payable_amount, shipping_amount, shipping_state, tax_cfg)
+    tax_base = taxable_base(payable_amount, shipping_amount, shipping_state, tax_cfg)
+
+    total_amount = payable_amount + shipping_amount + tax_amount
 
     new_order = {
         "userId": user["id"],
@@ -178,6 +192,12 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         "discountCode": discount_code_used,
         "shippingAmount": shipping_amount,
         "shippingLabel": shipping_cfg.get("label"),
+        # Stored so an invoice can be reconciled to the rate that was actually
+        # charged, even after the rate is later changed.
+        "taxAmount": tax_amount,
+        "taxRateBps": tax_cfg.get("rateBps") if tax_amount else 0,
+        "taxBase": tax_base,
+        "taxState": shipping_state[:40],
         "totalAmount": total_amount,
         "status": "pending",
         "items": order_items,

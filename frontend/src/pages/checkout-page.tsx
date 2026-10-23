@@ -8,6 +8,7 @@ import {
   calcShipping,
   amountUntilFreeShipping,
 } from "@/hooks/use-shipping";
+import { useTaxConfig, calcTax, formatRate } from "@/hooks/use-tax";
 import { Loader2, Tag, X, CheckCircle2, Stethoscope } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,14 @@ export default function CheckoutPage() {
   const payableGoods = Math.max(0, subtotal - discountAmount);
   const shippingAmount = calcShipping(payableGoods, shippingConfig);
   const amountToFreeShipping = amountUntilFreeShipping(payableGoods, shippingConfig);
-  const finalTotal = payableGoods + shippingAmount;
+
+  // Sales tax depends on where it ships. The state lives in the checkout form,
+  // so the form lifts it here as the customer types.
+  const [shipToState, setShipToState] = useState("");
+  const { config: taxConfig } = useTaxConfig();
+  const taxAmount = calcTax(payableGoods, shippingAmount, shipToState, taxConfig);
+
+  const finalTotal = payableGoods + shippingAmount + taxAmount;
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(price / 100);
@@ -74,6 +82,7 @@ export default function CheckoutPage() {
           <CheckoutForm
             orderTotal={finalTotal}
             discountCode={applied?.code}
+            onStateChange={setShipToState}
           />
         </div>
 
@@ -212,6 +221,14 @@ export default function CheckoutPage() {
                 >
                   Add {formatPrice(amountToFreeShipping)} more for free shipping.
                 </p>
+              )}
+              {taxAmount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {taxConfig.label} ({formatRate(taxConfig.rateBps)})
+                  </span>
+                  <span data-testid="tax-amount">{formatPrice(taxAmount)}</span>
+                </div>
               )}
             </div>
 
