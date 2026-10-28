@@ -6,6 +6,7 @@ from services.database import get_collection
 from services import goaffpro
 from services.shipping import calculate_shipping, get_shipping_config
 from services.tax import calculate_tax, get_tax_config, taxable_base
+from routes.payments import get_stripe
 from routes.auth import require_auth, require_member, require_admin
 
 router = APIRouter()
@@ -26,6 +27,8 @@ def transform_order(doc: dict) -> dict:
         "shippingLabel": doc.get("shippingLabel"),
         "taxAmount": doc.get("taxAmount", 0),
         "taxState": doc.get("taxState", ""),
+        "paymentStatus": doc.get("paymentStatus", "pay_later"),
+        "paidAt": doc.get("paidAt"),
         "status": doc.get("status", "pending"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
@@ -198,6 +201,11 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
         "taxRateBps": tax_cfg.get("rateBps") if tax_amount else 0,
         "taxBase": tax_base,
         "taxState": shipping_state[:40],
+        # paymentStatus is separate from `status`: status tracks FULFILMENT
+        # (pending/completed/cancelled), paymentStatus tracks whether money was
+        # actually collected. Card orders flip to "paid" on confirmation; the
+        # legacy pay-later path stays "pay_later".
+        "paymentStatus": "pay_later",
         "totalAmount": total_amount,
         "status": "pending",
         "items": order_items,
@@ -294,3 +302,136 @@ async def update_order_status(order_id: str, status_data: dict, admin: dict = De
         result.update(applied)
 
     return transform_order(result)
+
+
+# ---------------------------------------------------------------------------
+# Card payment for product orders
+#
+# The order is created FIRST (POST /api/orders) so every figure — goods,
+# discount, shipping, tax — is computed server-side exactly once. The
+# PaymentIntent is then raised for the STORED total, so a caller cannot name
+# its own price. Confirmation re-verifies against Stripe before the order is
+# marked paid.
+# ---------------------------------------------------------------------------
+
+@router.post("/orders/{order_id}/payment-intent")
+async def create_order_payment_intent(order_id: str, user: dict = Depends(require_member)):
+    orders = get_collection("orders")
+
+    try:
+        order = await orders.find_one({"_id": ObjectId(order_id)})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # SECURITY: an order id must never let one account pay for (or read) another
+    # account's order.
+    if str(order.get("userId")) != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your order")
+
+    if order.get("paymentStatus") == "paid":
+        raise HTTPException(status_code=400, detail="Order is already paid")
+
+    amount = int(order.get("totalAmount") or 0)
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Nothing to charge on this order")
+
+    stripe = get_stripe()
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency="usd",
+            automatic_payment_methods={"enabled": True},
+            description=f"Active Recovery 360 order {order_id}",
+            metadata={
+                "type": "order",
+                "orderId": order_id,
+                "userId": user["id"],
+                # Recorded so confirmation can verify the paid amount covers the
+                # quoted total without re-deriving it from mutable order data.
+                "expectedAmountCents": str(amount),
+            },
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
+
+    await orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {
+            "stripePaymentIntentId": intent.id,
+            "paymentStatus": "awaiting_payment",
+        }},
+    )
+
+    return {
+        "clientSecret": intent.client_secret,
+        "paymentIntentId": intent.id,
+        "amount": amount,
+    }
+
+
+@router.post("/orders/{order_id}/confirm-payment")
+async def confirm_order_payment(order_id: str, data: dict, user: dict = Depends(require_member)):
+    orders = get_collection("orders")
+    stripe = get_stripe()
+
+    payment_intent_id = (data or {}).get("paymentIntentId")
+    if not payment_intent_id:
+        raise HTTPException(status_code=400, detail="Missing paymentIntentId")
+
+    try:
+        order = await orders.find_one({"_id": ObjectId(order_id)})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if str(order.get("userId")) != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your order")
+
+    if order.get("paymentStatus") == "paid":
+        # Idempotent: a double-click or a 3DS redirect replay must not error.
+        return transform_order(order)
+
+    try:
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid payment: {str(e)}")
+
+    metadata = getattr(intent, "metadata", None) or {}
+
+    if metadata.get("type") != "order":
+        raise HTTPException(status_code=400, detail="Payment is not an order payment")
+    if metadata.get("orderId") != order_id:
+        raise HTTPException(status_code=400, detail="Payment does not belong to this order")
+
+    intent_user = metadata.get("userId")
+    if intent_user and intent_user != user["id"]:
+        raise HTTPException(status_code=403, detail="Payment does not belong to this account")
+
+    if intent.status != "succeeded":
+        raise HTTPException(status_code=400, detail="Payment not completed")
+
+    # SECURITY: fail closed — an intent missing its expected amount must still
+    # cover the order total from the database.
+    try:
+        expected_cents = int(metadata.get("expectedAmountCents", order.get("totalAmount") or 0))
+    except (TypeError, ValueError):
+        expected_cents = int(order.get("totalAmount") or 0)
+
+    paid_cents = intent.amount_received or 0
+    if paid_cents < expected_cents:
+        raise HTTPException(status_code=400, detail="Payment amount does not cover the order total")
+
+    await orders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {
+            "paymentStatus": "paid",
+            "paidAt": datetime.utcnow(),
+            "stripePaymentIntentId": payment_intent_id,
+            "amountPaid": paid_cents,
+        }},
+    )
+
+    updated = await orders.find_one({"_id": ObjectId(order_id)})
+    return transform_order(updated)

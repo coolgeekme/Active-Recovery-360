@@ -8,7 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Lock, ArrowLeft } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -19,6 +19,19 @@ import {
 } from "@/components/ui/form";
 import { useLocation } from "wouter";
 import { useAffiliateRef } from "@/hooks/use-affiliate-ref";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+// Vite inlines VITE_* at BUILD time, so a missing key means this bundle was
+// compiled without it. We deliberately do NOT fall back to "pay later":
+// silently accepting an unpaid order is exactly the bug this replaced.
+const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 
 interface CheckoutFormProps {
   /** Order grand total in cents — goods after discount PLUS shipping PLUS tax. */
@@ -40,9 +53,136 @@ const checkoutFormSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
-export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug, onStateChange }: CheckoutFormProps) {
+const formatPrice = (cents: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+    (cents || 0) / 100
+  );
+
+/**
+ * Step 2 of checkout: the card form. Lives inside <Elements> so it can use the
+ * Stripe hooks. Charges the STORED order total, then asks the server to verify
+ * the payment before anything is treated as paid.
+ */
+function PaymentStep({
+  orderId,
+  amount,
+  onPaid,
+  onBack,
+}: {
+  orderId: string;
+  amount: number;
+  onPaid: () => void;
+  onBack: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [isPaying, setIsPaying] = useState(false);
+
+  const handlePay = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsPaying(true);
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        // Only used when the card requires a 3DS redirect.
+        return_url: window.location.origin + "/account/orders",
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      toast({
+        title: "Payment Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsPaying(false);
+      return;
+    }
+
+    if (paymentIntent && paymentIntent.status === "succeeded") {
+      try {
+        await apiRequest("POST", `/api/orders/${orderId}/confirm-payment`, {
+          paymentIntentId: paymentIntent.id,
+        });
+        onPaid();
+      } catch (e: any) {
+        toast({
+          title: "Could not confirm payment",
+          description:
+            e?.message ||
+            "Your card was charged but we could not record the order. Please contact us.",
+          variant: "destructive",
+        });
+      }
+    }
+    setIsPaying(false);
+  };
+
+  return (
+    <form onSubmit={handlePay} className="space-y-6">
+      <div className="rounded-lg border p-4">
+        <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+          <Lock className="h-4 w-4" />
+          <span>
+            Card details are handled by Stripe. They never touch our server.
+          </span>
+        </div>
+        <PaymentElement />
+      </div>
+
+      <div className="bg-primary/5 p-4 rounded-lg flex justify-between font-bold">
+        <span>Amount due</span>
+        <span className="text-primary" data-testid="payment-amount">
+          {formatPrice(amount)}
+        </span>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full btn-primary-enhanced py-3 rounded font-montserrat"
+        disabled={!stripe || isPaying}
+        data-testid="pay-now-btn"
+      >
+        {isPaying ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing payment…
+          </>
+        ) : (
+          `Pay ${formatPrice(amount)}`
+        )}
+      </Button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full"
+        onClick={onBack}
+        disabled={isPaying}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to shipping details
+      </Button>
+    </form>
+  );
+}
+
+export default function CheckoutForm({
+  orderTotal,
+  discountCode,
+  hcpReferralSlug,
+  onStateChange,
+}: CheckoutFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [step, setStep] = useState<"details" | "payment">("details");
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [serverTotal, setServerTotal] = useState<number>(orderTotal);
   const { toast } = useToast();
   const { clearCart, cartItems } = useCart();
   const [, navigate] = useLocation();
@@ -60,25 +200,21 @@ export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug
     },
   });
 
-  const onSubmit = async (data: CheckoutFormValues) => {
+  /** Step 1: create the order (server prices it), then raise a PaymentIntent. */
+  const onDetailsSubmit = async (data: CheckoutFormValues) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Create order with shipping address and current cart items (local cart)
       const shippingAddress = `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`;
 
-      await apiRequest("POST", "/api/orders", {
+      const order: any = await apiRequest("POST", "/api/orders", {
         shippingAddress,
-        // Sent separately so the server can price sales tax without parsing a
+        // Sent separately so the server prices sales tax without parsing a
         // free-text address.
         shippingState: data.state,
-        // No card is collected or charged online — the team arranges payment
-        // after the order is received. The backend ignores this field.
-        paymentMethod: "pay_later",
         discountCode: discountCode || undefined,
         hcpReferralSlug: hcpReferralSlug || undefined,
-        // Affiliate attribution. Both refs are sent; the SERVER enforces
-        // precedence (HCP referral wins) so the rule lives in exactly one place.
+        // Both refs are sent; the SERVER enforces precedence (HCP wins) so the
+        // rule lives in exactly one place.
         affiliateRef: affiliateRef?.ref || undefined,
         items: cartItems.map((i) => ({
           productId: i.productId,
@@ -86,34 +222,31 @@ export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug
           variantSku: i.variantSku,
         })),
       });
-      
-      // After a successful order, clear the cart and both referral sources.
-      // The order doc now holds the attribution, so clearing client-side is safe.
-      await clearCart();
-      clearAffiliateRef();
-      try {
-        window.localStorage.removeItem("ar360_hcp_referral");
-        window.dispatchEvent(new StorageEvent("storage", { key: "ar360_hcp_referral" }));
-      } catch {
-        /* noop */
+
+      if (!order?.id) throw new Error("Order could not be created");
+
+      const intent: any = await apiRequest(
+        "POST",
+        `/api/orders/${order.id}/payment-intent`,
+        {}
+      );
+
+      if (!intent?.clientSecret) {
+        throw new Error("Payment could not be started");
       }
-      
-      setIsComplete(true);
-      
+
+      setOrderId(order.id);
+      setClientSecret(intent.clientSecret);
+      // The server's total is authoritative — it may differ from the client's
+      // estimate if a price changed while the cart was open.
+      setServerTotal(intent.amount ?? order.totalAmount ?? orderTotal);
+      setStep("payment");
+    } catch (e: any) {
       toast({
-        title: "Order received!",
-        description: "We'll be in touch to arrange payment.",
-      });
-      
-      // Redirect to account/orders page after a delay
-      setTimeout(() => {
-        navigate("/account/orders");
-      }, 3000);
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error placing order",
-        description: "There was a problem processing your order. Please try again.",
+        title: "Could not start checkout",
+        description:
+          e?.message ||
+          "There was a problem preparing your order. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -121,21 +254,32 @@ export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price / 100);
+  const onPaid = async () => {
+    setIsComplete(true);
+    // Only clear the cart AFTER money is captured.
+    await clearCart();
+    clearAffiliateRef();
+    try {
+      window.localStorage.removeItem("ar360_hcp_referral");
+      window.dispatchEvent(
+        new StorageEvent("storage", { key: "ar360_hcp_referral" })
+      );
+    } catch {
+      /* noop */
+    }
+    setTimeout(() => navigate("/account/orders"), 3000);
   };
 
   if (isComplete) {
     return (
       <div className="text-center py-10">
         <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-primary mb-2">Order Received!</h2>
+        <h2 className="text-2xl font-bold text-primary mb-2">
+          Payment received!
+        </h2>
         <p className="text-muted-foreground mb-6">
-          Thanks — your order has been received. Our team will contact you
-          shortly to arrange payment and confirm shipping.
+          Thanks — your order is confirmed and paid. We'll email you tracking
+          information once it ships.
         </p>
         <div className="flex justify-center space-x-4">
           <Button variant="outline" asChild>
@@ -149,149 +293,167 @@ export default function CheckoutForm({ orderTotal, discountCode, hcpReferralSlug
     );
   }
 
+  // No publishable key baked into this build — refuse rather than take an
+  // order we cannot collect payment for.
+  if (!stripePromise) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+        <h2 className="text-lg font-bold text-red-900 mb-2">
+          Online payment is unavailable
+        </h2>
+        <p className="text-sm text-red-800">
+          Card payments are not configured on this site yet. Please contact us
+          at{" "}
+          <a className="underline" href="mailto:info@activerecovery360.com">
+            info@activerecovery360.com
+          </a>{" "}
+          to place your order.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <h2 className="text-xl font-bold text-primary mb-4">Shipping Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="john@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+    <div>
+      {step === "details" ? (
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onDetailsSubmit)}
+            className="space-y-6"
+          >
+            <div>
+              <h2 className="text-xl font-bold text-primary mb-4">
+                Shipping Information
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem className="mt-4">
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="123 Main St, Apt 4B" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="New York" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem className="mt-4">
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="123 Main St, Apt 4B" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Phoenix" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="AZ"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            onStateChange?.(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="zipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zip Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="85001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full btn-primary-enhanced py-3 rounded font-montserrat"
+              disabled={isSubmitting}
+              data-testid="continue-to-payment"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Preparing payment…
+                </>
+              ) : (
+                "Continue to Payment"
               )}
+            </Button>
+          </form>
+        </Form>
+      ) : (
+        clientSecret &&
+        orderId && (
+          <Elements
+            stripe={stripePromise}
+            options={{ clientSecret, appearance: { theme: "stripe" } }}
+          >
+            <PaymentStep
+              orderId={orderId}
+              amount={serverTotal}
+              onPaid={onPaid}
+              onBack={() => setStep("details")}
             />
-            
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>State</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="AZ"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        onStateChange?.(e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="zipCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Zip Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="10001" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-bold text-primary mb-4">Payment</h2>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm text-amber-900">
-              <strong>Payment is not collected online.</strong> Once you submit
-              your order, our team will contact you to arrange payment and
-              confirm shipping — no card details are needed now.
-            </p>
-          </div>
-        </div>
-            
-
-        <div className="bg-primary/5 p-4 rounded-lg">
-          <div className="flex justify-between mb-2">
-            <span>Subtotal</span>
-            <span>{formatPrice(orderTotal)}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span>Shipping</span>
-            <span>{formatPrice(0)}</span>
-          </div>
-          <div className="border-t border-gray-200 my-2 pt-2 flex justify-between font-bold">
-            <span>Total</span>
-            <span className="text-primary">{formatPrice(orderTotal)}</span>
-          </div>
-        </div>
-
-        <Button 
-          type="submit" 
-          className="w-full btn-primary-enhanced py-3 rounded font-montserrat"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            `Submit Order - ${formatPrice(orderTotal)}`
-          )}
-        </Button>
-      </form>
-    </Form>
+          </Elements>
+        )
+      )}
+    </div>
   );
 }

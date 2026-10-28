@@ -93,6 +93,9 @@ export interface Order {
   /** Sales tax charged on this order, in cents. Absent on pre-tax orders. */
   taxAmount?: number;
   taxState?: string;
+  /** 'paid' once a card payment is captured; 'pay_later' for legacy orders. */
+  paymentStatus?: 'paid' | 'pay_later' | 'awaiting_payment';
+  paidAt?: string | null;
   status: 'pending' | 'completed' | 'cancelled';
   items: OrderItem[];
   shippingAddress: string;

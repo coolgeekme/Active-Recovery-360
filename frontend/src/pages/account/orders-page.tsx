@@ -108,6 +108,14 @@ export default function OrdersPage() {
                   <div className="mt-2 md:mt-0 flex flex-col items-end">
                     <div className="flex items-center">
                       {getStatusBadge(order.status)}
+                      {order.paymentStatus === "paid" ? (
+                        <span
+                          className="ml-2 text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded"
+                          data-testid="order-paid-badge"
+                        >
+                          Paid
+                        </span>
+                      ) : null}
                       <span className="ml-4 font-semibold">{formatPrice(order.totalAmount)}</span>
                     </div>
                     {(order.shippingAmount ?? 0) > 0 && (
