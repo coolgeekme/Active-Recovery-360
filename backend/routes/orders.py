@@ -29,6 +29,10 @@ def transform_order(doc: dict) -> dict:
         "taxState": doc.get("taxState", ""),
         "paymentStatus": doc.get("paymentStatus", "pay_later"),
         "paidAt": doc.get("paidAt"),
+        # What Stripe actually captured, plus the intent id, so an order can be
+        # reconciled against the Stripe dashboard without a lookup.
+        "amountPaid": doc.get("amountPaid", 0),
+        "stripePaymentIntentId": doc.get("stripePaymentIntentId"),
         "status": doc.get("status", "pending"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
@@ -364,7 +368,10 @@ async def create_order_payment_intent(order_id: str, user: dict = Depends(requir
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency="usd",
-            automatic_payment_methods={"enabled": True},
+            # Card only. automatic_payment_methods={"enabled": True} surfaced
+            # Bank, Crypto and Cash App Pay on the checkout form, which is not
+            # what this shop sells through.
+            payment_method_types=["card"],
             description=f"Active Recovery 360 order {order_id}",
             metadata={
                 "type": "order",
