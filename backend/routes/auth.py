@@ -241,18 +241,43 @@ async def get_user(user: dict = Depends(require_auth)):
     return user
 
 @router.post("/membership/purchase")
-async def purchase_membership(user: dict = Depends(require_auth)):
-    if user.get("isMember"):
-        raise HTTPException(status_code=400, detail="Already a member")
-    
+async def purchase_membership(data: Optional[dict] = None, user: dict = Depends(require_admin)):
+    """ADMIN-ONLY: grant a membership without taking payment.
+
+    This endpoint used to require nothing but a login, so ANY registered user
+    could award themselves the paid $29 membership by calling it directly. No
+    page links to it — but an API route does not need a link to be reachable,
+    and it bypassed the whole Stripe flow.
+
+    It is now admin-gated, so the only remaining use is a deliberate comp. The
+    admin panel's user editor can already set `isMember`, so nothing is lost.
+    Pass `{"userId": "<id>"}` to comp somebody else; omit it to act on yourself.
+    """
+    target_id = (data or {}).get("userId") or user["id"]
+
     users = get_collection("users")
+    try:
+        target = await users.find_one({"_id": ObjectId(target_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid userId")
+
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target.get("isMember"):
+        raise HTTPException(status_code=400, detail="Already a member")
+
     await users.update_one(
-        {"_id": ObjectId(user["id"])},
-        {"$set": {"isMember": True}}
+        {"_id": ObjectId(target_id)},
+        {"$set": {
+            "isMember": True,
+            "membershipCompedAt": datetime.utcnow(),
+            "membershipCompedBy": user["id"],
+        }},
     )
-    
-    user["isMember"] = True
-    return user
+
+    target["isMember"] = True
+    return target
 
 @router.patch("/user/profile")
 async def update_profile(updates: dict, user: dict = Depends(require_auth)):
