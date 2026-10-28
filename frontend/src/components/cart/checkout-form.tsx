@@ -206,7 +206,8 @@ export default function CheckoutForm({
     try {
       const shippingAddress = `${data.address}, ${data.city}, ${data.state} ${data.zipCode}`;
 
-      const order: any = await apiRequest("POST", "/api/orders", {
+      // apiRequest resolves to a Response — it does NOT parse JSON for us.
+      const orderRes = await apiRequest("POST", "/api/orders", {
         shippingAddress,
         // Sent separately so the server prices sales tax without parsing a
         // free-text address.
@@ -223,13 +224,15 @@ export default function CheckoutForm({
         })),
       });
 
+      const order: any = await orderRes.json();
       if (!order?.id) throw new Error("Order could not be created");
 
-      const intent: any = await apiRequest(
+      const intentRes = await apiRequest(
         "POST",
         `/api/orders/${order.id}/payment-intent`,
         {}
       );
+      const intent: any = await intentRes.json();
 
       if (!intent?.clientSecret) {
         throw new Error("Payment could not be started");
@@ -242,11 +245,20 @@ export default function CheckoutForm({
       setServerTotal(intent.amount ?? order.totalAmount ?? orderTotal);
       setStep("payment");
     } catch (e: any) {
+      // apiRequest throws "403: {json}" style messages — surface the useful part.
+      let detail = e?.message || "There was a problem preparing your order.";
+      const jsonStart = detail.indexOf("{");
+      if (jsonStart >= 0) {
+        try {
+          const parsed = JSON.parse(detail.slice(jsonStart));
+          if (parsed?.detail) detail = String(parsed.detail);
+        } catch {
+          /* keep the raw message */
+        }
+      }
       toast({
         title: "Could not start checkout",
-        description:
-          e?.message ||
-          "There was a problem preparing your order. Please try again.",
+        description: detail,
         variant: "destructive",
       });
     } finally {
