@@ -338,6 +338,28 @@ async def create_order_payment_intent(order_id: str, user: dict = Depends(requir
         raise HTTPException(status_code=400, detail="Nothing to charge on this order")
 
     stripe = get_stripe()
+
+    # Reuse a still-usable intent. Without this, a page reload or a double-click
+    # strands an orphan PaymentIntent in Stripe on every attempt.
+    existing_id = order.get("stripePaymentIntentId")
+    if existing_id and order.get("paymentStatus") == "awaiting_payment":
+        try:
+            existing = stripe.PaymentIntent.retrieve(existing_id)
+            if existing.status in (
+                "requires_payment_method",
+                "requires_confirmation",
+                "requires_action",
+            ) and (existing.amount or 0) == amount:
+                return {
+                    "clientSecret": existing.client_secret,
+                    "paymentIntentId": existing.id,
+                    "amount": amount,
+                    "reused": True,
+                }
+        except Exception:
+            # A stale/expired intent must never block a fresh attempt.
+            pass
+
     try:
         intent = stripe.PaymentIntent.create(
             amount=amount,
