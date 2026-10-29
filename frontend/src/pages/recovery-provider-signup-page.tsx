@@ -31,7 +31,8 @@ const SERVICE_OPTIONS = [
   "Sports Performance", "Strength & Conditioning", "Mobility",
   "Injury Prevention", "Manual Therapy", "Massage / Soft Tissue",
   "Balance & Functional Training", "Running / Athletic Performance",
-  "Senior Fitness & Recovery", "Wellness / Fitness", "Other",
+  "Senior Fitness & Recovery", "Wellness / Fitness",
+  "Red Light Therapy", "Hyperbaric Oxygen Therapy", "Other",
 ];
 
 const IDEAL_CLIENTS = [
