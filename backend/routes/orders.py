@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from datetime import datetime
@@ -10,6 +12,7 @@ from routes.payments import get_stripe
 from routes.auth import require_auth, require_member, require_admin
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 def transform_order(doc: dict) -> dict:
     if not doc:
@@ -463,4 +466,19 @@ async def confirm_order_payment(order_id: str, data: dict, user: dict = Depends(
     )
 
     updated = await orders.find_one({"_id": ObjectId(order_id)})
+
+    # Report the sale to GoAffPro on the PAYMENT event. Cards are actually
+    # charged now, so a verified capture is the honest "this sale is real"
+    # trigger — previously the only trigger was an admin marking the order
+    # completed, which no longer reflects when money changed hands. The service
+    # is idempotent and never raises, so a GoAffPro outage cannot fail a
+    # confirmed payment.
+    try:
+        report = await goaffpro.report_order(updated)
+        applied = goaffpro.sync_fields(report)
+        await orders.update_one({"_id": ObjectId(order_id)}, {"$set": applied})
+        updated.update(applied)
+    except Exception as e:  # noqa: BLE001 — never block a confirmed payment
+        logger.error("GoAffPro postback failed after payment for %s: %s", order_id, e)
+
     return transform_order(updated)

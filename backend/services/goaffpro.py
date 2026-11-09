@@ -7,9 +7,11 @@ GoAffPro's published server-side integration surface is a single endpoint
     POST https://api.goaffpro.com/order_complete
     {"ref": "<referral>", "shop": "<shop identifier>", "order_id": "<order id>"}
 
-It is documented to be called "after the payment is processed". This shop takes
-no online payment, so we call it when an admin marks an order `completed` — the
-closest honest equivalent to "this sale is real" available today.
+It is documented to be called "after the payment is processed". This shop now
+REALLY charges cards (Stripe, verified capture), so the primary trigger is
+POST /api/orders/{id}/confirm-payment once Stripe reports the payment
+succeeded. An admin marking an order `completed` is kept as a secondary trigger
+for orders settled outside the card flow.
 
 Three rules are load-bearing here:
 
