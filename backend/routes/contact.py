@@ -13,10 +13,12 @@ from routes.auth import require_admin
 
 router = APIRouter()
 
-# Where contact-form submissions are delivered
+# Where contact-form submissions are delivered.
+# NOTE: kevin@activerecovery360.com was removed — that mailbox was created in
+# 2025 and the password was lost, so it is a black hole nobody reads. info@ is
+# a working alias on the admin@ M365 mailbox.
 CONTACT_RECIPIENTS = [
     "info@activerecovery360.com",
-    "kevin@activerecovery360.com",
     "reggie@coolgeek.me",
 ]
 
