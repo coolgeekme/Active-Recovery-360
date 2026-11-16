@@ -1,6 +1,18 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Card, 
   CardContent, 
@@ -28,6 +40,7 @@ import {
 import { 
   ArrowLeft, 
   Package, 
+  Trash2,
   Loader2,
   Search,
   Filter
@@ -50,6 +63,43 @@ interface Order {
 export default function OrderManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  // Order pending deletion — non-null opens the confirm dialog.
+  const [pendingDelete, setPendingDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
+    try {
+      // apiRequest resolves to a Response; the body carries what was removed.
+      const res = await apiRequest("DELETE", `/api/orders/${pendingDelete.id}`);
+      let detail = "";
+      try {
+        const body = await res.json();
+        if (body?.deleted?.paymentStatus === "paid") {
+          detail = " This order had been paid — its record is now gone.";
+        }
+      } catch {
+        /* body is optional */
+      }
+      toast({
+        title: "Order deleted",
+        description: `Order #${pendingDelete.id} has been removed.${detail}`,
+      });
+      setPendingDelete(null);
+      await queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+    } catch (e: any) {
+      toast({
+        title: "Could not delete order",
+        description: e?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const { data: orders = [], isLoading, error } = useQuery<Order[]>({
     queryKey: ["/api/admin/orders"],
@@ -211,9 +261,22 @@ export default function OrderManagement() {
                         {format(new Date(order.createdAt), "MMM dd, yyyy")}
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline">
-                          View Details
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline">
+                            View Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Delete order"
+                            aria-label={`Delete order ${order.id}`}
+                            data-testid={`delete-order-${order.id}`}
+                            onClick={() => setPendingDelete(order)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -223,6 +286,61 @@ export default function OrderManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation — destructive and irreversible, so it is never a
+          single click. Paid orders get an explicit extra warning. */}
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this order?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Order <span className="font-semibold">#{pendingDelete?.id}</span>
+                  {pendingDelete?.user?.username
+                    ? ` (${pendingDelete.user.username})`
+                    : ""}{" "}
+                  for{" "}
+                  <span className="font-semibold">
+                    ${Number(pendingDelete?.total ?? 0).toFixed(2)}
+                  </span>{" "}
+                  will be permanently removed.
+                </p>
+                <p className="text-destructive font-medium">
+                  This cannot be undone. There is no way to restore a deleted order.
+                </p>
+                {pendingDelete?.paymentStatus === "paid" && (
+                  <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900">
+                    <strong>This order was paid.</strong> Deleting it erases the
+                    record of that payment here. The money itself is unaffected
+                    and still shows in Stripe, but this site will no longer have
+                    a record of the sale.
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              data-testid="confirm-delete-order"
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+            >
+              {isDeleting ? "Deleting…" : "Delete order"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

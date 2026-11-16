@@ -482,3 +482,39 @@ async def confirm_order_payment(order_id: str, data: dict, user: dict = Depends(
         logger.error("GoAffPro postback failed after payment for %s: %s", order_id, e)
 
     return transform_order(updated)
+
+
+@router.delete("/orders/{order_id}")
+async def delete_order(order_id: str, admin: dict = Depends(require_admin)):
+    """ADMIN ONLY: permanently delete an order.
+
+    Added because the admin UI had no way to remove an order at all, so test
+    orders and genuine mistakes piled up with no way to clear them.
+
+    This is irreversible and there is no soft-delete. Deleting an order that has
+    been PAID destroys a financial record, so the response echoes what was
+    removed and the caller is expected to confirm that deliberately.
+    """
+    orders = get_collection("orders")
+
+    try:
+        order = await orders.find_one({"_id": ObjectId(order_id)})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    summary = {
+        "orderId": order_id,
+        "totalAmount": order.get("totalAmount", 0),
+        "paymentStatus": order.get("paymentStatus", "pay_later"),
+        "stripePaymentIntentId": order.get("stripePaymentIntentId"),
+    }
+
+    await orders.delete_one({"_id": ObjectId(order_id)})
+    logger.info(
+        "Order %s deleted by admin %s (total=%s paymentStatus=%s)",
+        order_id, admin.get("id"), summary["totalAmount"], summary["paymentStatus"],
+    )
+
+    return {"status": "deleted", "deleted": summary}
