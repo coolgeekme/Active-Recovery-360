@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -9,6 +10,10 @@ from services import goaffpro
 from services.shipping import calculate_shipping, get_shipping_config
 from services.tax import calculate_tax, get_tax_config, taxable_base
 from routes.payments import get_stripe
+from services.email import (
+    send_order_admin_notification,
+    send_order_confirmation_email,
+)
 from routes.auth import require_auth, require_member, require_admin
 
 router = APIRouter()
@@ -276,7 +281,19 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
     await cart_items.delete_many({"userId": user["id"]})
 
     new_order["_id"] = result.inserted_id
-    return transform_order(new_order)
+
+    # Tell the shop an order came in. Fire-and-forget: a mail outage must never
+    # fail a customer's order.
+    created = transform_order(new_order)
+    asyncio.create_task(
+        send_order_admin_notification(
+            created,
+            customer_name=user.get("fullName") or user.get("username") or "",
+            customer_email=user.get("email") or "",
+        )
+    )
+
+    return created
 
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status_data: dict, admin: dict = Depends(require_admin)):
@@ -481,7 +498,25 @@ async def confirm_order_payment(order_id: str, data: dict, user: dict = Depends(
     except Exception as e:  # noqa: BLE001 — never block a confirmed payment
         logger.error("GoAffPro postback failed after payment for %s: %s", order_id, e)
 
-    return transform_order(updated)
+    final = transform_order(updated)
+
+    # The money has landed: confirm to the customer and tell the shop it is paid.
+    asyncio.create_task(
+        send_order_confirmation_email(
+            user.get("email") or "",
+            final,
+            customer_name=(user.get("fullName") or user.get("username") or "there").split(" ")[0],
+        )
+    )
+    asyncio.create_task(
+        send_order_admin_notification(
+            final,
+            customer_name=user.get("fullName") or user.get("username") or "",
+            customer_email=user.get("email") or "",
+        )
+    )
+
+    return final
 
 
 @router.delete("/orders/{order_id}")

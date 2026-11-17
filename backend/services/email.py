@@ -329,3 +329,174 @@ async def send_team_signup_welcome_email(
     </html>
     """
     return await send_email(to_email, subject, html_content)
+
+
+# ---------------------------------------------------------------------------
+# Order emails
+#
+# These did not exist at all before: the shop could take a card payment and
+# send nobody anything. Kevin reported exactly that ("not getting any email
+# notifications on orders").
+# ---------------------------------------------------------------------------
+
+# Who hears about a new order. info@ is an alias on the admin@ M365 mailbox.
+ORDER_NOTIFICATION_RECIPIENTS = [
+    "info@activerecovery360.com",
+    "reggie@coolgeek.me",
+]
+
+
+def _esc(value) -> str:
+    """Minimal HTML escape — order fields come from user input."""
+    return (
+        str(value if value is not None else "")
+        .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def _money(cents) -> str:
+    try:
+        return f"${(int(cents or 0) / 100):,.2f}"
+    except (TypeError, ValueError):
+        return "$0.00"
+
+
+def _order_rows_html(order: dict) -> str:
+    rows = []
+    for item in order.get("items", []) or []:
+        name = _esc(item.get("name", ""))
+        variant = item.get("variantName")
+        if variant:
+            name += f" <span style='color:#666'>({_esc(variant)})</span>"
+        qty = item.get("quantity", 1)
+        line = (item.get("price", 0) or 0) * (qty or 1)
+        rows.append(
+            f"<tr><td style='padding:6px 0'>{name}</td>"
+            f"<td style='text-align:center'>{qty}</td>"
+            f"<td style='text-align:right'>{_money(line)}</td></tr>"
+        )
+    return "".join(rows) or "<tr><td colspan='3'>No items</td></tr>"
+
+
+def _order_totals_html(order: dict) -> str:
+    parts = [
+        f"<tr><td>Subtotal</td><td style='text-align:right'>{_money(order.get('subtotal'))}</td></tr>"
+    ]
+    if (order.get("discountAmount") or 0) > 0:
+        parts.append(
+            f"<tr><td>Discount {_esc(order.get('discountCode') or '')}</td>"
+            f"<td style='text-align:right'>-{_money(order.get('discountAmount'))}</td></tr>"
+        )
+    parts.append(
+        f"<tr><td>{_esc(order.get('shippingLabel') or 'Shipping')}</td>"
+        f"<td style='text-align:right'>"
+        f"{'Free' if not order.get('shippingAmount') else _money(order.get('shippingAmount'))}</td></tr>"
+    )
+    if (order.get("taxAmount") or 0) > 0:
+        parts.append(
+            f"<tr><td>Sales tax</td><td style='text-align:right'>{_money(order.get('taxAmount'))}</td></tr>"
+        )
+    parts.append(
+        f"<tr><td style='font-weight:bold;padding-top:10px;border-top:1px solid #ddd'>Total</td>"
+        f"<td style='text-align:right;font-weight:bold;padding-top:10px;border-top:1px solid #ddd'>"
+        f"{_money(order.get('totalAmount'))}</td></tr>"
+    )
+    return "".join(parts)
+
+
+_ORDER_WRAPPER = """
+    <div class="container">
+      <div class="header"><h1>Active Recovery 360</h1></div>
+      <div class="content">{body}</div>
+      <div class="footer">
+        <p>The Active Recovery 360 Team<br>Exercise &bull; Injury &amp; Performance Recovery</p>
+      </div>
+    </div>"""
+
+_ORDER_STYLE = """
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #0f4c81; color: white; padding: 20px; text-align: center; }}
+        .content {{ padding: 30px; background-color: #f9f9f9; }}
+        .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
+        table {{ width: 100%; border-collapse: collapse; }}
+        .items td {{ border-bottom: 1px solid #eee; }}
+    """
+
+
+async def send_order_admin_notification(order: dict, customer_name: str = "", customer_email: str = "") -> dict:
+    """Tell the shop owner an order came in."""
+    order_id = str(order.get("id") or order.get("_id") or "")
+    paid = (order.get("paymentStatus") == "paid")
+    status_line = (
+        "<p style='color:#12703a;font-weight:bold'>Payment received — this order is PAID.</p>"
+        if paid else
+        "<p style='color:#b26a00;font-weight:bold'>Awaiting payment.</p>"
+    )
+
+    body = f"""
+      <h2>New order #{_esc(order_id[:10])}</h2>
+      {status_line}
+      <p><strong>Customer:</strong> {_esc(customer_name or 'Unknown')} &lt;{_esc(customer_email)}&gt;</p>
+      <p><strong>Ship to:</strong> {_esc(order.get('shippingAddress'))}</p>
+      <table class="items">
+        <tr style="border-bottom:2px solid #ddd">
+          <th style="text-align:left">Item</th><th>Qty</th><th style="text-align:right">Price</th>
+        </tr>
+        {_order_rows_html(order)}
+      </table>
+      <table style="margin-top:14px">{_order_totals_html(order)}</table>
+    """
+    html_content = (
+        "<!DOCTYPE html><html><head><style>" + _ORDER_STYLE + "</style></head><body>"
+        + _ORDER_WRAPPER.format(body=body) + "</body></html>"
+    )
+
+    subject = (
+        f"{'PAID' if paid else 'New'} order #{order_id[:10]} — {_money(order.get('totalAmount'))}"
+    )
+
+    results = []
+    for recipient in ORDER_NOTIFICATION_RECIPIENTS:
+        results.append(await send_email(recipient, subject, html_content))
+    sent = [r for r in results if r.get("status") == "success"]
+    return {
+        "status": "success" if sent else "error",
+        "sent_to": len(sent),
+        "of": len(ORDER_NOTIFICATION_RECIPIENTS),
+    }
+
+
+async def send_order_confirmation_email(to_email: str, order: dict, customer_name: str = "there") -> dict:
+    """Confirm the order to the customer."""
+    if not to_email:
+        return {"status": "skipped", "message": "No customer email on the order"}
+
+    order_id = str(order.get("id") or order.get("_id") or "")
+    paid = (order.get("paymentStatus") == "paid")
+
+    body = f"""
+      <h2>Thanks{customer_name and ', ' + _esc(customer_name) or ''}!</h2>
+      <p>We've received your order <strong>#{_esc(order_id[:10])}</strong>.</p>
+      {'<p>Your payment has gone through and your order is confirmed.</p>'
+       if paid else
+       '<p>Our team will be in touch shortly to arrange payment and confirm shipping.</p>'}
+      <table class="items">
+        <tr style="border-bottom:2px solid #ddd">
+          <th style="text-align:left">Item</th><th>Qty</th><th style="text-align:right">Price</th>
+        </tr>
+        {_order_rows_html(order)}
+      </table>
+      <table style="margin-top:14px">{_order_totals_html(order)}</table>
+      <p style="margin-top:20px"><strong>Shipping to:</strong><br>{_esc(order.get('shippingAddress'))}</p>
+      <p style="text-align:center">
+        <a href="{FRONTEND_URL}/account/orders" style="display:inline-block;padding:12px 30px;background-color:#0f4c81;color:white;text-decoration:none;border-radius:5px;margin:20px 0">View Your Order</a>
+      </p>
+    """
+    html_content = (
+        "<!DOCTYPE html><html><head><style>" + _ORDER_STYLE + "</style></head><body>"
+        + _ORDER_WRAPPER.format(body=body) + "</body></html>"
+    )
+    subject = f"Your Active Recovery 360 order #{order_id[:10]}"
+    return await send_email(to_email, subject, html_content)
