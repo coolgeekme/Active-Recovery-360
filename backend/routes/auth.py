@@ -277,7 +277,9 @@ async def purchase_membership(data: Optional[dict] = None, user: dict = Depends(
     )
 
     target["isMember"] = True
-    return target
+    # SECURITY: never return the raw document — it carries the bcrypt password
+    # hash. transform_user whitelists the public fields.
+    return transform_user(target)
 
 @router.patch("/user/profile")
 async def update_profile(updates: dict, user: dict = Depends(require_auth)):
