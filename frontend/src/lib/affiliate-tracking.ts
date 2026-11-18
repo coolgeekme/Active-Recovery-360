@@ -48,3 +48,57 @@ export function initAffiliateTracking(): void {
 
 /** True when the shop id is configured — surfaced in the admin view. */
 export const affiliateTrackingConfigured = Boolean(SHOP_ID);
+
+/**
+ * Report a completed sale to GoAffPro.
+ *
+ * GoAffPro's DOCUMENTED server-side endpoint (api.goaffpro.com/order_complete)
+ * rejects every request from a custom-SDK store with "No payload or invalid
+ * payload sent with the conversion callback". That was verified against this
+ * live shop with a real referral code AND synthetic ones, on both the `api`
+ * and `api2` hosts, in JSON and form encoding — always the same rejection.
+ * Their docs only fully describe that endpoint for Shopify stores.
+ *
+ * What actually works is the loader's own client-side function,
+ * `goaffproTrackConversion`, which posts the enriched order to
+ * api2.goaffpro.com/order_complete and answers "OK". So the browser reports
+ * the sale, exactly as GoAffPro's Custom SDK guide describes.
+ *
+ * Only ever called after the backend has verified the Stripe capture, so this
+ * can never report an unpaid order.
+ */
+export function reportAffiliateConversion(order: any): void {
+  if (typeof window === "undefined") return;
+  const track = (window as any).goaffproTrackConversion;
+  // Loader blocked, shop id unset, or the script failed — stay silent.
+  if (typeof track !== "function") return;
+  if (!order) return;
+  // HCP PRECEDENCE: the backend sets this false when a provider storefront
+  // earned the sale, so one order can never pay two commissions.
+  if (order.goaffproClientSync === false) return;
+
+  const total = Number(order.totalAmount) || 0;
+  const shipping = Number(order.shippingAmount) || 0;
+  const tax = Number(order.taxAmount) || 0;
+  const discount = Number(order.discountAmount) || 0;
+  const id = String(order.id || "");
+
+  try {
+    track({
+      id,
+      number: `#${id.slice(-8).toUpperCase()}`,
+      total,
+      // GoAffPro defines subtotal as "order total minus shipping and taxes".
+      subtotal: Math.max(0, total - shipping - tax),
+      discount,
+      shipping,
+      tax,
+      currency: "USD",
+      // Process as a custom order — skips platform order enrichment, which
+      // does not exist for a bespoke store.
+      forceSDK: true,
+    });
+  } catch {
+    // A third-party failure must never break a completed checkout.
+  }
+}

@@ -500,6 +500,17 @@ async def confirm_order_payment(order_id: str, data: dict, user: dict = Depends(
 
     final = transform_order(updated)
 
+    # Tell the browser whether it should report this sale to GoAffPro.
+    #
+    # The server-side endpoint in their docs (api.goaffpro.com/order_complete)
+    # rejects every payload from a custom-SDK store, so the sale is reported
+    # from the browser via the loader's `goaffproTrackConversion` — the path
+    # their Custom SDK guide actually describes. This flag is the server's
+    # verdict on whether that should happen: HCP PRECEDENCE says an order
+    # credited to a provider storefront is NOT also reported as an affiliate
+    # conversion, so one sale never pays two commissions.
+    final["goaffproClientSync"] = not bool(updated.get("hcpReferralId"))
+
     # The money has landed: confirm to the customer and tell the shop it is paid.
     asyncio.create_task(
         send_order_confirmation_email(
