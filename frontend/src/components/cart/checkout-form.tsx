@@ -5,7 +5,6 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/use-cart";
 import { apiRequest } from "@/lib/queryClient";
-import { reportAffiliateConversion } from "@/lib/affiliate-tracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,14 +105,13 @@ function PaymentStep({
 
     if (paymentIntent && paymentIntent.status === "succeeded") {
       try {
-        const res = await apiRequest("POST", `/api/orders/${orderId}/confirm-payment`, {
+        // The SERVER reports this sale to GoAffPro once Stripe confirms the
+        // capture (see services/goaffpro.report_order), so it survives the
+        // customer closing the tab. Do not also call the loader's client-side
+        // tracker here — two reports of one sale risks paying twice.
+        await apiRequest("POST", `/api/orders/${orderId}/confirm-payment`, {
           paymentIntentId: paymentIntent.id,
         });
-        const confirmed = await res.json().catch(() => null);
-        // Report the sale to GoAffPro from the browser: their loader exposes
-        // `goaffproTrackConversion`, which is the only path their API accepts
-        // for a custom-SDK store. Safe to call even if it is unavailable.
-        reportAffiliateConversion(confirmed);
         onPaid();
       } catch (e: any) {
         toast({

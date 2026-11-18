@@ -31,7 +31,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-ORDER_COMPLETE_URL = "https://api.goaffpro.com/order_complete"
+ORDER_COMPLETE_URL = "https://api2.goaffpro.com/order_complete"
 REQUEST_TIMEOUT = 15.0
 
 # The shop identifier from GoAffPro admin -> Settings -> Developer -> Debug
@@ -77,6 +77,64 @@ def evaluate(order: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+def build_payload(order: dict, order_id: str, ref: str) -> dict:
+    """Build the conversion payload GoAffPro actually accepts.
+
+    The three-field shape in their docs ({"ref", "shop", "order_id"}) is
+    rejected by the live endpoint with "No payload or invalid payload sent with
+    the conversion callback" — verified against this real shop. That shape only
+    works for their Shopify integration.
+
+    Reading their public loader.js shows what their own SDK sends:
+    a session envelope plus a nested `data` object holding the order. Posting
+    that exact shape returns "OK". Reproducing it here means the sale is
+    reported by the server, so it survives the customer closing the tab.
+    """
+    total = int(order.get("totalAmount") or 0)
+    shipping = int(order.get("shippingAmount") or 0)
+    tax = int(order.get("taxAmount") or 0)
+    discount = int(order.get("discountAmount") or 0)
+    # GoAffPro defines subtotal as "order total minus shipping and taxes".
+    subtotal = max(0, total - shipping - tax)
+
+    line_items = []
+    for item in (order.get("items") or [])[:50]:
+        line_items.append({
+            "name": item.get("productName") or item.get("name") or "",
+            "quantity": int(item.get("quantity") or 1),
+            "price": int(item.get("price") or 0),
+        })
+
+    return {
+        # Session envelope — the SDK sends these; the values may be empty, the
+        # keys are what matter.
+        "sub_id": "",
+        "ref": ref,
+        "shop": GOAFFPRO_SHOP_ID,
+        "location": "https://activerecovery360.com/",
+        "navigator": "activerecovery360-backend",
+        "referrer": "",
+        "discount_code": order.get("discountCode") or "",
+        "order_id": order_id,
+        "visit_id": "",
+        # The order itself. Amounts are integer cents, matching both storage
+        # here and Stripe.
+        "data": {
+            "id": order_id,
+            "number": "#" + order_id[-8:].upper(),
+            "total": total,
+            "subtotal": subtotal,
+            "discount": discount,
+            "shipping": shipping,
+            "tax": tax,
+            "currency": "USD",
+            # Process as a custom order; there is no platform to enrich from.
+            "forceSDK": True,
+            "line_items": line_items,
+        },
+    }
+
+
 async def report_order(order: dict) -> dict:
     """Report one completed order to GoAffPro. Never raises.
 
@@ -100,7 +158,7 @@ async def report_order(order: dict) -> dict:
             "reported": False,
         }
 
-    payload = {"ref": ref, "shop": GOAFFPRO_SHOP_ID, "order_id": order_id}
+    payload = build_payload(order, order_id, ref)
 
     try:
         async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
