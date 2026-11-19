@@ -79,6 +79,38 @@ def test_line_items_are_forwarded():
     assert d["line_items"][0]["price"] == 1499
 
 
+def test_line_items_carry_product_id_and_sku():
+    """Without an identifier GoAffPro cannot apply a per-product commission rate.
+
+    A store owner who sets a flat rate on a low-margin product must have that
+    rate actually matched, so every line item carries the stable product id and
+    a SKU (falling back to the id when the item has no variant SKU).
+    """
+    order = _order(items=[{
+        "productId": "6a8e4ff5476b82a84db78791",
+        "name": "BALLR Balm",
+        "variantSku": "BALM-2OZ",
+        "price": 4500,
+        "quantity": 1,
+    }])
+    li = goaffpro.build_payload(order, "abc", "R")["data"]["line_items"][0]
+    assert li["product_id"] == "6a8e4ff5476b82a84db78791"
+    assert li["sku"] == "BALM-2OZ"
+
+
+def test_line_item_sku_falls_back_to_product_id():
+    """Products in this catalog have no SKU field at all."""
+    order = _order(items=[{
+        "productId": "6a8e4ff5476b82a84db78791",
+        "name": "BALLR Balm",
+        "variantSku": None,
+        "price": 4500,
+        "quantity": 1,
+    }])
+    li = goaffpro.build_payload(order, "abc", "R")["data"]["line_items"][0]
+    assert li["sku"] == "6a8e4ff5476b82a84db78791"
+
+
 def test_missing_amounts_do_not_raise():
     """Historical orders predate shipping and tax fields."""
     d = goaffpro.build_payload({"_id": "x", "totalAmount": 1000}, "x", "R")["data"]

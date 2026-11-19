@@ -103,6 +103,13 @@ def build_payload(order: dict, order_id: str, ref: str) -> dict:
             "name": item.get("productName") or item.get("name") or "",
             "quantity": int(item.get("quantity") or 1),
             "price": int(item.get("price") or 0),
+            # GoAffPro matches per-product commission rates against these. With
+            # only a name and a price it cannot identify the product at all, so
+            # any "flat rate on this product" rule silently falls back to the
+            # program default. `product_id` is our stable Mongo id; the SKU is
+            # used when the item is a variant and carries one.
+            "product_id": str(item.get("productId") or ""),
+            "sku": str(item.get("variantSku") or item.get("productId") or ""),
         })
 
     return {
