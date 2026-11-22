@@ -100,6 +100,18 @@ export interface Order {
   items: OrderItem[];
   shippingAddress: string;
   createdAt?: string;
+  /** Buyer, included by the admin orders endpoint so the table can render a row. */
+  user?: {
+    username?: string | null;
+    email?: string | null;
+    fullName?: string | null;
+  } | null;
+  /** GoAffPro attribution, so an admin can audit commissions. */
+  affiliateRef?: string | null;
+  goaffproSyncStatus?: string | null;
+  goaffproSyncMessage?: string | null;
+  hcpReferralId?: string | null;
+  hcpReferralName?: string | null;
 }
 
 export interface OrderItem {

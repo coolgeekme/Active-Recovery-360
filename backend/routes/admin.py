@@ -67,23 +67,71 @@ async def update_user_role(user_id: str, role_data: dict, admin: dict = Depends(
 
 @router.get("/orders")
 async def get_all_orders(admin: dict = Depends(require_admin)):
+    """Every order, with enough detail for the admin table to be usable.
+
+    This used to return a deliberately thin shape (id, userId, totalAmount,
+    status, items, address, date). The admin page rendered `order.total` and
+    `order.user.username`, so the first order in the list threw on
+    `undefined.toFixed()` and the whole page came up blank — Kevin could not
+    see or delete anything.
+
+    It also hid exactly the fields an admin needs to reconcile money: whether
+    the order was paid, and whether the affiliate conversion reached GoAffPro.
+    The response now carries the full order plus a `user` block.
+    """
     orders = get_collection("orders")
-    
+    users = get_collection("users")
+
     cursor = orders.find().sort("createdAt", -1)
     docs = await cursor.to_list(length=500)
-    
+
+    # One lookup for every user on the page rather than one per order.
+    ids = []
+    for doc in docs:
+        try:
+            ids.append(ObjectId(str(doc.get("userId"))))
+        except Exception:
+            continue
+    people = {}
+    if ids:
+        async for u in users.find({"_id": {"$in": ids}}):
+            people[str(u["_id"])] = u
+
     result = []
     for doc in docs:
+        uid = str(doc.get("userId", ""))
+        person = people.get(uid) or {}
         result.append({
             "id": str(doc["_id"]),
-            "userId": str(doc.get("userId", "")),
+            "userId": uid,
+            # Kept as cents, like everywhere else. The frontend divides.
             "totalAmount": doc.get("totalAmount", 0),
             "status": doc.get("status", "pending"),
+            "paymentStatus": doc.get("paymentStatus", "pay_later"),
+            "paidAt": doc.get("paidAt"),
+            "amountPaid": doc.get("amountPaid", 0),
             "items": doc.get("items", []),
             "shippingAddress": doc.get("shippingAddress", ""),
-            "createdAt": doc.get("createdAt")
+            "shippingAmount": doc.get("shippingAmount", 0),
+            "shippingLabel": doc.get("shippingLabel"),
+            "taxAmount": doc.get("taxAmount", 0),
+            "taxState": doc.get("taxState", ""),
+            "discountAmount": doc.get("discountAmount", 0),
+            "discountCode": doc.get("discountCode"),
+            "createdAt": doc.get("createdAt"),
+            # Attribution + sync state, so an admin can audit commissions.
+            "affiliateRef": doc.get("affiliateRef"),
+            "goaffproSyncStatus": doc.get("goaffproSyncStatus"),
+            "goaffproSyncMessage": doc.get("goaffproSyncMessage"),
+            "hcpReferralId": doc.get("hcpReferralId"),
+            "hcpReferralName": doc.get("hcpReferralName"),
+            "user": {
+                "username": person.get("username"),
+                "email": person.get("email"),
+                "fullName": person.get("fullName"),
+            },
         })
-    
+
     return result
 
 # HCP Management Endpoints

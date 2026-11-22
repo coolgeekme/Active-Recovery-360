@@ -106,9 +106,15 @@ export default function OrderManagement() {
   });
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.user?.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toString().includes(searchTerm);
+    // Guard the strings: an order whose user record is missing a username or
+    // email used to throw here and blank the entire page.
+    const term = searchTerm.toLowerCase();
+    const username = (order.user?.username ?? "").toLowerCase();
+    const email = (order.user?.email ?? "").toLowerCase();
+    const matchesSearch =
+      username.includes(term) ||
+      email.includes(term) ||
+      String(order.id ?? "").includes(searchTerm);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -251,7 +257,7 @@ export default function OrderManagement() {
                           <div className="text-sm text-muted-foreground">{order.user?.email}</div>
                         </div>
                       </TableCell>
-                      <TableCell>${order.total.toFixed(2)}</TableCell>
+                      <TableCell>${((order.totalAmount ?? 0) / 100).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(order.status)}>
                           {order.status}
