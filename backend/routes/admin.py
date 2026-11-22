@@ -107,6 +107,14 @@ async def get_all_orders(admin: dict = Depends(require_admin)):
             # Kept as cents, like everywhere else. The frontend divides.
             "totalAmount": doc.get("totalAmount", 0),
             "status": doc.get("status", "pending"),
+            # Fulfilment trail, so the admin view can show progress.
+            "processingAt": doc.get("processingAt"),
+            "shippedAt": doc.get("shippedAt"),
+            "deliveredAt": doc.get("deliveredAt"),
+            "completedAt": doc.get("completedAt"),
+            "cancelledAt": doc.get("cancelledAt"),
+            "trackingNumber": doc.get("trackingNumber"),
+            "carrier": doc.get("carrier"),
             "paymentStatus": doc.get("paymentStatus", "pay_later"),
             "paidAt": doc.get("paidAt"),
             "amountPaid": doc.get("amountPaid", 0),

@@ -46,19 +46,28 @@ import {
   Filter
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import type { Order } from "@/types";
 
-interface Order {
-  id: number;
-  userId: number;
-  total: number;
-  status: string;
-  createdAt: string;
-  user?: {
-    username: string;
-    email: string;
-  };
-}
+/** The states an order moves through, in order. */
+const STATUS_FLOW = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  processing: "Processing",
+  shipped: "Shipped",
+  delivered: "Delivered",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
 
 export default function OrderManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +77,44 @@ export default function OrderManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [nextStatus, setNextStatus] = useState<string>("pending");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrier, setCarrier] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const openOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setNextStatus(order.status || "pending");
+    setTrackingNumber((order as any).trackingNumber || "");
+    setCarrier((order as any).carrier || "");
+  };
+
+  const saveStatus = async () => {
+    if (!selectedOrder) return;
+    setIsUpdating(true);
+    try {
+      await apiRequest("PUT", `/api/orders/${selectedOrder.id}/status`, {
+        status: nextStatus,
+        trackingNumber: trackingNumber.trim() || null,
+        carrier: carrier.trim() || null,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/admin/orders"] });
+      toast({
+        title: "Order updated",
+        description: `Marked as ${STATUS_LABEL[nextStatus] || nextStatus}.`,
+      });
+      setSelectedOrder(null);
+    } catch (e: any) {
+      toast({
+        title: "Could not update order",
+        description: e?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!pendingDelete) return;
@@ -120,7 +167,7 @@ export default function OrderManagement() {
   });
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status || "").toLowerCase()) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'processing':
@@ -128,6 +175,7 @@ export default function OrderManagement() {
       case 'shipped':
         return 'bg-purple-100 text-purple-800';
       case 'delivered':
+      case 'completed':
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
@@ -268,7 +316,7 @@ export default function OrderManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => openOrder(order)}>
                             View Details
                           </Button>
                           <Button
@@ -313,7 +361,7 @@ export default function OrderManagement() {
                     : ""}{" "}
                   for{" "}
                   <span className="font-semibold">
-                    ${Number(pendingDelete?.total ?? 0).toFixed(2)}
+                    ${(Number(pendingDelete?.totalAmount ?? 0) / 100).toFixed(2)}
                   </span>{" "}
                   will be permanently removed.
                 </p>
@@ -347,6 +395,169 @@ export default function OrderManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Order details + fulfilment. This is where an admin actually works an
+          order: see what was bought and paid, then move it through
+          pending -> processing -> shipped -> delivered. */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order #{selectedOrder?.id?.slice(-8).toUpperCase()}</DialogTitle>
+            <DialogDescription>
+              {selectedOrder?.createdAt
+                ? `Placed ${format(new Date(selectedOrder.createdAt), "MMM dd, yyyy 'at' h:mm a")}`
+                : "Order details"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Customer */}
+              <div>
+                <h4 className="text-sm font-semibold mb-1">Customer</h4>
+                <p className="text-sm">
+                  {selectedOrder.user?.fullName || selectedOrder.user?.username || "Unknown"}
+                </p>
+                <p className="text-sm text-muted-foreground">{selectedOrder.user?.email}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Ship to: {selectedOrder.shippingAddress || "—"}
+                </p>
+              </div>
+
+              {/* Items */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Items</h4>
+                <div className="rounded-md border divide-y">
+                  {(selectedOrder.items || []).map((it, i) => (
+                    <div key={i} className="flex justify-between px-3 py-2 text-sm">
+                      <span>
+                        {it.name} <span className="text-muted-foreground">× {it.quantity}</span>
+                      </span>
+                      <span>${((it.price ?? 0) / 100).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Money */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Payment</h4>
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span>${((selectedOrder.shippingAmount ?? 0) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Sales tax{selectedOrder.taxState ? ` (${selectedOrder.taxState})` : ""}
+                    </span>
+                    <span>${((selectedOrder.taxAmount ?? 0) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold border-t pt-1">
+                    <span>Total</span>
+                    <span>${((selectedOrder.totalAmount ?? 0) / 100).toFixed(2)}</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm">
+                  <Badge
+                    className={
+                      selectedOrder.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-amber-100 text-amber-800"
+                    }
+                  >
+                    {selectedOrder.paymentStatus === "paid" ? "Paid" : "Not paid online"}
+                  </Badge>
+                  {selectedOrder.paidAt && (
+                    <span className="ml-2 text-muted-foreground">
+                      {format(new Date(selectedOrder.paidAt), "MMM dd, yyyy 'at' h:mm a")}
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {/* Affiliate trail */}
+              {(selectedOrder.affiliateRef || selectedOrder.hcpReferralId) && (
+                <div className="text-sm">
+                  <h4 className="text-sm font-semibold mb-1">Attribution</h4>
+                  {selectedOrder.affiliateRef && (
+                    <p className="text-muted-foreground">
+                      Affiliate referral: <code>{selectedOrder.affiliateRef}</code>
+                      {selectedOrder.goaffproSyncStatus && (
+                        <span className="ml-2">({selectedOrder.goaffproSyncStatus})</span>
+                      )}
+                    </p>
+                  )}
+                  {selectedOrder.hcpReferralId && (
+                    <p className="text-muted-foreground">
+                      Provider referral: {selectedOrder.hcpReferralName || selectedOrder.hcpReferralId}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Fulfilment */}
+              <div className="border-t pt-4 space-y-3">
+                <h4 className="text-sm font-semibold">Fulfilment</h4>
+
+                <div>
+                  <Label htmlFor="order-status">Status</Label>
+                  <Select value={nextStatus} onValueChange={setNextStatus}>
+                    <SelectTrigger id="order-status" data-testid="order-status-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_FLOW.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {STATUS_LABEL[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Marking an order shipped or delivered reports the sale to GoAffPro
+                    so the affiliate is credited.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="order-carrier">Carrier (optional)</Label>
+                    <Input
+                      id="order-carrier"
+                      placeholder="UPS, FedEx…"
+                      value={carrier}
+                      onChange={(e) => setCarrier(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="order-tracking">Tracking number (optional)</Label>
+                    <Input
+                      id="order-tracking"
+                      placeholder="1Z…"
+                      value={trackingNumber}
+                      onChange={(e) => setTrackingNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+                    Close
+                  </Button>
+                  <Button
+                    onClick={saveStatus}
+                    disabled={isUpdating || nextStatus === selectedOrder.status}
+                    data-testid="save-order-status"
+                  >
+                    {isUpdating ? "Saving…" : "Save changes"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

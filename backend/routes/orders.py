@@ -19,6 +19,23 @@ from routes.auth import require_auth, require_member, require_admin
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Fulfilment trail. The shop packs and ships by hand.
+ALLOWED_STATUSES = ["pending", "processing", "shipped", "delivered", "completed", "cancelled"]
+
+# The timestamp each state writes, so history is not overwritten.
+STATUS_TIMESTAMPS = {
+    "processing": "processingAt",
+    "shipped": "shippedAt",
+    "delivered": "deliveredAt",
+    "completed": "completedAt",
+    "cancelled": "cancelledAt",
+}
+
+# Once an order is genuinely going out, the sale is real enough to pay a
+# commission on. Reporting is idempotent, so several of these can be hit.
+COMMISSION_TRIGGER_STATUSES = {"shipped", "delivered", "completed"}
+
+
 def transform_order(doc: dict) -> dict:
     if not doc:
         return None
@@ -42,6 +59,16 @@ def transform_order(doc: dict) -> dict:
         "amountPaid": doc.get("amountPaid", 0),
         "stripePaymentIntentId": doc.get("stripePaymentIntentId"),
         "status": doc.get("status", "pending"),
+        # Fulfilment trail. Each transition stamps its own field so the admin
+        # view can show when an order was packed, shipped and delivered rather
+        # than just a single mutable status.
+        "processingAt": doc.get("processingAt"),
+        "shippedAt": doc.get("shippedAt"),
+        "deliveredAt": doc.get("deliveredAt"),
+        "completedAt": doc.get("completedAt"),
+        "cancelledAt": doc.get("cancelledAt"),
+        "trackingNumber": doc.get("trackingNumber"),
+        "carrier": doc.get("carrier"),
         "items": doc.get("items", []),
         "shippingAddress": doc.get("shippingAddress", ""),
         "createdAt": doc.get("createdAt"),
@@ -297,33 +324,60 @@ async def create_order(order_data: dict, user: dict = Depends(require_member)):
 
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status_data: dict, admin: dict = Depends(require_admin)):
+    """Move an order along its fulfilment trail.
+
+    The shop packs and ships by hand, so the states an admin actually works in
+    are pending -> processing -> shipped -> delivered. `completed` is kept as the
+    terminal "done" state and `cancelled` for a dead order.
+
+    Each transition stamps its own timestamp instead of overwriting a single
+    "updated" field, so the history of what happened and when survives.
+    """
     orders = get_collection("orders")
-    
-    status = status_data.get("status")
-    if status not in ["pending", "completed", "cancelled"]:
-        raise HTTPException(status_code=400, detail="Invalid status")
-    
+
+    status = (status_data.get("status") or "").strip().lower()
+    if status not in ALLOWED_STATUSES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Allowed: {', '.join(ALLOWED_STATUSES)}",
+        )
+
+    updates: dict = {"status": status}
+    stamp = STATUS_TIMESTAMPS.get(status)
+    if stamp:
+        updates[stamp] = datetime.utcnow()
+
+    # Optional shipping details, captured when the order goes out.
+    tracking = status_data.get("trackingNumber")
+    if tracking is not None:
+        updates["trackingNumber"] = str(tracking).strip() or None
+    carrier = status_data.get("carrier")
+    if carrier is not None:
+        updates["carrier"] = str(carrier).strip() or None
+
     try:
         result = await orders.find_one_and_update(
             {"_id": ObjectId(order_id)},
-            {"$set": {"status": status}},
-            return_document=True
+            {"$set": updates},
+            return_document=True,
         )
     except Exception:
         raise HTTPException(status_code=404, detail="Order not found")
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # Report the conversion to GoAffPro when an admin confirms the sale.
-    # `completed` is the only honest commission trigger this shop has: there is
-    # no online payment event to hang it on. Fail soft — a GoAffPro problem must
-    # never block or roll back the order update (services.goaffpro never raises).
-    if status == "completed":
+    # Report the sale to GoAffPro once the order is genuinely going out.
+    # Historically only `completed` triggered this, which meant an admin who
+    # worked in shipped/delivered never generated a commission. The service is
+    # idempotent (it refuses to report an order already marked synced), so
+    # hitting several of these states is safe.
+    if status in COMMISSION_TRIGGER_STATUSES:
         report = await goaffpro.report_order(result)
         applied = goaffpro.sync_fields(report)
-        await orders.update_one({"_id": result["_id"]}, {"$set": applied})
-        result.update(applied)
+        if applied:
+            await orders.update_one({"_id": result["_id"]}, {"$set": applied})
+            result.update(applied)
 
     return transform_order(result)
 

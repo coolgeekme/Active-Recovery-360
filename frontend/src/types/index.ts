@@ -96,7 +96,15 @@ export interface Order {
   /** 'paid' once a card payment is captured; 'pay_later' for legacy orders. */
   paymentStatus?: 'paid' | 'pay_later' | 'awaiting_payment';
   paidAt?: string | null;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled';
+  /** Fulfilment trail — each state stamps its own timestamp. */
+  processingAt?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  trackingNumber?: string | null;
+  carrier?: string | null;
   items: OrderItem[];
   shippingAddress: string;
   createdAt?: string;

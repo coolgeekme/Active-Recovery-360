@@ -58,8 +58,14 @@ export default function OrdersPage() {
     switch (status) {
       case "pending":
         return <Badge variant="secondary">Pending</Badge>;
+      case "processing":
+        return <Badge variant="secondary">Processing</Badge>;
+      case "shipped":
+        return <Badge>Shipped</Badge>;
+      case "delivered":
+        return <Badge variant="public">Delivered</Badge>;
       case "completed":
-        return <Badge variant="success">Completed</Badge>;
+        return <Badge variant="public">Completed</Badge>;
       case "cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       default:
