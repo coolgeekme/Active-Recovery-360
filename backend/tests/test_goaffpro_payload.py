@@ -54,17 +54,28 @@ def test_ref_and_shop_are_carried_through():
     assert payload["order_id"] == "abc123"
 
 
+def test_amounts_are_sent_in_dollars_not_cents():
+    """GoAffPro reads the amount as currency UNITS.
+
+    Sending 2508 for a $25.08 order makes its Sales tab show $2,508 and pays a
+    commission 100x too large. Confirmed against the live Sales tab.
+    """
+    d = goaffpro.build_payload(_order(), "abc123", "REF")["data"]
+    assert d["total"] == 25.08
+    assert d["subtotal"] == 14.99
+    assert d["shipping"] == 8.00
+    assert d["tax"] == 2.09
+
+
 def test_amounts_reconcile_to_the_order_total():
     """subtotal + shipping + tax must equal total, or GoAffPro stores a lie."""
     d = goaffpro.build_payload(_order(), "abc123", "REF")["data"]
-    assert d["subtotal"] + d["shipping"] + d["tax"] == d["total"]
-    assert d["total"] == 2508
-    assert d["subtotal"] == 1499  # 2508 - 800 - 209
+    assert round(d["subtotal"] + d["shipping"] + d["tax"], 2) == d["total"]
 
 
 def test_discount_is_reported_not_folded_into_subtotal():
     d = goaffpro.build_payload(_order(discountAmount=500), "abc", "R")["data"]
-    assert d["discount"] == 500
+    assert d["discount"] == 5.00
 
 
 def test_force_sdk_is_set():
@@ -76,7 +87,7 @@ def test_line_items_are_forwarded():
     d = goaffpro.build_payload(_order(), "abc", "R")["data"]
     assert d["line_items"][0]["name"] == "CBD Patches"
     assert d["line_items"][0]["quantity"] == 1
-    assert d["line_items"][0]["price"] == 1499
+    assert d["line_items"][0]["price"] == 14.99
 
 
 def test_line_items_carry_product_id_and_sku():
@@ -114,10 +125,10 @@ def test_line_item_sku_falls_back_to_product_id():
 def test_missing_amounts_do_not_raise():
     """Historical orders predate shipping and tax fields."""
     d = goaffpro.build_payload({"_id": "x", "totalAmount": 1000}, "x", "R")["data"]
-    assert d["total"] == 1000
+    assert d["total"] == 10.00
     assert d["shipping"] == 0
     assert d["tax"] == 0
-    assert d["subtotal"] == 1000
+    assert d["subtotal"] == 10.00
 
 
 def test_hcp_referral_is_still_skipped():

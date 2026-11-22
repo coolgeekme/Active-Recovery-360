@@ -77,6 +77,20 @@ def evaluate(order: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+def _money(cents) -> float:
+    """Convert stored integer cents into the currency unit GoAffPro expects.
+
+    GoAffPro reads the amount as currency UNITS, not minor units. Sending 2508
+    for a $25.08 order makes its Sales tab show $2,508 and pays a commission
+    100x too large. Verified against the live Sales tab: our 2508 displayed as
+    $2,508.
+    """
+    try:
+        return round(int(cents or 0) / 100, 2)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def build_payload(order: dict, order_id: str, ref: str) -> dict:
     """Build the conversion payload GoAffPro actually accepts.
 
@@ -102,7 +116,7 @@ def build_payload(order: dict, order_id: str, ref: str) -> dict:
         line_items.append({
             "name": item.get("productName") or item.get("name") or "",
             "quantity": int(item.get("quantity") or 1),
-            "price": int(item.get("price") or 0),
+            "price": _money(item.get("price") or 0),
             # GoAffPro matches per-product commission rates against these. With
             # only a name and a price it cannot identify the product at all, so
             # any "flat rate on this product" rule silently falls back to the
@@ -129,11 +143,11 @@ def build_payload(order: dict, order_id: str, ref: str) -> dict:
         "data": {
             "id": order_id,
             "number": "#" + order_id[-8:].upper(),
-            "total": total,
-            "subtotal": subtotal,
-            "discount": discount,
-            "shipping": shipping,
-            "tax": tax,
+            "total": _money(total),
+            "subtotal": _money(subtotal),
+            "discount": _money(discount),
+            "shipping": _money(shipping),
+            "tax": _money(tax),
             "currency": "USD",
             # Process as a custom order; there is no platform to enrich from.
             "forceSDK": True,
