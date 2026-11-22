@@ -415,13 +415,13 @@ _ORDER_WRAPPER = """
     </div>"""
 
 _ORDER_STYLE = """
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background-color: #0f4c81; color: white; padding: 20px; text-align: center; }}
-        .content {{ padding: 30px; background-color: #f9f9f9; }}
-        .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
-        table {{ width: 100%; border-collapse: collapse; }}
-        .items td {{ border-bottom: 1px solid #eee; }}
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0f4c81; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; background-color: #f9f9f9; }
+        .footer { padding: 20px; text-align: center; font-size: 12px; color: #666; }
+        table { width: 100%; border-collapse: collapse; }
+        .items td { border-bottom: 1px solid #eee; }
     """
 
 
@@ -499,4 +499,87 @@ async def send_order_confirmation_email(to_email: str, order: dict, customer_nam
         + _ORDER_WRAPPER.format(body=body) + "</body></html>"
     )
     subject = f"Your Active Recovery 360 order #{order_id[:10]}"
+    return await send_email(to_email, subject, html_content)
+
+
+# --------------------------------------------------------------------------
+# Fulfilment updates
+#
+# Until now the customer heard from us exactly once: the payment confirmation.
+# Nothing told them the order was being packed, that it had shipped, or that it
+# had arrived. These three close that gap.
+# --------------------------------------------------------------------------
+
+_FULFILMENT_COPY = {
+    "shipped": {
+        "heading": "Your order is on its way",
+        "lead": "Good news &mdash; your order has shipped.",
+        "subject": "Your Active Recovery 360 order #{ref} has shipped",
+    },
+    "delivered": {
+        "heading": "Your order was delivered",
+        "lead": "Your order has been marked as delivered. We hope it helps.",
+        "subject": "Your Active Recovery 360 order #{ref} was delivered",
+    },
+    "cancelled": {
+        "heading": "Your order was cancelled",
+        "lead": "Your order has been cancelled. If this is a surprise, reply to this "
+                "email and we will sort it out.",
+        "subject": "Your Active Recovery 360 order #{ref} was cancelled",
+    },
+}
+
+
+async def send_order_fulfilment_email(
+    to_email: str,
+    order: dict,
+    event: str,
+    customer_name: str = "there",
+) -> dict:
+    """Tell the customer their order shipped, arrived, or was cancelled.
+
+    `event` is one of: shipped, delivered, cancelled.
+    """
+    if not to_email:
+        return {"status": "skipped", "message": "No customer email on the order"}
+
+    copy = _FULFILMENT_COPY.get(event)
+    if not copy:
+        return {"status": "skipped", "message": f"Unknown fulfilment event {event!r}"}
+
+    order_id = str(order.get("id") or order.get("_id") or "")
+    ref = _esc(order_id[:10])
+    tracking = (order.get("trackingNumber") or "").strip()
+    carrier = (order.get("carrier") or "").strip()
+
+    tracking_html = ""
+    if tracking:
+        label = f"{_esc(carrier)} tracking" if carrier else "Tracking number"
+        tracking_html = (
+            f'<p style="margin-top:16px;font-size:15px"><strong>{label}:</strong> '
+            f'<span style="font-family:monospace">{_esc(tracking)}</span></p>'
+        )
+
+    body = f"""\
+      <h2>{_esc(copy['heading'])}</h2>
+      <p>Hi {_esc(customer_name)},</p>
+      <p>{copy['lead']}</p>
+      <p>Order <strong>#{ref}</strong></p>
+      {tracking_html}
+      <table class="items" style="margin-top:18px">
+        <tr style="border-bottom:2px solid #ddd">
+          <th style="text-align:left">Item</th><th>Qty</th><th style="text-align:right">Price</th>
+        </tr>
+        {_order_rows_html(order)}
+      </table>
+      <p style="margin-top:18px"><strong>Shipping to:</strong><br>{_esc(order.get('shippingAddress'))}</p>
+      <p style="text-align:center">
+        <a href="{FRONTEND_URL}/account/orders" style="display:inline-block;padding:12px 30px;background-color:#0f4c81;color:white;text-decoration:none;border-radius:5px;margin:20px 0">View Your Order</a>
+      </p>
+    """
+    html_content = (
+        "<!DOCTYPE html><html><head><style>" + _ORDER_STYLE + "</style></head><body>"
+        + _ORDER_WRAPPER.format(body=body) + "</body></html>"
+    )
+    subject = copy["subject"].format(ref=order_id[:10])
     return await send_email(to_email, subject, html_content)

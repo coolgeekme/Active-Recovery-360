@@ -13,6 +13,7 @@ from routes.payments import get_stripe
 from services.email import (
     send_order_admin_notification,
     send_order_confirmation_email,
+    send_order_fulfilment_email,
 )
 from routes.auth import require_auth, require_member, require_admin
 
@@ -34,6 +35,10 @@ STATUS_TIMESTAMPS = {
 # Once an order is genuinely going out, the sale is real enough to pay a
 # commission on. Reporting is idempotent, so several of these can be hit.
 COMMISSION_TRIGGER_STATUSES = {"shipped", "delivered", "completed"}
+
+# Statuses the customer hears about. `processing` is deliberately excluded —
+# it is internal packing state and mailing it would be noise.
+CUSTOMER_NOTICE_STATUSES = {"shipped", "delivered", "cancelled"}
 
 
 def transform_order(doc: dict) -> dict:
@@ -379,7 +384,34 @@ async def update_order_status(order_id: str, status_data: dict, admin: dict = De
             await orders.update_one({"_id": result["_id"]}, {"$set": applied})
             result.update(applied)
 
+    # Tell the customer what just happened. Fire-and-forget: a mail outage must
+    # never block or roll back a status change the admin already made.
+    if status in CUSTOMER_NOTICE_STATUSES:
+        final = transform_order(result)
+        asyncio.create_task(
+            _notify_customer_of_status(final, status)
+        )
+
     return transform_order(result)
+
+
+async def _notify_customer_of_status(order: dict, status: str) -> None:
+    """Look up the buyer's email and send the matching fulfilment update."""
+    try:
+        user = await get_collection("users").find_one(
+            {"_id": ObjectId(str(order.get("userId")))}
+        )
+        email_addr = (user or {}).get("email") or ""
+        if not email_addr:
+            return
+        name = (
+            (user or {}).get("fullName")
+            or (user or {}).get("username")
+            or ""
+        ).split(" ")[0] or "there"
+        await send_order_fulfilment_email(email_addr, order, status, customer_name=name)
+    except Exception as exc:  # noqa: BLE001 — never surface a mail error to the admin
+        logger.error("Fulfilment email failed for order %s: %s", order.get("id"), exc)
 
 
 # ---------------------------------------------------------------------------
