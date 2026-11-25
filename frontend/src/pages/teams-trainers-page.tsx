@@ -17,6 +17,15 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import Breadcrumbs from "@/components/layout/breadcrumbs";
 
+/**
+ * The affiliate portal. Teams & Trainers is NOT a separate program — a team
+ * joins the same affiliate program and simply gets its own commission rate, so
+ * their "team code" is an ordinary affiliate referral link.
+ */
+const AFFILIATE_PORTAL_URL =
+  (import.meta.env.VITE_GOAFFPRO_PORTAL_URL as string | undefined)?.trim() ||
+  "https://activerecovery360.goaffpro.com";
+
 export default function TeamsTrainersPage() {
   const { toast } = useToast();
   const [name, setName] = useState("");
@@ -205,11 +214,31 @@ export default function TeamsTrainersPage() {
                 <div className="text-center" data-testid="team-signup-success">
                   <CheckCircle2 className="h-14 w-14 text-primary mx-auto mb-4" />
                   <h2 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                    You&apos;re on the list
+                    You&apos;re in
                   </h2>
                   <p className="text-secondary">
-                    We&apos;ll email <span className="font-semibold">{email}</span> with your
-                    team code and next steps.
+                    Thanks &mdash; we&apos;ve got your details and Reggie will follow
+                    up about your team&apos;s commission.
+                  </p>
+                  {/* One program: the team code IS an affiliate code, so they can
+                      collect it right now instead of waiting on an email that
+                      never arrives. */}
+                  <p className="text-secondary mt-4">
+                    You don&apos;t need to wait to get started &mdash; your link and
+                    code are ready now.
+                  </p>
+                  <Button asChild size="lg" className="mt-5" data-testid="team-affiliate-portal-link">
+                    <a
+                      href={AFFILIATE_PORTAL_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Get my affiliate link
+                    </a>
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Signs you in at <span className="font-semibold">{email}</span> if
+                    you already created an account there.
                   </p>
                 </div>
               ) : (
@@ -220,7 +249,9 @@ export default function TeamsTrainersPage() {
                       Get your team set up
                     </h2>
                     <p className="text-secondary text-sm">
-                      Tell us who you are and we&apos;ll get you a code.
+                      Tell us who you are and we&apos;ll set up your team&apos;s
+                      commission &mdash; you&apos;ll get your referral link the moment
+                      you sign up.
                     </p>
                   </div>
                   <form

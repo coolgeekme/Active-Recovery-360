@@ -12,6 +12,12 @@ logger = logging.getLogger(__name__)
 resend.api_key = os.environ.get("RESEND_API_KEY")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "https://activerecovery360.com")
+# Teams & Trainers is not a separate program — a team joins the same affiliate
+# program, so their "team code" is an ordinary affiliate referral link and the
+# email should send them straight to the portal to collect it.
+AFFILIATE_PORTAL_URL = os.environ.get(
+    "AFFILIATE_PORTAL_URL", "https://activerecovery360.goaffpro.com"
+)
 
 async def send_email(to_email: str, subject: str, html_content: str) -> dict:
     """Send an email using Resend"""
@@ -263,8 +269,9 @@ async def send_team_signup_welcome_email(
 ) -> dict:
     """Acknowledge a Teams & Trainers signup.
 
-    The signup form has always told people "We'll email you with your team code
-    and next steps", but no email was ever sent. This is that email.
+    Teams join the SAME affiliate program as everyone else, with their own
+    commission rate, so this email sends them straight to the portal to collect
+    their referral link rather than promising a code that nobody ever issues.
     """
     role_labels = {
         "team": "Team / Coach",
@@ -279,7 +286,7 @@ async def send_team_signup_welcome_email(
         details.insert(0, f"<strong>Organization:</strong> {organization}")
     details_html = "<br>".join(details)
 
-    subject = "You're on the list - Active Recovery 360 Teams & Trainers"
+    subject = "Your Active Recovery 360 team code is ready"
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -301,18 +308,25 @@ async def send_team_signup_welcome_email(
             <div class="content">
                 <p>Hi {first_name},</p>
                 <p>Thanks for signing up for the Active Recovery 360 Teams &amp; Trainers
-                affiliate program. You're on the list.</p>
+                program.</p>
                 <p><strong>Your signup details</strong><br>
                 {details_html}</p>
-                <p><strong>What happens next:</strong></p>
+                <p><strong>Your code is ready now.</strong> Teams aren&apos;t a separate
+                program &mdash; you join the same Active Recovery 360 affiliate program as
+                everyone else, with your own commission rate.</p>
                 <ul>
-                    <li>We set up your team's affiliate code.</li>
-                    <li>You get an email with your code and the next steps for sharing it.</li>
-                    <li>Every qualifying referral earns funds toward your team's athletic
-                    training and recovery needs.</li>
+                    <li>Your referral link and code are available immediately in the
+                    affiliate portal.</li>
+                    <li>Every qualifying referral earns your team a commission on the
+                    products.</li>
+                    <li>Share the link with your athletes, parents or clients &mdash; we
+                    track the sales for you.</li>
                 </ul>
-                <p>We review new signups each business day, so your code is usually ready
-                within 1&ndash;2 business days.</p>
+                <p style="text-align: center;">
+                    <a href="{AFFILIATE_PORTAL_URL}" class="button">Get Your Affiliate Link</a>
+                </p>
+                <p>We&apos;ll be in touch separately about your team&apos;s commission rate
+                &mdash; reply to this email if you&apos;d like to talk it through.</p>
                 <p>In the meantime, take a look at the products your team will be earning
                 toward:</p>
                 <p style="text-align: center;">

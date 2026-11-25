@@ -255,6 +255,12 @@ export default function AdminPage() {
                     )}
                   </Link>
                 </Button>
+                <Button variant="outline" className="w-full justify-start" asChild data-testid="team-signups-link">
+                  <Link href="/admin/team-signups">
+                    <Users className="h-4 w-4 mr-2" />
+                    Teams &amp; Trainers
+                  </Link>
+                </Button>
                 <Separator className="my-2" />
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/settings">

@@ -32,7 +32,52 @@ def _transform(doc: dict) -> dict:
         "role": doc.get("role", "team"),
         "message": doc.get("message"),
         "createdAt": doc.get("createdAt"),
+        # Where this lead is in the follow-up. Without it the admin list is a
+        # pile of identical rows and nobody can tell who has already been dealt
+        # with. Older rows predate the field, so default them to `new`.
+        "status": doc.get("status", "new"),
+        "notes": doc.get("notes"),
+        "updatedAt": doc.get("updatedAt"),
     }
+
+
+SIGNUP_STATUSES = ["new", "contacted", "enrolled", "declined"]
+
+
+@router.patch("/admin/team-signups/{signup_id}")
+async def admin_update_signup(
+    signup_id: str, payload: dict, admin: dict = Depends(require_admin)
+):
+    """Move a signup through the follow-up: new -> contacted -> enrolled | declined."""
+    try:
+        oid = ObjectId(signup_id)
+    except InvalidId:
+        raise HTTPException(status_code=404, detail="Signup not found")
+
+    updates: dict = {}
+    if "status" in payload:
+        status = (payload.get("status") or "").strip().lower()
+        if status not in SIGNUP_STATUSES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid status. Allowed: {', '.join(SIGNUP_STATUSES)}",
+            )
+        updates["status"] = status
+    if "notes" in payload:
+        updates["notes"] = (payload.get("notes") or "").strip() or None
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+
+    updates["updatedAt"] = datetime.now(timezone.utc).isoformat()
+
+    coll = get_collection("team_signups")
+    result = await coll.find_one_and_update(
+        {"_id": oid}, {"$set": updates}, return_document=True
+    )
+    if not result:
+        raise HTTPException(status_code=404, detail="Signup not found")
+    return _transform(result)
 
 
 @router.post("/team-signups")
